@@ -21,7 +21,18 @@
 </style>
 
 <div class="alert alert-warning border-0 shadow-sm">
-  <strong>Use the manual that applies to your visit.</strong> NBA has revised its framework. The Tier I tab follows the May 2026 UG Engineering manual (visits from May 2026 onward); Tier II follows the January 2025 manual. Always confirm the live e-NBA SAR, pre-qualifier and current NBA notices before submitting. This guide summarizes and organizes the official requirements; it is not an NBA decision or a substitute for the complete manual.
+  <strong>Use the manual that applies to your visit.</strong> NBA has revised its framework. The Tier I tab follows the May 2026 UG Engineering manual (visits from May 2026 onward); Tier II follows the January 2025 manual. Always confirm the live e-NBA SAR, pre-qualifier and current NBA notices before submitting. This guide summarizes and organizes the official requirements; it is not an NBA decision or a substitute for the complete 
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body p-4">
+    <div class="text-uppercase small text-primary fw-bold mb-1">Official manual — per criterion (DOCX)</div>
+    <h2 class="h5 mb-2">NBA UG Engineering Tier I Manual, May 2026 edition — fillable format</h2>
+    <p class="text-muted small mb-3">Each file is the official criterion-wise SAR format extracted from the NBA manual, in Word format so any institution can open, fill and submit. Tier I only.</p>
+    <div class="d-flex flex-wrap gap-2">
+      {% for n in "123456789" %}<a class="btn btn-sm btn-outline-primary" href="{% static 'nba-manuals/tier1/criterion-' %}{{ n }}.docx" download><i class="fas fa-file-word me-1"></i>CRITERIA {{ n }}</a>{% endfor %}
+    </div>
+  </div>
 </div>
 
 {% if nba_sar_samples %}
