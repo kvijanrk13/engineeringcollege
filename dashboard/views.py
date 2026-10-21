@@ -89,6 +89,15 @@ from .utils import (
 )
 from .nba_content import NBA_UG_CRITERIA
 from .nba_sar_samples import NBA_SAR_SAMPLES
+from .naac_content import (
+    NAAC_CRITERIA,
+    NAAC_FACTS,
+    NAAC_GRADING,
+    NAAC_HEI_TYPES,
+    NAAC_INSTITUTE_SOURCES,
+    NAAC_PROCESS,
+    NAAC_SOURCES,
+)
 
 logger = logging.getLogger(__name__)
 DECRYPTION_FAILURE_ALERT_LIMIT = 3
@@ -3628,6 +3637,27 @@ def nba_accreditation(request):
     })
 
 
+def naac_context():
+    """Shared NAAC guide data for the standalone page and the dashboard tab."""
+    return {
+        'naac_hei_types': NAAC_HEI_TYPES,
+        'naac_criteria': NAAC_CRITERIA,
+        'naac_grading': NAAC_GRADING,
+        'naac_process': NAAC_PROCESS,
+        'naac_facts': NAAC_FACTS,
+        'naac_sources': NAAC_SOURCES,
+        'naac_institute_sources': NAAC_INSTITUTE_SOURCES,
+    }
+
+
+def naac_accreditation(request):
+    """Public criteria-wise NAAC institutional accreditation guide."""
+    return render(request, 'dashboard/naac_accreditation.html', {
+        'title': 'NAAC Accreditation Criteria Guide',
+        **naac_context(),
+    })
+
+
 def mobile_dashboard(request):
     """Public mobile-friendly dashboard landing page."""
     try:
@@ -3669,6 +3699,7 @@ def mobile_dashboard(request):
         'suspicious_alerts': open_suspicious_alerts(),
         'nba_tiers': NBA_UG_CRITERIA,
         'nba_sar_samples': NBA_SAR_SAMPLES,
+        **naac_context(),
     })
 
 

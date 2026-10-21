@@ -1,0 +1,20 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}NAAC Accreditation Criteria Guide{% endblock %}
+{% block extra_css %}
+{% endblock %}
+{% block content %}
+<div class="container-fluid nba-page py-4">
+  <section class="nba-hero p-4 p-lg-5 mb-4 shadow-sm">
+    <div class="row align-items-center g-3">
+      <div class="col-lg-9">
+        <div class="small text-uppercase fw-bold opacity-75 mb-2">Institutional accreditation · Higher education</div>
+        <h1 class="display-6 fw-bold mb-2">NAAC Accreditation Criteria Guide</h1>
+        <p class="lead mb-0">A practical, criteria-wise guide to preparing an institution for NAAC accreditation under the Revised Accreditation Framework. Select the category that matches your institution, then open each criterion for its focus, the key indicators under it, what to demonstrate, the evidence file to prepare and the accountable team.</p>
+      </div>
+      <div class="col-lg-3 text-lg-end"><span class="badge rounded-pill bg-light text-primary fs-6 p-3">7 criteria · 1,000 weighted marks</span></div>
+    </div>
+  </section>
+
+  {% include 'dashboard/_naac_criteria.html' %}
+</div>
+{% endblock %}

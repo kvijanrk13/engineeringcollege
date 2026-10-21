@@ -26,6 +26,7 @@ urlpatterns = [
     path('home/', views.home, name='home'),
     path('projects/', views.projects, name='projects'),
     path('nba-accreditation/', views.nba_accreditation, name='nba_accreditation'),
+    path('naac-accreditation/', views.naac_accreditation, name='naac_accreditation'),
     path('projects/<path:project_path>', views.projects_removed, name='projects_removed'),
     path(
         'payments/phonepe/callback/',
@@ -183,6 +184,7 @@ urlpatterns = [
     path('exam-branch/attendance-report/', views.attendance_report, name='attendance_report'),
     path('gallery/', views.gallery, name='gallery'),
     path('nba/', views.nba_accreditation, name='nba'),
+    path('naac/', views.naac_accreditation, name='naac'),
 
     # System routes
     path('system/session-info/', views.session_info, name='session_info'),

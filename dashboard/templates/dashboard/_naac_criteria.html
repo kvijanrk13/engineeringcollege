@@ -1,0 +1,195 @@
+{% load static dashboard_filters %}
+<style>
+  .naac-page { max-width: 1440px; }
+  .naac-hero { background: linear-gradient(120deg,#4a2352,#0f766e); color:#fff; border-radius:18px; }
+  .naac-type-nav .nav-link { border:1px solid #d9e2ec; color:#234; font-weight:600; }
+  .naac-type-nav .nav-link.active { background:#4a2352; border-color:#4a2352; }
+  .naac-criteria-nav { max-height:72vh; overflow:auto; }
+  .naac-criteria-nav .nav-link { text-align:left; white-space:normal; color:#26384a; border-radius:8px; margin-bottom:5px; }
+  .naac-criteria-nav .nav-link.active { background:#f3ecf7; color:#4a2352; font-weight:700; border-left:4px solid #7c3f96; }
+  .naac-criterion-card { border:0; border-radius:14px; }
+  .naac-evidence-box { background:#f4f8f6; border-radius:10px; }
+  .naac-source a { overflow-wrap:anywhere; }
+  .naac-fact { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; }
+  .naac-ki-table th { background:#f1f5f9; font-size:.82rem; text-transform:uppercase; letter-spacing:.03em; }
+  .naac-ki-table td { font-size:.92rem; vertical-align:top; }
+  .naac-step { border-left:3px solid #0f766e; }
+  @media(max-width:767px) { .naac-criteria-nav { max-height:300px; } }
+</style>
+
+<div class="alert alert-warning border-0 shadow-sm">
+  <strong>Use the manual that applies to your cycle.</strong> NAAC's Revised Accreditation Framework (w.e.f. 1 February 2023) replaced the earlier seven-criterion manual for every unit of assessment, and the criterion weightage still differs between universities, autonomous colleges and affiliated colleges. Confirm the live NAAC manual, the current AQAR template and the peer team communication on the NAAC portal before you file. This guide summarises and organises the official requirements; it is not a NAAC decision or a substitute for the complete manual.
+</div>
+
+{% if naac_facts %}
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body p-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+      <div>
+        <div class="text-uppercase small text-primary fw-bold mb-1">What NAAC assesses</div>
+        <h2 class="h4 mb-1">Seven criteria, one institution, one cycle</h2>
+        <p class="text-muted mb-0">
+          NAAC scores the institution as a whole against seven criteria. Every criterion carries
+          key indicators, and every key indicator is broken into metrics: qualitative metrics that
+          the peer team reads and judges on site, and quantitative metrics that NAAC verifies as
+          data before the visit. Open the category that matches your institution, then open any
+          criterion for its focus, what to demonstrate, the evidence file to prepare and the team
+          that should own it.
+        </p>
+      </div>
+      <span class="badge rounded-pill bg-light text-primary border p-2">Revised Accreditation Framework</span>
+    </div>
+    <div class="row g-3">
+      {% for fact in naac_facts %}
+      <div class="col-6 col-md-2">
+        <div class="naac-fact p-3 text-center h-100">
+          <div class="h5 mb-0">{{ fact.value }}</div>
+          <div class="small text-muted">{{ fact.label }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white fw-bold">Institutional grade scale</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead class="table-light"><tr><th>Institutional CGPA</th><th>Grade</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for row in naac_grading %}
+            <tr><td>{{ row.range }}</td><td><strong>{{ row.grade }}</strong></td><td class="text-muted">{{ row.status }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <p class="small text-muted px-3 py-2 mb-0">Final CGPA is rounded off to two decimal points and class intervals are inclusive at both ends.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white fw-bold">How the assessment runs, step by step</div>
+      <div class="card-body p-3">
+        {% for step in naac_process %}
+        <div class="naac-step ps-3 pb-3 mb-1">
+          <div class="d-flex flex-wrap gap-2 align-items-baseline">
+            <span class="badge bg-success">{{ step.stage }}</span>
+            <strong>{{ step.title }}</strong>
+          </div>
+          <div class="small text-muted mt-1">{{ step.detail }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<ul class="nav nav-pills naac-type-nav gap-2 mb-3" id="naacTypeTabs" role="tablist">
+  {% for type_key, hei_type in naac_hei_types.items %}
+  <li class="nav-item" role="presentation"><button class="nav-link {% if forloop.first %}active{% endif %}" id="{{ type_key }}-tab" data-bs-toggle="pill" data-bs-target="#{{ type_key }}-pane" type="button" role="tab" aria-controls="{{ type_key }}-pane" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">{{ hei_type.label }}</button></li>
+  {% endfor %}
+</ul>
+
+<div class="tab-content" id="naacTypeContent">
+  {% for type_key, hei_type in naac_hei_types.items %}
+  <section class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="{{ type_key }}-pane" role="tabpanel" aria-labelledby="{{ type_key }}-tab" tabindex="0">
+    <div class="card border-0 shadow-sm mb-3"><div class="card-body d-flex flex-column flex-lg-row justify-content-between gap-3">
+      <div><span class="badge bg-primary mb-2">{{ hei_type.manual }}</span><h2 class="h4 mb-1">{{ hei_type.label }}</h2><p class="text-muted mb-1">{{ hei_type.format }} · 7 criteria · {{ hei_type.total }} total weighted marks</p><p class="small text-muted mb-0"><strong>Who applies:</strong> {{ hei_type.eligibility }}</p></div>
+      <div class="naac-source text-lg-end"><div class="small text-muted">Official source documents</div>
+        {% if type_key == 'autonomous' %}
+        <a href="https://naac.gov.in/index.php/en/assessment-accreditation" target="_blank" rel="noopener">NAAC — criteria, weightage and grading</a><br><a href="https://naac.gov.in/index.php/en/2-uncategorised/239-empanelment-of-hindi-consultant-2023" target="_blank" rel="noopener">NAAC Manual for Autonomous Colleges (official text)</a>
+        {% else %}
+        <a href="https://naac.gov.in/index.php/en/assessment-accreditation" target="_blank" rel="noopener">NAAC — criteria, weightage and grading</a><br><a href="https://naac.gov.in/index.php/en/resources/publications/manuals" target="_blank" rel="noopener">NAAC — manuals by unit of assessment</a>
+        {% endif %}
+      </div>
+    </div></div>
+
+    <div class="row g-3">
+      <aside class="col-lg-3"><div class="card border-0 shadow-sm"><div class="card-header bg-white fw-bold">Criteria navigation</div><div class="list-group list-group-flush naac-criteria-nav p-2" role="tablist">
+        {% for criterion in naac_criteria %}
+        <button class="list-group-item list-group-item-action nav-link {% if forloop.first %}active{% endif %}" id="{{ type_key }}-criterion-{{ forloop.counter }}-tab" data-bs-toggle="pill" data-bs-target="#{{ type_key }}-criterion-{{ forloop.counter }}-pane" type="button" role="tab" aria-controls="{{ type_key }}-criterion-{{ forloop.counter }}-pane" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"><span class="badge bg-secondary me-2">{{ forloop.counter }}</span>{{ criterion.name }}<span class="badge bg-light text-dark float-end">{{ hei_type.weightage|get_item:forloop.counter }}</span></button>
+        {% endfor %}
+      </div></div></aside>
+
+      <div class="col-lg-9"><div class="tab-content">
+        {% for criterion in naac_criteria %}
+        {% with criterion_no=forloop.counter %}
+        <article class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="{{ type_key }}-criterion-{{ criterion_no }}-pane" role="tabpanel" aria-labelledby="{{ type_key }}-criterion-{{ criterion_no }}-tab" tabindex="0">
+          <div class="card naac-criterion-card shadow-sm"><div class="card-body p-4 p-lg-5">
+            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+              <div><div class="text-uppercase small text-primary fw-bold">Criterion {{ criterion_no }}</div><h2 class="h3 mb-0">{{ criterion.name }}</h2></div>
+              <div class="text-end">
+                <span class="badge bg-primary fs-6 p-2">{{ hei_type.weightage|get_item:criterion_no }} marks</span>
+                <div class="small text-muted mt-1">{{ criterion.metrics }}</div>
+              </div>
+            </div>
+            <p class="lead fs-5">{{ criterion.focus }}</p>
+
+            <h3 class="h5 mt-4">Key indicators under this criterion</h3>
+            <div class="table-responsive">
+              <table class="table table-sm naac-ki-table">
+                <thead><tr><th style="width:70px;">KI</th><th>Key indicator</th>{% if hei_type.ki_weightage %}<th style="width:120px;" class="text-end">Weightage</th>{% endif %}</tr></thead>
+                <tbody>
+                  {% for ki in criterion.key_indicators %}
+                  <tr><td><strong>{{ ki.code }}</strong></td><td>{{ ki.name }}</td>{% if hei_type.ki_weightage %}<td class="text-end">{{ ki.marks }}</td>{% endif %}</tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% if not hei_type.ki_weightage %}
+            <p class="small text-muted mb-0">Key-indicator weightage is fixed in the NAAC Self-Study Report format for this unit of assessment and is confirmed at the time of the assessment.</p>
+            {% endif %}
+
+            <h3 class="h5 mt-4">What the institution should demonstrate</h3>
+            <ol class="ps-3">{% for item in criterion.requirements %}<li class="mb-2">{{ item }}</li>{% endfor %}</ol>
+
+            <div class="naac-evidence-box p-3 mt-4">
+              <h3 class="h6"><i class="fas fa-folder-open me-2 text-primary"></i>Evidence file to prepare</h3>
+              <p class="mb-0">{{ criterion.evidence }}</p>
+            </div>
+            <div class="mt-3 small text-muted"><strong>Suggested accountable team:</strong> {{ criterion.owner }}. NAAC grades the institution, so assign one named owner and one evidence custodian per criterion in the IQAC quality plan.</div>
+          </div></div>
+        </article>
+        {% endwith %}
+        {% endfor %}
+      </div></div>
+    </div>
+  </section>
+  {% endfor %}
+</div>
+
+{% if naac_sources or naac_institute_sources %}
+<div class="card border-0 shadow-sm mt-4">
+  <div class="card-body p-4">
+    <div class="text-uppercase small text-primary fw-bold mb-1">Source documents</div>
+    <h2 class="h4 mb-3">Where the framework and this institution’s own record live</h2>
+    <div class="row g-4">
+      {% if naac_sources %}
+      <div class="col-lg-7">
+        <div class="naac-source">
+          <div class="fw-bold mb-2">NAAC official pages</div>
+          {% for source in naac_sources %}
+          <div class="mb-2"><a href="{{ source.url }}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt me-1"></i>{{ source.label }}</a></div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+      {% if naac_institute_sources %}
+      <div class="col-lg-5">
+        <div class="naac-source">
+          <div class="fw-bold mb-2">This institute’s published record</div>
+          {% for source in naac_institute_sources %}
+          <div class="mb-2"><a href="{{ source.url }}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt me-1"></i>{{ source.label }}</a></div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    <p class="small text-muted mb-0 mt-3">NAAC requires the institution to display its own assessment outcome document on its website, and the SSR in PDF, once the cycle is complete. Nothing on this page is a NAAC grade — it is a preparation guide.</p>
+  </div>
+</div>
+{% endif %}
