@@ -1,0 +1,21 @@
+{% load static %}
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>NBA Criterion {{ criterion_no }} Form</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head><body class="bg-light">
+<div class="container py-4">
+  <h3>NBA Criterion {{ criterion_no }} — {{ role|title }} input</h3>
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label class="form-label">Content to be filled</label>
+      <textarea name="content" class="form-control" rows="12">{{ obj.content }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Submitted by</label>
+      <input name="username" class="form-control" value="{{ obj.submitted_by }}">
+    </div>
+    <button class="btn btn-primary">Save</button>
+  </form>
+  <p class="small text-muted mt-3">Last updated: {{ obj.updated_at }}</p>
+</div>
+</body></html>

@@ -11511,3 +11511,14 @@ def naac_login(request):
         error = "Invalid credentials (use admin / admin)."
     from django.shortcuts import render
     return render(request, "dashboard/naac_login.html", {"error": error, "roles": ["admin","principal","hod","staff"]})
+
+
+def nba_criterion_form(request, criterion_no):
+    from .models import NbaCriterionResponse
+    role = request.session.get("nba_role", "staff")
+    obj, _ = NbaCriterionResponse.objects.get_or_create(tier="tier1", criterion_no=criterion_no, role=role)
+    if request.method == "POST":
+        obj.content = request.POST.get("content", "")
+        obj.submitted_by = request.POST.get("username", "")
+        obj.save()
+    return render(request, "dashboard/nba_criterion_form.html", {"criterion_no": criterion_no, "role": role, "obj": obj})
