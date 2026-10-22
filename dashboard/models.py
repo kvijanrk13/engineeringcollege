@@ -927,11 +927,10 @@ class MoocsExamResult(models.Model):
 class NbaCriterionResponse(models.Model):
     tier = models.CharField(max_length=10, default="tier1")
     criterion_no = models.IntegerField()
-    role = models.CharField(max_length=20, default="staff")
     content = models.TextField(blank=True)
     submitted_by = models.CharField(max_length=100, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ("tier", "criterion_no", "role")
+        unique_together = ("tier", "criterion_no")
         verbose_name = "NBA Criterion Response"

@@ -122,6 +122,7 @@
             <h3 class="h5 mt-4">What the program should demonstrate</h3><ol class="ps-3">{% for item in criterion.requirements %}<li class="mb-2">{{ item }}</li>{% endfor %}</ol>
             <div class="evidence-box p-3 mt-4"><h3 class="h6"><i class="fas fa-folder-open me-2 text-primary"></i>Evidence file to prepare</h3><p class="mb-0">{{ criterion.evidence }}</p></div>
             <div class="mt-3 small text-muted"><strong>Suggested accountable team:</strong> {{ criterion.owner }}. Assign a named owner and evidence custodian in the institution’s NBA preparation plan.</div>
+            <div class="mt-3"><a class="btn btn-primary" href="{% url 'dashboard:nba_criterion_form' criterion_no %}?tier={{ tier_key }}"><i class="fas fa-table me-1"></i>Open shared Criterion {{ criterion_no }} form</a><span class="small text-muted ms-2">Shared sheet for all NBA roles</span></div>
 
             {% if nba_sar_samples %}
             {% with tier_samples=nba_sar_samples|get_item:tier_key|default_if_none:"" %}

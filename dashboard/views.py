@@ -3629,9 +3629,12 @@ def home(request):
 
 
 def nba_accreditation(request):
-    """Public criteria-wise NBA UG engineering accreditation guide."""
+    """Criteria-wise NBA guide, available after NBA login."""
+    if not request.session.get("nba_role"):
+        return redirect("dashboard:nba_login")
     return render(request, 'dashboard/nba_accreditation.html', {
         'title': 'NBA Accreditation Criteria Guide',
+        'nba_role': request.session.get("nba_role"),
         'nba_tiers': NBA_UG_CRITERIA,
         'nba_sar_samples': NBA_SAR_SAMPLES,
     })
@@ -3651,9 +3654,12 @@ def naac_context():
 
 
 def naac_accreditation(request):
-    """Public criteria-wise NAAC institutional accreditation guide."""
+    """Criteria-wise NAAC guide, available after NAAC login."""
+    if not request.session.get("naac_role"):
+        return redirect("dashboard:naac_login")
     return render(request, 'dashboard/naac_accreditation.html', {
         'title': 'NAAC Accreditation Criteria Guide',
+        'naac_role': request.session.get("naac_role"),
         **naac_context(),
     })
 
@@ -11488,13 +11494,11 @@ def nba_login(request):
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "").strip()
-        role = request.POST.get("role", "admin")
-        if username == "admin" and password == "admin":
+        role = request.POST.get("role", "admin").lower()
+        if username == "admin" and password == "admin" and role in {"admin", "principal", "hod", "staff"}:
             request.session["nba_role"] = role
-            from django.shortcuts import redirect
-            return redirect("/nba-accreditation/")
+            return redirect("dashboard:nba_accreditation")
         error = "Invalid credentials (use admin / admin)."
-    from django.shortcuts import render
     return render(request, "dashboard/nba_login.html", {"error": error, "roles": ["admin","principal","hod","staff"]})
 
 
@@ -11503,22 +11507,60 @@ def naac_login(request):
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "").strip()
-        role = request.POST.get("role", "admin")
-        if username == "admin" and password == "admin":
+        role = request.POST.get("role", "admin").lower()
+        if username == "admin" and password == "admin" and role in {"admin", "principal", "hod", "staff"}:
             request.session["naac_role"] = role
-            from django.shortcuts import redirect
-            return redirect("/naac-accreditation/")
+            return redirect("dashboard:naac_accreditation")
         error = "Invalid credentials (use admin / admin)."
-    from django.shortcuts import render
     return render(request, "dashboard/naac_login.html", {"error": error, "roles": ["admin","principal","hod","staff"]})
 
 
 def nba_criterion_form(request, criterion_no):
+    import json
+    from django.http import Http404
     from .models import NbaCriterionResponse
-    role = request.session.get("nba_role", "staff")
-    obj, _ = NbaCriterionResponse.objects.get_or_create(tier="tier1", criterion_no=criterion_no, role=role)
+    role = request.session.get("nba_role")
+    if role not in {"admin", "principal", "hod", "staff"}:
+        return redirect("dashboard:nba_login")
+    tier = request.GET.get("tier", "tier1")
+    if tier not in NBA_UG_CRITERIA:
+        raise Http404("Unknown NBA tier")
+    criteria = NBA_UG_CRITERIA[tier]["criteria"]
+    if criterion_no < 1 or criterion_no > len(criteria):
+        raise Http404("Unknown NBA criterion")
+    criterion = criteria[criterion_no - 1]
+    obj, _ = NbaCriterionResponse.objects.get_or_create(tier=tier, criterion_no=criterion_no)
     if request.method == "POST":
-        obj.content = request.POST.get("content", "")
-        obj.submitted_by = request.POST.get("username", "")
+        answers = {}
+        for index, _requirement in enumerate(criterion["requirements"], start=1):
+            key = f"requirement_{index}"
+            answers[key] = request.POST.get(key, "").strip()
+        for key in ("summary", "evidence", "owner", "review_notes", "next_steps"):
+            answers[key] = request.POST.get(key, "").strip()
+        obj.content = json.dumps(answers)
+        obj.submitted_by = request.POST.get("username", "").strip()[:100]
         obj.save()
-    return render(request, "dashboard/nba_criterion_form.html", {"criterion_no": criterion_no, "role": role, "obj": obj})
+        return redirect(f"{reverse('dashboard:nba_criterion_form', args=[criterion_no])}?tier={tier}&saved=1")
+    try:
+        answers = json.loads(obj.content) if obj.content else {}
+    except (TypeError, ValueError):
+        answers = {"summary": obj.content}
+    fields = [
+        {"key": "summary", "label": "What did the program do?", "help": criterion["focus"], "value": answers.get("summary", ""), "kind": "textarea"},
+    ]
+    fields.extend({
+        "key": f"requirement_{index}",
+        "label": f"Requirement {index}: {requirement}",
+        "help": "Describe the work completed, dates or assessment years, results, and who is responsible.",
+        "value": answers.get(f"requirement_{index}", ""), "kind": "textarea",
+    } for index, requirement in enumerate(criterion["requirements"], start=1))
+    fields.extend([
+        {"key": "evidence", "label": "Evidence and document references", "help": f"List file names, links, dates, page numbers, or repository locations. Suggested evidence: {criterion['evidence']}", "value": answers.get("evidence", ""), "kind": "textarea"},
+        {"key": "owner", "label": "Responsible owner and evidence custodian", "help": f"Suggested accountable team: {criterion['owner']}. Add the named person or office.", "value": answers.get("owner", ""), "kind": "input"},
+        {"key": "review_notes", "label": "HOD / Principal review comments", "help": "Record review feedback, questions, decisions, and approval status here so the team can see the same review trail.", "value": answers.get("review_notes", ""), "kind": "textarea"},
+        {"key": "next_steps", "label": "Gaps, action, owner, and due date", "help": "Record what remains, the next action, who will do it, and the target date.", "value": answers.get("next_steps", ""), "kind": "textarea"},
+    ])
+    return render(request, "dashboard/nba_criterion_form.html", {
+        "criterion_no": criterion_no, "role": role, "tier": tier, "criterion": criterion,
+        "fields": fields, "obj": obj, "saved": request.GET.get("saved") == "1",
+    })
