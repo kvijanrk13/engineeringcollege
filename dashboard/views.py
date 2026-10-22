@@ -11481,3 +11481,33 @@ def upload_certificate(request, *args, **kwargs):
 def upload_certificates_bulk(request, *args, **kwargs):
     from django.http import HttpResponse
     return HttpResponse("upload_certificates_bulk not yet implemented.", status=501)
+
+
+def nba_login(request):
+    error = None
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "").strip()
+        role = request.POST.get("role", "admin")
+        if username == "admin" and password == "admin":
+            request.session["nba_role"] = role
+            from django.shortcuts import redirect
+            return redirect("/nba-accreditation/")
+        error = "Invalid credentials (use admin / admin)."
+    from django.shortcuts import render
+    return render(request, "dashboard/nba_login.html", {"error": error, "roles": ["admin","principal","hod","staff"]})
+
+
+def naac_login(request):
+    error = None
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "").strip()
+        role = request.POST.get("role", "admin")
+        if username == "admin" and password == "admin":
+            request.session["naac_role"] = role
+            from django.shortcuts import redirect
+            return redirect("/naac-accreditation/")
+        error = "Invalid credentials (use admin / admin)."
+    from django.shortcuts import render
+    return render(request, "dashboard/naac_login.html", {"error": error, "roles": ["admin","principal","hod","staff"]})

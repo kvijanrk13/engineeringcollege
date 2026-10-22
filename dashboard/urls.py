@@ -26,7 +26,9 @@ urlpatterns = [
     path('home/', views.home, name='home'),
     path('projects/', views.projects, name='projects'),
     path('nba-accreditation/', views.nba_accreditation, name='nba_accreditation'),
+    path('nba-login/', views.nba_login, name='nba_login'),
     path('naac-accreditation/', views.naac_accreditation, name='naac_accreditation'),
+    path('naac-login/', views.naac_login, name='naac_login'),
     path('projects/<path:project_path>', views.projects_removed, name='projects_removed'),
     path(
         'payments/phonepe/callback/',
