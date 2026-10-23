@@ -11585,6 +11585,8 @@ def nba_criterion_form(request, criterion_no):
             field["value"] = "\n".join(" | ".join(str(cell) for cell in row) for row in response_table["rows"] if isinstance(row, list))
         except (TypeError, ValueError):
             pass
+    peo_matrix = None
+    peo_matrix_value = ""
     if tier == "tier1" and criterion_no == 1:
         matrix_key = "requirement_5"
         try:
@@ -11602,6 +11604,7 @@ def nba_criterion_form(request, criterion_no):
                 ],
             }
         fields[5]["peo_matrix"] = peo_matrix
+        peo_matrix_value = fields[5]["value"]
     fields.extend([
         {"key": "evidence", "label": "Evidence and document references", "help": f"List file names, links, dates, page numbers, or repository locations. Suggested evidence: {criterion['evidence']}", "value": answers.get("evidence", ""), "kind": "textarea"},
         {"key": "owner", "label": "Responsible owner and evidence custodian", "help": f"Suggested accountable team: {criterion['owner']}. Add the named person or office.", "value": answers.get("owner", ""), "kind": "input"},
@@ -11612,6 +11615,8 @@ def nba_criterion_form(request, criterion_no):
         "criterion_no": criterion_no, "role": role, "tier": tier, "criterion": criterion,
         "fields": fields, "obj": obj, "saved": request.GET.get("saved") == "1",
         "annexure_tables": annexure_tables,
+        "peo_matrix": peo_matrix,
+        "peo_matrix_value": peo_matrix_value,
         "annexure_source": "dashboard/nba-manuals/annexure-ii-nba.pdf" if tier == "tier1" else None,
         "annexure_page_start": annexure_pages[criterion_no][0],
         "annexure_page_end": annexure_pages[criterion_no][1],

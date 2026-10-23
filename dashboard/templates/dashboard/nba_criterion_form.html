@@ -27,8 +27,10 @@
   .annexure-table caption { padding: 1rem; }
   .annexure-table th { background: #edf4f9; color: #173b5d; vertical-align: middle; }
   .annexure-table td { min-width: 150px; vertical-align: top; }
-  .annexure-table textarea { min-height: 76px; resize: vertical; }
+  .annexure-table textarea { min-height: 40px; height: 40px; resize: vertical; padding: .25rem .4rem; font-size: .875rem; }
   .annexure-table th[scope="row"] { min-width: 220px; }
+  .annexure-table .annexure-fixed-label { font-weight: 600; background: #f7fafc; }
+  .annexure-table .annexure-fixed-label textarea { font-weight: 600; background: #f7fafc; }
   .annexure-table th[scope="row"] textarea { font-weight: 600; background: #f7fafc; }
 </style>
 {% endblock %}
@@ -67,26 +69,44 @@
       <section class="mb-5">
         <h3 class="h5 mb-1">Prescribed Annexure II tables</h3>
         <p class="text-muted">These editable tables follow the headings and row structure in the Annexure II pages shown above. Add rows where required.</p>
+        {% if peo_matrix %}
+        <div class="mb-4" data-peo-matrix>
+          <h4 class="h6">Table No. 1.1.5.1: Mapping of PEOs with mission</h4>
+          <div class="table-responsive annexure-table-wrap">
+            <table class="table table-bordered annexure-table align-middle mb-2">
+              <thead><tr><th scope="col">PEO Statements</th>{% for mission in peo_matrix.missions %}<th scope="col"><input class="form-control form-control-sm" data-mission aria-label="Mission heading {{ forloop.counter }}" value="{{ mission }}"></th>{% endfor %}</tr></thead>
+              <tbody data-peo-rows>
+                {% for peo in peo_matrix.peos %}<tr data-peo-row><th scope="row"><input class="form-control form-control-sm" data-peo-statement value="{{ peo.statement }}" aria-label="PEO statement"></th>{% for value in peo.values %}<td><select class="form-select form-select-sm" data-correlation aria-label="Correlation for {{ peo.statement }}"><option value=""{% if not value %} selected{% endif %}>Select</option><option value="-"{% if value == '-' %} selected{% endif %}>-</option><option value="1"{% if value == '1' %} selected{% endif %}>1 · Low</option><option value="2"{% if value == '2' %} selected{% endif %}>2 · Medium</option><option value="3"{% if value == '3' %} selected{% endif %}>3 · High</option></select></td>{% endfor %}</tr>{% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="d-flex flex-wrap gap-2"><button class="btn btn-sm btn-outline-primary" type="button" data-add-peo>Add PEO row</button><button class="btn btn-sm btn-outline-primary" type="button" data-add-mission>Add mission column</button></div>
+          <label class="form-label fw-semibold mt-2" for="peo-mapping-rationale">Justification and rationale for the mapping</label><textarea class="form-control mb-2" id="peo-mapping-rationale" data-mapping-rationale rows="3">{{ peo_matrix.rationale }}</textarea>
+          <input type="hidden" id="requirement_5" name="requirement_5" value="{{ peo_matrix_value }}" data-peo-matrix-value>
+        </div>
+        {% endif %}
         {% for table in annexure_tables %}
-        <div class="mb-4" data-annexure-table>
+        <div class="mb-4" data-annexure-table data-column-count="{{ table.columns|length }}">
           <div class="table-responsive annexure-table-wrap">
             <table class="table table-bordered annexure-table align-middle">
               <caption class="caption-top fw-semibold text-dark">{{ table.title }}</caption>
               <thead>
-                {% if table.header_groups %}<tr>{% for group in table.header_groups %}<th scope="colgroup" colspan="{{ group.span }}">{{ group.label }}</th>{% endfor %}</tr>{% endif %}
-                <tr>{% for column in table.columns %}<th scope="col">{{ column }}</th>{% endfor %}</tr>
+                {% if table.header_groups %}
+                <tr>{% for group in table.header_groups %}<th scope="{% if group.rowspan == 2 %}col{% else %}colgroup{% endif %}" colspan="{{ group.span }}"{% if group.rowspan %} rowspan="{{ group.rowspan }}"{% endif %}>{{ group.label }}</th>{% endfor %}</tr>
+                <tr>{% for group in table.header_groups %}{% if not group.rowspan %}{% for column in group.columns %}<th scope="col">{{ column }}</th>{% endfor %}{% endif %}{% endfor %}</tr>
+                {% else %}<tr>{% for column in table.columns %}<th scope="col">{{ column }}</th>{% endfor %}</tr>{% endif %}
               </thead>
               <tbody data-annexure-rows>
-                {% for row in table.rows %}<tr data-annexure-row>{% for cell in row %}{% if forloop.first %}<th scope="row"><textarea class="form-control" data-annexure-cell aria-label="Annexure row label">{{ cell }}</textarea></th>{% else %}<td><textarea class="form-control" data-annexure-cell aria-label="Annexure table cell">{{ cell }}</textarea></td>{% endif %}{% endfor %}</tr>{% endfor %}
+                {% for row in table.rows %}<tr data-annexure-row>{% for cell in row %}{% if forloop.first %}<th scope="row"{% if table.fixed_first_column %} class="annexure-fixed-label"{% endif %}><textarea class="form-control" data-annexure-cell aria-label="Annexure row label"{% if table.fixed_first_column %} readonly{% endif %}>{{ cell }}</textarea></th>{% else %}<td><textarea class="form-control" data-annexure-cell aria-label="Annexure table cell">{{ cell }}</textarea></td>{% endif %}{% endfor %}</tr>{% endfor %}
               </tbody>
             </table>
           </div>
-          <button class="btn btn-sm btn-outline-primary mt-2" type="button" data-add-annexure-row>Add row</button>
+          {% if table.allow_add_rows %}<button class="btn btn-sm btn-outline-primary mt-2" type="button" data-add-annexure-row>Add row</button>{% endif %}
           <input type="hidden" name="{{ table.key }}" value="{{ table.saved_value }}" data-annexure-value>
         </div>
         {% endfor %}
       </section>
-      {% endif %}
+      {% else %}<div class="alert alert-info mb-4">The Annexure II presents Criterion {{ criterion_no }} as narrative requirements and does not prescribe a data table.</div>{% endif %}
       <h3 class="h5 mb-1">Requirement notes and review</h3>
       <p class="text-muted">Use this section for explanations, evidence references, review comments, and follow-up actions.</p>
       <div class="table-responsive response-table-wrap mb-4">
@@ -97,25 +117,9 @@
               {% if field.key == 'summary' %}
               <tr><th scope="row" class="criterion-cell">Overall summary<div class="field-help fw-normal mt-2">{{ field.help }}</div></th><td><textarea class="form-control" id="{{ field.key }}" name="{{ field.key }}" rows="4" placeholder="Summarize the program's response to this criterion.">{{ field.value }}</textarea></td></tr>
               {% elif field.is_requirement %}
-              <tr><th scope="row" class="criterion-cell"><span class="text-primary fw-bold">{{ field.number }}.</span> {{ field.prompt }}<div class="field-help fw-normal mt-2">{{ field.help }}</div></th><td>
-                {% if criterion_no == 1 and field.number == 5 and field.peo_matrix %}
-                <div class="table-responsive" data-peo-matrix>
-                  <table class="table table-bordered nba-source-table mb-2">
-                    <caption class="caption-top fw-semibold text-dark">Table No. 1.1.5.1: Mapping of PEOs with mission</caption>
-                    <thead><tr><th scope="col">PEO Statements</th>{% for mission in field.peo_matrix.missions %}<th scope="col"><input class="form-control form-control-sm" data-mission aria-label="Mission heading {{ forloop.counter }}" value="{{ mission }}"></th>{% endfor %}</tr></thead>
-                    <tbody data-peo-rows>
-                      {% for peo in field.peo_matrix.peos %}
-                      <tr data-peo-row><td><input class="form-control form-control-sm" data-peo-statement value="{{ peo.statement }}" aria-label="PEO statement"></td>{% for value in peo.values %}<td><select class="form-select form-select-sm" data-correlation aria-label="Correlation for {{ peo.statement }}"><option value=""{% if not value %} selected{% endif %}>Select</option><option value="-"{% if value == '-' %} selected{% endif %}>-</option><option value="1"{% if value == '1' %} selected{% endif %}>1 · Low</option><option value="2"{% if value == '2' %} selected{% endif %}>2 · Medium</option><option value="3"{% if value == '3' %} selected{% endif %}>3 · High</option></select></td>{% endfor %}</tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                  <div class="d-flex flex-wrap gap-2"><button class="btn btn-sm btn-outline-primary" type="button" data-add-peo>Add PEO row</button><button class="btn btn-sm btn-outline-primary" type="button" data-add-mission>Add mission column</button></div>
-                  <p class="small text-muted mt-2 mb-2">Enter correlation levels as Low (1), Medium (2), or High (3). Use “-” when there is no correlation.</p>
-                  <label class="form-label fw-semibold" for="peo-mapping-rationale">Justification and rationale for the mapping</label><textarea class="form-control mb-2" id="peo-mapping-rationale" data-mapping-rationale rows="3">{{ field.peo_matrix.rationale }}</textarea>
-                  <input type="hidden" id="{{ field.key }}" name="{{ field.key }}" value="{{ field.value }}" data-peo-matrix-value>
-                </div>
-                {% else %}<textarea class="form-control" id="{{ field.key }}" name="{{ field.key }}" rows="5" placeholder="Enter the response here. Include specific years, figures, decisions, and references where applicable.">{{ field.value }}</textarea>{% endif %}
-              </td></tr>
+                {% if not peo_matrix or field.number != 5 %}
+                <tr><th scope="row" class="criterion-cell"><span class="text-primary fw-bold">{{ field.number }}.</span> {{ field.prompt }}<div class="field-help fw-normal mt-2">{{ field.help }}</div></th><td><textarea class="form-control" id="{{ field.key }}" name="{{ field.key }}" rows="5" placeholder="Enter the response here. Include specific years, figures, decisions, and references where applicable.">{{ field.value }}</textarea></td></tr>
+                {% endif %}
               {% else %}
               <tr><th scope="row" class="criterion-cell">{{ field.label }}<div class="field-help fw-normal mt-2">{{ field.help }}</div></th><td>{% if field.kind == 'textarea' %}<textarea class="form-control" id="{{ field.key }}" name="{{ field.key }}" rows="4">{{ field.value }}</textarea>{% else %}<input class="form-control" id="{{ field.key }}" name="{{ field.key }}" value="{{ field.value }}" placeholder="Enter the name, role, or office responsible">{% endif %}</td></tr>
               {% endif %}
@@ -187,7 +191,7 @@
     document.querySelectorAll('[data-annexure-table]').forEach(function (table) {
       var rows = table.querySelector('[data-annexure-rows]');
       var value = table.querySelector('[data-annexure-value]');
-      var count = table.querySelectorAll('thead th').length;
+      var count = Number(table.getAttribute('data-column-count'));
       table.querySelector('[data-add-annexure-row]').addEventListener('click', function () {
         var row = document.createElement('tr'); row.setAttribute('data-annexure-row', '');
         for (var i = 0; i < count; i++) {
