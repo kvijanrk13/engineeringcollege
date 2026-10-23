@@ -31,6 +31,7 @@
     <p class="text-muted small mb-3">Each file is the official criterion-wise SAR format extracted from the NBA manual, in Word format so any institution can open, fill and submit. Tier I only.</p>
     <div class="d-flex flex-wrap gap-2">
       {% for n in "123456789" %}<a class="btn btn-sm btn-outline-primary" href="{% static 'nba-manuals/tier1/criterion-' %}{{ n }}.docx" target="_blank" rel="noopener"><i class="fas fa-file-alt me-1"></i>CRITERIA {{ n }}</a>{% endfor %}
+      <a class="btn btn-sm btn-outline-secondary" href="https://www.nbaind.org/files/Manual%20for%20UG%20Engineering%20Tier%20I-%202026%20Edition_Format_20260521165316.pdf" target="_blank" rel="noopener"><i class="fas fa-file-pdf me-1"></i>Full NBA 2026 Manual (PDF)</a>
     </div>
   </div>
 </div>
