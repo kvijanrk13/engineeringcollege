@@ -11529,6 +11529,10 @@ def nba_criterion_form(request, criterion_no):
     if criterion_no < 1 or criterion_no > len(criteria):
         raise Http404("Unknown NBA criterion")
     criterion = criteria[criterion_no - 1]
+    annexure_pages = {
+        1: (10, 14), 2: (15, 15), 3: (16, 18), 4: (19, 29), 5: (30, 40),
+        6: (41, 47), 7: (48, 49), 8: (50, 50), 9: (51, 56),
+    }
     obj, _ = NbaCriterionResponse.objects.get_or_create(tier=tier, criterion_no=criterion_no)
     if request.method == "POST":
         answers = {}
@@ -11566,4 +11570,7 @@ def nba_criterion_form(request, criterion_no):
     return render(request, "dashboard/nba_criterion_form.html", {
         "criterion_no": criterion_no, "role": role, "tier": tier, "criterion": criterion,
         "fields": fields, "obj": obj, "saved": request.GET.get("saved") == "1",
+        "annexure_source": "dashboard/nba-manuals/annexure-ii-nba.pdf" if tier == "tier1" else None,
+        "annexure_page_start": annexure_pages[criterion_no][0],
+        "annexure_page_end": annexure_pages[criterion_no][1],
     })
