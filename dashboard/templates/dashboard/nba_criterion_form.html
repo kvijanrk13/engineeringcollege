@@ -19,6 +19,9 @@
   .response-table textarea { min-height: 110px; resize: vertical; }
   .annexure-viewer { border: 1px solid #d8e2eb; border-radius: 12px; overflow: hidden; background: #f5f7fa; }
   .annexure-viewer iframe { display: block; width: 100%; height: min(78vh, 920px); border: 0; }
+  .nba-source-table { min-width: 820px; }
+  .nba-source-table th { background: #edf4f9; vertical-align: middle; }
+  .nba-source-table td { min-width: 110px; vertical-align: middle; }
 </style>
 {% endblock %}
 {% block content %}
@@ -59,7 +62,25 @@
               {% if field.key == 'summary' %}
               <tr><th scope="row" class="criterion-cell">Overall summary<div class="field-help fw-normal mt-2">{{ field.help }}</div></th><td><textarea class="form-control" id="{{ field.key }}" name="{{ field.key }}" rows="4" placeholder="Summarize the program's response to this criterion.">{{ field.value }}</textarea></td></tr>
               {% elif field.is_requirement %}
-              <tr><th scope="row" class="criterion-cell"><span class="text-primary fw-bold">{{ field.number }}.</span> {{ field.prompt }}<div class="field-help fw-normal mt-2">{{ field.help }}</div></th><td><textarea class="form-control" id="{{ field.key }}" name="{{ field.key }}" rows="5" placeholder="Enter the response here. Include specific years, figures, decisions, and references where applicable.">{{ field.value }}</textarea></td></tr>
+              <tr><th scope="row" class="criterion-cell"><span class="text-primary fw-bold">{{ field.number }}.</span> {{ field.prompt }}<div class="field-help fw-normal mt-2">{{ field.help }}</div></th><td>
+                {% if criterion_no == 1 and field.number == 5 and field.peo_matrix %}
+                <div class="table-responsive" data-peo-matrix>
+                  <table class="table table-bordered nba-source-table mb-2">
+                    <caption class="caption-top fw-semibold text-dark">Table No. 1.1.5.1: Mapping of PEOs with mission</caption>
+                    <thead><tr><th scope="col">PEO Statements</th>{% for mission in field.peo_matrix.missions %}<th scope="col"><input class="form-control form-control-sm" data-mission aria-label="Mission heading {{ forloop.counter }}" value="{{ mission }}"></th>{% endfor %}</tr></thead>
+                    <tbody data-peo-rows>
+                      {% for peo in field.peo_matrix.peos %}
+                      <tr data-peo-row><td><input class="form-control form-control-sm" data-peo-statement value="{{ peo.statement }}" aria-label="PEO statement"></td>{% for value in peo.values %}<td><select class="form-select form-select-sm" data-correlation aria-label="Correlation for {{ peo.statement }}"><option value=""{% if not value %} selected{% endif %}>Select</option><option value="-"{% if value == '-' %} selected{% endif %}>-</option><option value="1"{% if value == '1' %} selected{% endif %}>1 · Low</option><option value="2"{% if value == '2' %} selected{% endif %}>2 · Medium</option><option value="3"{% if value == '3' %} selected{% endif %}>3 · High</option></select></td>{% endfor %}</tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                  <div class="d-flex flex-wrap gap-2"><button class="btn btn-sm btn-outline-primary" type="button" data-add-peo>Add PEO row</button><button class="btn btn-sm btn-outline-primary" type="button" data-add-mission>Add mission column</button></div>
+                  <p class="small text-muted mt-2 mb-2">Enter correlation levels as Low (1), Medium (2), or High (3). Use “-” when there is no correlation.</p>
+                  <label class="form-label fw-semibold" for="peo-mapping-rationale">Justification and rationale for the mapping</label><textarea class="form-control mb-2" id="peo-mapping-rationale" data-mapping-rationale rows="3">{{ field.peo_matrix.rationale }}</textarea>
+                  <input type="hidden" id="{{ field.key }}" name="{{ field.key }}" value="{{ field.value }}" data-peo-matrix-value>
+                </div>
+                {% else %}<textarea class="form-control" id="{{ field.key }}" name="{{ field.key }}" rows="5" placeholder="Enter the response here. Include specific years, figures, decisions, and references where applicable.">{{ field.value }}</textarea>{% endif %}
+              </td></tr>
               {% else %}
               <tr><th scope="row" class="criterion-cell">{{ field.label }}<div class="field-help fw-normal mt-2">{{ field.help }}</div></th><td>{% if field.kind == 'textarea' %}<textarea class="form-control" id="{{ field.key }}" name="{{ field.key }}" rows="4">{{ field.value }}</textarea>{% else %}<input class="form-control" id="{{ field.key }}" name="{{ field.key }}" value="{{ field.value }}" placeholder="Enter the name, role, or office responsible">{% endif %}</td></tr>
               {% endif %}
@@ -80,4 +101,51 @@
   </form>
   <p class="meta-line mt-3 mb-0">Last updated {{ obj.updated_at }}{% if obj.submitted_by %} · Last saved by {{ obj.submitted_by }}{% endif %}</p>
 </main>
+<script>
+  (function () {
+    var matrix = document.querySelector('[data-peo-matrix]');
+    var form = document.querySelector('form[method="post"]');
+    if (!matrix || !form) return;
+    var body = matrix.querySelector('[data-peo-rows]');
+    var hidden = matrix.querySelector('[data-peo-matrix-value]');
+    function correlationSelect() {
+      var select = document.createElement('select');
+      select.className = 'form-select form-select-sm';
+      select.setAttribute('data-correlation', '');
+      select.setAttribute('aria-label', 'Correlation level');
+      [['', 'Select'], ['-', '-'], ['1', '1 · Low'], ['2', '2 · Medium'], ['3', '3 · High']].forEach(function (option) {
+        var item = document.createElement('option'); item.value = option[0]; item.textContent = option[1]; select.appendChild(item);
+      });
+      return select;
+    }
+    function addPeo() {
+      var row = document.createElement('tr'); row.setAttribute('data-peo-row', '');
+      var count = body.querySelectorAll('[data-peo-row]').length + 1;
+      var statementCell = row.insertCell(); var statement = document.createElement('input');
+      statement.className = 'form-control form-control-sm'; statement.value = 'PEO' + count; statement.setAttribute('data-peo-statement', ''); statementCell.appendChild(statement);
+      matrix.querySelectorAll('[data-mission]').forEach(function () { var cell = row.insertCell(); cell.appendChild(correlationSelect()); });
+      body.appendChild(row);
+    }
+    function addMission() {
+      var headerRow = matrix.querySelector('thead tr'); var missionCount = matrix.querySelectorAll('[data-mission]').length + 1;
+      var headerCell = document.createElement('th'); var heading = document.createElement('input');
+      heading.className = 'form-control form-control-sm'; heading.value = 'M' + missionCount; heading.setAttribute('data-mission', '');
+      heading.setAttribute('aria-label', 'Mission heading ' + missionCount); headerCell.appendChild(heading);
+      headerRow.appendChild(headerCell);
+      body.querySelectorAll('[data-peo-row]').forEach(function (row) { var cell = document.createElement('td'); cell.appendChild(correlationSelect()); row.appendChild(cell); });
+    }
+    matrix.querySelector('[data-add-peo]').addEventListener('click', addPeo);
+    matrix.querySelector('[data-add-mission]').addEventListener('click', addMission);
+    form.addEventListener('submit', function () {
+      var missions = Array.from(matrix.querySelectorAll('[data-mission]')).map(function (input) { return input.value; });
+      var peos = Array.from(body.querySelectorAll('[data-peo-row]')).map(function (row) {
+        return {
+          statement: row.querySelector('[data-peo-statement]').value,
+          values: Array.from(row.querySelectorAll('[data-correlation]')).map(function (input) { return input.value; })
+        };
+      });
+      hidden.value = JSON.stringify({missions: missions, peos: peos, rationale: matrix.querySelector('[data-mapping-rationale]').value});
+    });
+  })();
+</script>
 {% endblock %}

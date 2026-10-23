@@ -11561,6 +11561,23 @@ def nba_criterion_form(request, criterion_no):
         "help": "Describe the work completed, dates or assessment years, results, and who is responsible.",
         "value": answers.get(f"requirement_{index}", ""), "kind": "textarea",
     } for index, requirement in enumerate(criterion["requirements"], start=1))
+    if tier == "tier1" and criterion_no == 1:
+        matrix_key = "requirement_5"
+        try:
+            peo_matrix = json.loads(answers.get(matrix_key, ""))
+            if not isinstance(peo_matrix, dict) or not isinstance(peo_matrix.get("missions"), list) or not isinstance(peo_matrix.get("peos"), list):
+                raise ValueError("Invalid PEO matrix")
+        except (TypeError, ValueError):
+            peo_matrix = {
+                "missions": ["M1", "M2", "M3"],
+                "rationale": "",
+                "peos": [
+                    {"statement": "PEO1", "values": ["", "", ""]},
+                    {"statement": "PEO2", "values": ["", "", ""]},
+                    {"statement": "PEOn", "values": ["", "", ""]},
+                ],
+            }
+        fields[5]["peo_matrix"] = peo_matrix
     fields.extend([
         {"key": "evidence", "label": "Evidence and document references", "help": f"List file names, links, dates, page numbers, or repository locations. Suggested evidence: {criterion['evidence']}", "value": answers.get("evidence", ""), "kind": "textarea"},
         {"key": "owner", "label": "Responsible owner and evidence custodian", "help": f"Suggested accountable team: {criterion['owner']}. Add the named person or office.", "value": answers.get("owner", ""), "kind": "input"},
