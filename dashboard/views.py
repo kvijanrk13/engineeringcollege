@@ -11516,6 +11516,7 @@ def naac_login(request):
 
 
 def nba_criterion_form(request, criterion_no):
+    import copy
     import json
     from django.http import Http404
     from .models import NbaCriterionResponse
@@ -11529,6 +11530,8 @@ def nba_criterion_form(request, criterion_no):
     if criterion_no < 1 or criterion_no > len(criteria):
         raise Http404("Unknown NBA criterion")
     criterion = criteria[criterion_no - 1]
+    from .nba_annexure_tables import NBA_ANNEXURE_TABLES
+    annexure_tables = copy.deepcopy(NBA_ANNEXURE_TABLES.get(criterion_no, [])) if tier == "tier1" else []
     response_columns = {
         1: ["Program item / statement", "Details or value", "Justification / mapping", "Evidence reference"],
         2: ["Course / activity", "Implementation and participation", "POs / PSOs addressed", "Outcome and evidence"],
@@ -11552,6 +11555,8 @@ def nba_criterion_form(request, criterion_no):
             answers[key] = request.POST.get(key, "").strip()
         for key in ("summary", "evidence", "owner", "review_notes", "next_steps"):
             answers[key] = request.POST.get(key, "").strip()
+        for table in annexure_tables:
+            answers[table["key"]] = request.POST.get(table["key"], "").strip()
         obj.content = json.dumps(answers)
         obj.submitted_by = request.POST.get("username", "").strip()[:100]
         obj.save()
@@ -11560,6 +11565,15 @@ def nba_criterion_form(request, criterion_no):
         answers = json.loads(obj.content) if obj.content else {}
     except (TypeError, ValueError):
         answers = {"summary": obj.content}
+    for table in annexure_tables:
+        try:
+            saved_table = json.loads(answers.get(table["key"], ""))
+            rows = saved_table.get("rows") if isinstance(saved_table, dict) else None
+            if isinstance(rows, list) and all(isinstance(row, list) and len(row) == len(table["columns"]) for row in rows):
+                table["rows"] = rows or table["rows"]
+        except (TypeError, ValueError):
+            pass
+        table["saved_value"] = json.dumps({"rows": table["rows"]})
     fields = [
         {"key": "summary", "label": "What did the program do?", "help": criterion["focus"], "value": answers.get("summary", ""), "kind": "textarea"},
     ]
@@ -11609,6 +11623,7 @@ def nba_criterion_form(request, criterion_no):
     return render(request, "dashboard/nba_criterion_form.html", {
         "criterion_no": criterion_no, "role": role, "tier": tier, "criterion": criterion,
         "fields": fields, "obj": obj, "saved": request.GET.get("saved") == "1",
+        "annexure_tables": annexure_tables,
         "annexure_source": "dashboard/nba-manuals/annexure-ii-nba.pdf" if tier == "tier1" else None,
         "annexure_page_start": annexure_pages[criterion_no][0],
         "annexure_page_end": annexure_pages[criterion_no][1],

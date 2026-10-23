@@ -26,6 +26,12 @@
   .requirement-entry-table th { background: #edf4f9; vertical-align: middle; }
   .requirement-entry-table td { min-width: 210px; vertical-align: top; }
   .requirement-entry-table textarea { min-height: 82px; resize: vertical; }
+  .annexure-table-wrap { border: 1px solid #d8e2eb; border-radius: 12px; }
+  .annexure-table { min-width: 960px; margin-bottom: 0; }
+  .annexure-table caption { padding: 1rem; }
+  .annexure-table th { background: #edf4f9; color: #173b5d; vertical-align: middle; }
+  .annexure-table td { min-width: 150px; vertical-align: top; }
+  .annexure-table textarea { min-height: 76px; resize: vertical; }
 </style>
 {% endblock %}
 {% block content %}
@@ -55,9 +61,32 @@
     {% csrf_token %}
     <div class="card-body p-3 p-lg-4">
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <div><h2 class="h4 mb-1">Collaborative response sheet</h2><p class="text-muted mb-0">Enter responses in the table beside each NBA requirement. Prompts remain visible to all collaborators.</p></div>
+        <div><h2 class="h4 mb-1">Criterion {{ criterion_no }} data entry</h2><p class="text-muted mb-0">Complete the prescribed Annexure II tables, then add explanations and evidence references below.</p></div>
         <span class="badge rounded-pill text-bg-success">Shared · autosaved on Save</span>
       </div>
+      {% if annexure_tables %}
+      <section class="mb-5">
+        <h3 class="h5 mb-1">Prescribed Annexure II tables</h3>
+        <p class="text-muted">These editable tables follow the headings and row structure in the Annexure II pages shown above. Add rows where required.</p>
+        {% for table in annexure_tables %}
+        <div class="mb-4" data-annexure-table>
+          <div class="table-responsive annexure-table-wrap">
+            <table class="table table-bordered annexure-table align-middle">
+              <caption class="caption-top fw-semibold text-dark">{{ table.title }}</caption>
+              <thead><tr>{% for column in table.columns %}<th scope="col">{{ column }}</th>{% endfor %}</tr></thead>
+              <tbody data-annexure-rows>
+                {% for row in table.rows %}<tr data-annexure-row>{% for cell in row %}<td><textarea class="form-control" data-annexure-cell aria-label="Annexure table cell">{{ cell }}</textarea></td>{% endfor %}</tr>{% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <button class="btn btn-sm btn-outline-primary mt-2" type="button" data-add-annexure-row>Add row</button>
+          <input type="hidden" name="{{ table.key }}" value="{{ table.saved_value }}" data-annexure-value>
+        </div>
+        {% endfor %}
+      </section>
+      {% endif %}
+      <h3 class="h5 mb-1">Requirement notes and review</h3>
+      <p class="text-muted">Use this section for explanations, evidence references, review comments, and follow-up actions.</p>
       <div class="table-responsive response-table-wrap mb-4">
         <table class="table table-bordered response-table align-middle">
           <thead><tr><th scope="col" class="criterion-cell">NBA criterion / requirement</th><th scope="col" class="response-cell">Program response</th></tr></thead>
@@ -105,6 +134,7 @@
           </tbody>
         </table>
       </div>
+
       <section class="sheet-field p-3 p-lg-4 mb-3">
         <label class="form-label fw-bold" for="username">Saved by</label>
         <div class="field-help mb-2">Enter your name so collaborators can identify who last saved this sheet.</div>
@@ -181,6 +211,26 @@
       form.addEventListener('submit', function () {
         var tableRows = Array.from(rows.querySelectorAll('[data-entry-row]')).map(function (row) {
           return Array.from(row.querySelectorAll('[data-entry-cell]')).map(function (cell) { return cell.value; });
+        });
+        value.value = JSON.stringify({rows: tableRows});
+      });
+    });
+    document.querySelectorAll('[data-annexure-table]').forEach(function (table) {
+      var rows = table.querySelector('[data-annexure-rows]');
+      var value = table.querySelector('[data-annexure-value]');
+      var count = table.querySelectorAll('thead th').length;
+      table.querySelector('[data-add-annexure-row]').addEventListener('click', function () {
+        var row = document.createElement('tr'); row.setAttribute('data-annexure-row', '');
+        for (var i = 0; i < count; i++) {
+          var cell = document.createElement('td'); var input = document.createElement('textarea');
+          input.className = 'form-control'; input.setAttribute('data-annexure-cell', ''); input.rows = 3;
+          cell.appendChild(input); row.appendChild(cell);
+        }
+        rows.appendChild(row);
+      });
+      form.addEventListener('submit', function () {
+        var tableRows = Array.from(rows.querySelectorAll('[data-annexure-row]')).map(function (row) {
+          return Array.from(row.querySelectorAll('[data-annexure-cell]')).map(function (cell) { return cell.value; });
         });
         value.value = JSON.stringify({rows: tableRows});
       });
