@@ -22,6 +22,10 @@
   .nba-source-table { min-width: 820px; }
   .nba-source-table th { background: #edf4f9; vertical-align: middle; }
   .nba-source-table td { min-width: 110px; vertical-align: middle; }
+  .requirement-entry-table { min-width: 980px; }
+  .requirement-entry-table th { background: #edf4f9; vertical-align: middle; }
+  .requirement-entry-table td { min-width: 210px; vertical-align: top; }
+  .requirement-entry-table textarea { min-height: 82px; resize: vertical; }
 </style>
 {% endblock %}
 {% block content %}
@@ -79,6 +83,19 @@
                   <label class="form-label fw-semibold" for="peo-mapping-rationale">Justification and rationale for the mapping</label><textarea class="form-control mb-2" id="peo-mapping-rationale" data-mapping-rationale rows="3">{{ field.peo_matrix.rationale }}</textarea>
                   <input type="hidden" id="{{ field.key }}" name="{{ field.key }}" value="{{ field.value }}" data-peo-matrix-value>
                 </div>
+                {% elif field.table_columns %}
+                <div data-requirement-table>
+                  <div class="table-responsive">
+                    <table class="table table-bordered requirement-entry-table mb-2">
+                      <thead><tr>{% for column in field.table_columns %}<th scope="col">{{ column }}</th>{% endfor %}</tr></thead>
+                      <tbody data-entry-rows>
+                        {% for row in field.table_rows %}<tr data-entry-row>{% for cell in row %}<td><textarea class="form-control" data-entry-cell aria-label="Table response detail">{{ cell }}</textarea></td>{% endfor %}</tr>{% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                  <button class="btn btn-sm btn-outline-primary mb-2" type="button" data-add-entry-row>Add table row</button>
+                  <input type="hidden" id="{{ field.key }}" name="{{ field.key }}" value="{{ field.value }}" data-entry-value>
+                </div>
                 {% else %}<textarea class="form-control" id="{{ field.key }}" name="{{ field.key }}" rows="5" placeholder="Enter the response here. Include specific years, figures, decisions, and references where applicable.">{{ field.value }}</textarea>{% endif %}
               </td></tr>
               {% else %}
@@ -105,9 +122,9 @@
   (function () {
     var matrix = document.querySelector('[data-peo-matrix]');
     var form = document.querySelector('form[method="post"]');
-    if (!matrix || !form) return;
-    var body = matrix.querySelector('[data-peo-rows]');
-    var hidden = matrix.querySelector('[data-peo-matrix-value]');
+    if (!form) return;
+    var body = matrix ? matrix.querySelector('[data-peo-rows]') : null;
+    var hidden = matrix ? matrix.querySelector('[data-peo-matrix-value]') : null;
     function correlationSelect() {
       var select = document.createElement('select');
       select.className = 'form-select form-select-sm';
@@ -134,17 +151,39 @@
       headerRow.appendChild(headerCell);
       body.querySelectorAll('[data-peo-row]').forEach(function (row) { var cell = document.createElement('td'); cell.appendChild(correlationSelect()); row.appendChild(cell); });
     }
-    matrix.querySelector('[data-add-peo]').addEventListener('click', addPeo);
-    matrix.querySelector('[data-add-mission]').addEventListener('click', addMission);
-    form.addEventListener('submit', function () {
-      var missions = Array.from(matrix.querySelectorAll('[data-mission]')).map(function (input) { return input.value; });
-      var peos = Array.from(body.querySelectorAll('[data-peo-row]')).map(function (row) {
-        return {
-          statement: row.querySelector('[data-peo-statement]').value,
-          values: Array.from(row.querySelectorAll('[data-correlation]')).map(function (input) { return input.value; })
-        };
+    if (matrix) {
+      matrix.querySelector('[data-add-peo]').addEventListener('click', addPeo);
+      matrix.querySelector('[data-add-mission]').addEventListener('click', addMission);
+      form.addEventListener('submit', function () {
+        var missions = Array.from(matrix.querySelectorAll('[data-mission]')).map(function (input) { return input.value; });
+        var peos = Array.from(body.querySelectorAll('[data-peo-row]')).map(function (row) {
+          return {
+            statement: row.querySelector('[data-peo-statement]').value,
+            values: Array.from(row.querySelectorAll('[data-correlation]')).map(function (input) { return input.value; })
+          };
+        });
+        hidden.value = JSON.stringify({missions: missions, peos: peos, rationale: matrix.querySelector('[data-mapping-rationale]').value});
       });
-      hidden.value = JSON.stringify({missions: missions, peos: peos, rationale: matrix.querySelector('[data-mapping-rationale]').value});
+    }
+    document.querySelectorAll('[data-requirement-table]').forEach(function (table) {
+      var rows = table.querySelector('[data-entry-rows]');
+      var value = table.querySelector('[data-entry-value]');
+      var count = table.querySelectorAll('thead th').length;
+      table.querySelector('[data-add-entry-row]').addEventListener('click', function () {
+        var row = document.createElement('tr'); row.setAttribute('data-entry-row', '');
+        for (var i = 0; i < count; i++) {
+          var cell = document.createElement('td'); var input = document.createElement('textarea');
+          input.className = 'form-control'; input.setAttribute('data-entry-cell', ''); input.rows = 3;
+          cell.appendChild(input); row.appendChild(cell);
+        }
+        rows.appendChild(row);
+      });
+      form.addEventListener('submit', function () {
+        var tableRows = Array.from(rows.querySelectorAll('[data-entry-row]')).map(function (row) {
+          return Array.from(row.querySelectorAll('[data-entry-cell]')).map(function (cell) { return cell.value; });
+        });
+        value.value = JSON.stringify({rows: tableRows});
+      });
     });
   })();
 </script>
