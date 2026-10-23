@@ -11551,6 +11551,9 @@ def nba_criterion_form(request, criterion_no):
     fields.extend({
         "key": f"requirement_{index}",
         "label": f"Requirement {index}: {requirement}",
+        "prompt": requirement,
+        "number": index,
+        "is_requirement": True,
         "help": "Describe the work completed, dates or assessment years, results, and who is responsible.",
         "value": answers.get(f"requirement_{index}", ""), "kind": "textarea",
     } for index, requirement in enumerate(criterion["requirements"], start=1))
