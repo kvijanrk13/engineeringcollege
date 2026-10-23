@@ -11532,17 +11532,6 @@ def nba_criterion_form(request, criterion_no):
     criterion = criteria[criterion_no - 1]
     from .nba_annexure_tables import NBA_ANNEXURE_TABLES
     annexure_tables = copy.deepcopy(NBA_ANNEXURE_TABLES.get(criterion_no, [])) if tier == "tier1" else []
-    response_columns = {
-        1: ["Program item / statement", "Details or value", "Justification / mapping", "Evidence reference"],
-        2: ["Course / activity", "Implementation and participation", "POs / PSOs addressed", "Outcome and evidence"],
-        3: ["Course / assessment", "Assessment tool or rubric", "Target / attainment level", "Result and evidence"],
-        4: ["Academic year / cohort", "Student measure / data", "Calculation / result", "Evidence reference"],
-        5: ["Assessment year", "Faculty / qualification / workload", "Count or calculation", "Evidence reference"],
-        6: ["Assessment year", "Faculty contribution / output", "Outcome / impact", "Evidence reference"],
-        7: ["Laboratory / facility", "Equipment / technical support", "Use / maintenance / safety", "Evidence reference"],
-        8: ["Assessment year / indicator", "Gap / action taken", "Implementation / owner", "Improvement / evidence"],
-        9: ["Assessment year / service", "Activity / beneficiaries / resources", "Outcome / impact", "Evidence reference"],
-    }
     annexure_pages = {
         1: (10, 14), 2: (15, 15), 3: (16, 18), 4: (19, 29), 5: (30, 40),
         6: (41, 47), 7: (48, 49), 8: (50, 50), 9: (51, 56),
@@ -11593,10 +11582,9 @@ def nba_criterion_form(request, criterion_no):
             response_table = json.loads(field["value"])
             if not isinstance(response_table, dict) or not isinstance(response_table.get("rows"), list):
                 raise ValueError("Legacy response")
+            field["value"] = "\n".join(" | ".join(str(cell) for cell in row) for row in response_table["rows"] if isinstance(row, list))
         except (TypeError, ValueError):
-            response_table = {"rows": [[field["value"], "", "", ""]]}
-        field["table_columns"] = response_columns[criterion_no]
-        field["table_rows"] = response_table["rows"] or [["", "", "", ""]]
+            pass
     if tier == "tier1" and criterion_no == 1:
         matrix_key = "requirement_5"
         try:

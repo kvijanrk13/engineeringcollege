@@ -22,16 +22,14 @@
   .nba-source-table { min-width: 820px; }
   .nba-source-table th { background: #edf4f9; vertical-align: middle; }
   .nba-source-table td { min-width: 110px; vertical-align: middle; }
-  .requirement-entry-table { min-width: 980px; }
-  .requirement-entry-table th { background: #edf4f9; vertical-align: middle; }
-  .requirement-entry-table td { min-width: 210px; vertical-align: top; }
-  .requirement-entry-table textarea { min-height: 82px; resize: vertical; }
   .annexure-table-wrap { border: 1px solid #d8e2eb; border-radius: 12px; }
   .annexure-table { min-width: 960px; margin-bottom: 0; }
   .annexure-table caption { padding: 1rem; }
   .annexure-table th { background: #edf4f9; color: #173b5d; vertical-align: middle; }
   .annexure-table td { min-width: 150px; vertical-align: top; }
   .annexure-table textarea { min-height: 76px; resize: vertical; }
+  .annexure-table th[scope="row"] { min-width: 220px; }
+  .annexure-table th[scope="row"] textarea { font-weight: 600; background: #f7fafc; }
 </style>
 {% endblock %}
 {% block content %}
@@ -47,7 +45,8 @@
     <p class="mb-0">{{ criterion.focus }}</p>
   </div>
   {% if annexure_source %}
-  <section class="card border-0 shadow-sm mb-4">
+  <details class="card border-0 shadow-sm mb-4">
+    <summary class="card-header fw-semibold">View the official Annexure II pages for Criterion {{ criterion_no }}</summary>
     <div class="card-body">
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <div><h2 class="h5 mb-1">Official Annexure II format</h2><p class="text-muted mb-0">Source layout for Criterion {{ criterion_no }}: pages {{ annexure_page_start }}–{{ annexure_page_end }}. The PDF begins at the relevant page; scroll within it to view the criterion tables.</p></div>
@@ -55,13 +54,13 @@
       </div>
       <div class="annexure-viewer"><iframe src="{% static annexure_source %}#page={{ annexure_page_start }}&zoom=page" title="NBA Annexure II, Criterion {{ criterion_no }}, pages {{ annexure_page_start }} to {{ annexure_page_end }}"></iframe></div>
     </div>
-  </section>
+  </details>
   {% endif %}
   <form method="post" class="card border-0 shadow-sm">
     {% csrf_token %}
     <div class="card-body p-3 p-lg-4">
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <div><h2 class="h4 mb-1">Criterion {{ criterion_no }} data entry</h2><p class="text-muted mb-0">Complete the prescribed Annexure II tables, then add explanations and evidence references below.</p></div>
+        <div><h2 class="h4 mb-1">Criterion {{ criterion_no }} data entry</h2><p class="text-muted mb-0">Complete the prescribed Annexure II tables above, then add supporting explanations and evidence references below.</p></div>
         <span class="badge rounded-pill text-bg-success">Shared · autosaved on Save</span>
       </div>
       {% if annexure_tables %}
@@ -73,9 +72,12 @@
           <div class="table-responsive annexure-table-wrap">
             <table class="table table-bordered annexure-table align-middle">
               <caption class="caption-top fw-semibold text-dark">{{ table.title }}</caption>
-              <thead><tr>{% for column in table.columns %}<th scope="col">{{ column }}</th>{% endfor %}</tr></thead>
+              <thead>
+                {% if table.header_groups %}<tr>{% for group in table.header_groups %}<th scope="colgroup" colspan="{{ group.span }}">{{ group.label }}</th>{% endfor %}</tr>{% endif %}
+                <tr>{% for column in table.columns %}<th scope="col">{{ column }}</th>{% endfor %}</tr>
+              </thead>
               <tbody data-annexure-rows>
-                {% for row in table.rows %}<tr data-annexure-row>{% for cell in row %}<td><textarea class="form-control" data-annexure-cell aria-label="Annexure table cell">{{ cell }}</textarea></td>{% endfor %}</tr>{% endfor %}
+                {% for row in table.rows %}<tr data-annexure-row>{% for cell in row %}{% if forloop.first %}<th scope="row"><textarea class="form-control" data-annexure-cell aria-label="Annexure row label">{{ cell }}</textarea></th>{% else %}<td><textarea class="form-control" data-annexure-cell aria-label="Annexure table cell">{{ cell }}</textarea></td>{% endif %}{% endfor %}</tr>{% endfor %}
               </tbody>
             </table>
           </div>
@@ -111,19 +113,6 @@
                   <p class="small text-muted mt-2 mb-2">Enter correlation levels as Low (1), Medium (2), or High (3). Use “-” when there is no correlation.</p>
                   <label class="form-label fw-semibold" for="peo-mapping-rationale">Justification and rationale for the mapping</label><textarea class="form-control mb-2" id="peo-mapping-rationale" data-mapping-rationale rows="3">{{ field.peo_matrix.rationale }}</textarea>
                   <input type="hidden" id="{{ field.key }}" name="{{ field.key }}" value="{{ field.value }}" data-peo-matrix-value>
-                </div>
-                {% elif field.table_columns %}
-                <div data-requirement-table>
-                  <div class="table-responsive">
-                    <table class="table table-bordered requirement-entry-table mb-2">
-                      <thead><tr>{% for column in field.table_columns %}<th scope="col">{{ column }}</th>{% endfor %}</tr></thead>
-                      <tbody data-entry-rows>
-                        {% for row in field.table_rows %}<tr data-entry-row>{% for cell in row %}<td><textarea class="form-control" data-entry-cell aria-label="Table response detail">{{ cell }}</textarea></td>{% endfor %}</tr>{% endfor %}
-                      </tbody>
-                    </table>
-                  </div>
-                  <button class="btn btn-sm btn-outline-primary mb-2" type="button" data-add-entry-row>Add table row</button>
-                  <input type="hidden" id="{{ field.key }}" name="{{ field.key }}" value="{{ field.value }}" data-entry-value>
                 </div>
                 {% else %}<textarea class="form-control" id="{{ field.key }}" name="{{ field.key }}" rows="5" placeholder="Enter the response here. Include specific years, figures, decisions, and references where applicable.">{{ field.value }}</textarea>{% endif %}
               </td></tr>
@@ -195,26 +184,6 @@
         hidden.value = JSON.stringify({missions: missions, peos: peos, rationale: matrix.querySelector('[data-mapping-rationale]').value});
       });
     }
-    document.querySelectorAll('[data-requirement-table]').forEach(function (table) {
-      var rows = table.querySelector('[data-entry-rows]');
-      var value = table.querySelector('[data-entry-value]');
-      var count = table.querySelectorAll('thead th').length;
-      table.querySelector('[data-add-entry-row]').addEventListener('click', function () {
-        var row = document.createElement('tr'); row.setAttribute('data-entry-row', '');
-        for (var i = 0; i < count; i++) {
-          var cell = document.createElement('td'); var input = document.createElement('textarea');
-          input.className = 'form-control'; input.setAttribute('data-entry-cell', ''); input.rows = 3;
-          cell.appendChild(input); row.appendChild(cell);
-        }
-        rows.appendChild(row);
-      });
-      form.addEventListener('submit', function () {
-        var tableRows = Array.from(rows.querySelectorAll('[data-entry-row]')).map(function (row) {
-          return Array.from(row.querySelectorAll('[data-entry-cell]')).map(function (cell) { return cell.value; });
-        });
-        value.value = JSON.stringify({rows: tableRows});
-      });
-    });
     document.querySelectorAll('[data-annexure-table]').forEach(function (table) {
       var rows = table.querySelector('[data-annexure-rows]');
       var value = table.querySelector('[data-annexure-value]');
@@ -222,7 +191,8 @@
       table.querySelector('[data-add-annexure-row]').addEventListener('click', function () {
         var row = document.createElement('tr'); row.setAttribute('data-annexure-row', '');
         for (var i = 0; i < count; i++) {
-          var cell = document.createElement('td'); var input = document.createElement('textarea');
+          var cell = document.createElement(i === 0 ? 'th' : 'td'); if (i === 0) cell.setAttribute('scope', 'row');
+          var input = document.createElement('textarea');
           input.className = 'form-control'; input.setAttribute('data-annexure-cell', ''); input.rows = 3;
           cell.appendChild(input); row.appendChild(cell);
         }
