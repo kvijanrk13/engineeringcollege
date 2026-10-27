@@ -91,6 +91,60 @@
     .mentoring-page .badge {
         font-size: 0.85rem;
     }
+    .mentoring-page .form-control {
+        border-radius: 8px;
+        border: 1px solid rgba(15, 76, 129, 0.18);
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .mentoring-page .form-control:focus {
+        border-color: #0f4c81;
+        box-shadow: 0 0 0 0.2rem rgba(15, 76, 129, 0.15);
+        outline: none;
+    }
+    .mentoring-page select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 6l3 3 3-3'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px 16px;
+    }
+    .mentoring-page input[type="date"].form-control,
+    .mentoring-page input[type="email"].form-control {
+        padding: 0.5rem 0.75rem;
+    }
+    .mentoring-page textarea.form-control {
+        min-height: 70px;
+        resize: vertical;
+    }
+    .mentoring-page .yesno {
+        display: inline-flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    .mentoring-page .yesno label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-weight: 600;
+        color: #163149;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+    .mentoring-page .save-notice {
+        background: #e7f4ff;
+        border: 1px solid #0f4c81;
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        color: #0f4c81;
+    }
+    .mentoring-page .save-notice i {
+        margin-right: 0.5rem;
+    }
 </style>
 {% endblock %}
 
@@ -103,9 +157,26 @@
                 <i class="fas fa-user-tag me-1"></i> Mentoring Diary
             </span>
             <h1>B.Tech Mentoring Tab</h1>
-            <p>Department of Computer Science and Engineering &middot; Mentoring Diary (mentorship_file_b.tech)</p>
+            <p>Department of Computer Science and Engineering &middot; Fill in your mentoring details (mentorship_file_b.tech)</p>
         </div>
     </section>
+
+    {% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="save-notice">
+        <i class="fas fa-info-circle me-1"></i>
+        Fill in the fields below and click <strong>Save Mentoring Details</strong> to store your records.
+    </div>
 
     <div class="actions-bar">
         <a href="{% url 'dashboard:students_data' %}" class="btn btn-outline-secondary">
@@ -113,375 +184,274 @@
         </a>
     </div>
 
-    <!-- BATCH -->
-    <div class="mentoring-section">
-        <h6 class="section-title">Batch</h6>
-        <table>
-            <tr><td class="sub-label" style="width:20%">Batch</td><td></td></tr>
-        </table>
-    </div>
+    <form method="POST" action="{% url 'dashboard:mentoring_tab' %}">
+        {% csrf_token %}
 
-    <!-- STUDENT INFORMATION SHEET -->
-    <div class="mentoring-section">
-        <h6 class="section-title">Student Information Sheet</h6>
-        <table>
-            <tr>
-                <th colspan="2">Batch</th>
-                <th colspan="2">Admission Year</th>
-            </tr>
-            <tr>
-                <td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-                <td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-                <th colspan="4">Name of the Father</th>
-            </tr>
-            <tr>
-                <td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-                <th colspan="4">Name of the Mother</th>
-            </tr>
-            <tr>
-                <td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-                <th colspan="2">Full Address with Pincode</th>
-                <th colspan="2">Permanent Address</th>
-            </tr>
-            <tr>
-                <td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-                <td colspan="2"></td><td colspan="2">Communication Address</td>
-            </tr>
-            <tr>
-                <td></td><td></td><td></td><td></td>
-            </tr>
-        </table>
-    </div>
+        <!-- BATCH -->
+        <div class="mentoring-section">
+            <h6 class="section-title">Batch &amp; Admission</h6>
+            <table>
+                <tr>
+                    <th>Batch</th>
+                    <td><input type="text" name="batch" class="form-control" value="{{ mentoring.batch|default:'' }}"></td>
+                    <th>Admission Year</th>
+                    <td><input type="text" name="admission_year" class="form-control" value="{{ mentoring.admission_year|default:'' }}"></td>
+                </tr>
+            </table>
+        </div>
 
-    <!-- GENDER / BLOOD GROUP / ALLERGIES -->
-    <div class="mentoring-section">
-        <h6 class="section-title">Personal Details</h6>
-        <table>
-            <tr>
-                <th>Gender</th>
-                <th>Blood Group</th>
-                <th>Allergies, If any</th>
-            </tr>
-            <tr>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-            </tr>
-        </table>
-    </div>
+        <!-- STUDENT INFORMATION SHEET -->
+        <div class="mentoring-section">
+            <h6 class="section-title">Student Information Sheet</h6>
+            <table>
+                <tr>
+                    <th>Name of the Father</th>
+                    <td colspan="3"><input type="text" name="father_name" class="form-control" value="{{ mentoring.father_name|default:'' }}"></td>
+                </tr>
+                <tr>
+                    <th>Name of the Mother</th>
+                    <td colspan="3"><input type="text" name="mother_name" class="form-control" value="{{ mentoring.mother_name|default:'' }}"></td>
+                </tr>
+                <tr>
+                    <th>Full Address with Pincode</th>
+                    <td colspan="3"><textarea name="address" class="form-control" rows="2">{{ mentoring.address|default:'' }}</textarea></td>
+                </tr>
+                <tr>
+                    <th>Permanent Address</th>
+                    <td colspan="3"><textarea name="permanent_address" class="form-control" rows="2">{{ mentoring.permanent_address|default:'' }}</textarea></td>
+                </tr>
+                <tr>
+                    <th>Communication Address</th>
+                    <td colspan="3"><textarea name="communication_address" class="form-control" rows="2">{{ mentoring.communication_address|default:'' }}</textarea></td>
+                </tr>
+            </table>
+        </div>
 
-    <!-- MOBILE / EMAIL -->
-    <div class="mentoring-section">
-        <h6 class="section-title">Contact Details</h6>
-        <table>
-            <tr>
-                <th></th>
-                <th>Mobile No.</th>
-                <th>Email ID</th>
-            </tr>
-            <tr>
-                <td><strong>Student</strong></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-            </tr>
-            <tr>
-                <td><strong>Parent</strong></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-            </tr>
-        </table>
-    </div>
+        <!-- PERSONAL DETAILS -->
+        <div class="mentoring-section">
+            <h6 class="section-title">Personal Details</h6>
+            <table>
+                <tr>
+                    <th>Gender</th>
+                    <td><input type="text" name="gender" class="form-control" value="{{ mentoring.gender|default:'' }}"></td>
+                    <th>Blood Group</th>
+                    <td><input type="text" name="blood_group" class="form-control" value="{{ mentoring.blood_group|default:'' }}"></td>
+                </tr>
+                <tr>
+                    <th>Allergies, If any</th>
+                    <td colspan="3"><input type="text" name="allergies" class="form-control" value="{{ mentoring.allergies|default:'' }}"></td>
+                </tr>
+            </table>
+        </div>
 
-    <!-- SCHOOL / COLLEGE DETAILS -->
-    <div class="mentoring-section">
-        <h6 class="section-title">Educational Background</h6>
-        <table>
-            <tr>
-                <th></th>
-                <th>Name of School / College</th>
-                <th>Place</th>
-                <th>Board</th>
-                <th>Percentage / CGPA</th>
-            </tr>
-            <tr>
-                <td><strong>SSC / 10th</strong></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-            </tr>
-            <tr>
-                <td><strong>Inter / 10+2</strong></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-            </tr>
-        </table>
-    </div>
+        <!-- CONTACT DETAILS -->
+        <div class="mentoring-section">
+            <h6 class="section-title">Contact Details</h6>
+            <table>
+                <tr>
+                    <th>Student Mobile No.</th>
+                    <td><input type="text" name="student_mobile" class="form-control" value="{{ mentoring.student_mobile|default:'' }}"></td>
+                    <th>Parent Mobile No.</th>
+                    <td><input type="text" name="parent_mobile" class="form-control" value="{{ mentoring.parent_mobile|default:'' }}"></td>
+                </tr>
+                <tr>
+                    <th>Student Email ID</th>
+                    <td><input type="email" name="student_email" class="form-control" value="{{ mentoring.student_email|default:'' }}"></td>
+                    <th>Parent Email ID</th>
+                    <td><input type="email" name="parent_email" class="form-control" value="{{ mentoring.parent_email|default:'' }}"></td>
+                </tr>
+            </table>
+        </div>
 
-    <!-- SEMESTER SGPA / CGPA -->
-    <div class="mentoring-section">
-        <h6 class="section-title">Semester-wise SGPA / CGPA</h6>
-        <table>
-            <tr>
-                <th></th>
-                <th>Semester I</th>
-                <th>Semester II</th>
-                <th>Semester III</th>
-                <th>Semester IV</th>
-                <th>Semester V</th>
-                <th>Semester VI</th>
-                <th>Semester VII</th>
-                <th>Semester VIII</th>
-            </tr>
-            <tr>
-                <td><strong>SGPA</strong></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-            </tr>
-            <tr>
-                <td><strong>CGPA</strong></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-            </tr>
-        </table>
-    </div>
+        <!-- EDUCATIONAL BACKGROUND -->
+        <div class="mentoring-section">
+            <h6 class="section-title">Educational Background</h6>
+            <table>
+                <tr>
+                    <th></th>
+                    <th>Name of School / College</th>
+                    <th>Place</th>
+                    <th>Board</th>
+                    <th>Percentage / CGPA</th>
+                </tr>
+                <tr>
+                    <td><strong>SSC / 10th</strong></td>
+                    <td><input type="text" name="ssc_school_name" class="form-control" value="{{ mentoring.ssc_school_name|default:'' }}"></td>
+                    <td><input type="text" name="ssc_place" class="form-control" value="{{ mentoring.ssc_place|default:'' }}"></td>
+                    <td><input type="text" name="ssc_board" class="form-control" value="{{ mentoring.ssc_board|default:'' }}"></td>
+                    <td><input type="text" name="ssc_percentage" class="form-control" value="{{ mentoring.ssc_percentage|default:'' }}"></td>
+                </tr>
+                <tr>
+                    <td><strong>Inter / 10+2</strong></td>
+                    <td><input type="text" name="inter_college_name" class="form-control" value="{{ mentoring.inter_college_name|default:'' }}"></td>
+                    <td><input type="text" name="inter_place" class="form-control" value="{{ mentoring.inter_place|default:'' }}"></td>
+                    <td><input type="text" name="inter_board" class="form-control" value="{{ mentoring.inter_board|default:'' }}"></td>
+                    <td><input type="text" name="inter_percentage" class="form-control" value="{{ mentoring.inter_percentage|default:'' }}"></td>
+                </tr>
+            </table>
+        </div>
 
-    <!-- I B.Tech FIRST SEMESTER MENTORING -->
-    <div class="mentoring-section">
-        <h6 class="section-title">I B.Tech &mdash; First Semester</h6>
-        <table>
-            <tr>
-                <th colspan="4">Academic Year: I B.Tech. First Semester</th>
-                <th colspan="4">Academic Year: I B.Tech. First Semester</th>
-            </tr>
-            <tr>
-                <th colspan="4">Name of the Mentor</th>
-                <th colspan="4">Designation</th>
-            </tr>
-            <tr>
-                <td></td><td></td><td></td><td></td>
-                <td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-                <td colspan="4">Semester Starting Date</td>
-                <td colspan="4">Semester Ending Date</td>
-            </tr>
-            <tr>
-                <td></td><td></td><td></td><td></td>
-                <td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-                <td colspan="4">Are you Hosteller? &nbsp;<span class="badge bg-light text-dark">Yes / No</span></td>
-                <td colspan="4">Travelling in College Bus? &nbsp;<span class="badge bg-light text-dark">Yes / No</span></td>
-            </tr>
-            <tr>
-                <td></td><td></td><td></td><td></td>
-                <td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-                <th colspan="4">Reasons for Joining ANRK</th>
-                <th colspan="4">Ambition(s)</th>
-            </tr>
-            <tr>
-                <td></td><td></td><td></td><td></td>
-                <td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-                <th colspan="2">Strengths</th>
-                <th colspan="2">Weaknesses</th>
-                <th colspan="2">Weaknesses</th>
-                <th colspan="2">Areas Where Support is Required</th>
-            </tr>
-            <tr>
-                <td></td><td></td><td></td><td></td>
-                <td></td><td></td><td></td><td></td>
-            </tr>
-        </table>
-    </div>
+        <!-- SEMESTER SGPA / CGPA -->
+        <div class="mentoring-section">
+            <h6 class="section-title">Semester-wise SGPA / CGPA</h6>
+            <table>
+                <tr>
+                    <th></th>
+                    <th>Sem I</th><th>Sem II</th><th>Sem III</th><th>Sem IV</th><th>Sem V</th><th>Sem VI</th><th>Sem VII</th><th>Sem VIII</th>
+                </tr>
+                <tr>
+                    <td><strong>SGPA</strong></td>
+                    <td><input type="text" name="sgpa_sem1" class="form-control" value="{{ mentoring.sgpa_sem1|default:'' }}"></td>
+                    <td><input type="text" name="sgpa_sem2" class="form-control" value="{{ mentoring.sgpa_sem2|default:'' }}"></td>
+                    <td><input type="text" name="sgpa_sem3" class="form-control" value="{{ mentoring.sgpa_sem3|default:'' }}"></td>
+                    <td><input type="text" name="sgpa_sem4" class="form-control" value="{{ mentoring.sgpa_sem4|default:'' }}"></td>
+                    <td><input type="text" name="sgpa_sem5" class="form-control" value="{{ mentoring.sgpa_sem5|default:'' }}"></td>
+                    <td><input type="text" name="sgpa_sem6" class="form-control" value="{{ mentoring.sgpa_sem6|default:'' }}"></td>
+                    <td><input type="text" name="sgpa_sem7" class="form-control" value="{{ mentoring.sgpa_sem7|default:'' }}"></td>
+                    <td><input type="text" name="sgpa_sem8" class="form-control" value="{{ mentoring.sgpa_sem8|default:'' }}"></td>
+                </tr>
+                <tr>
+                    <td><strong>CGPA</strong></td>
+                    <td><input type="text" name="cgpa_sem1" class="form-control" value="{{ mentoring.cgpa_sem1|default:'' }}"></td>
+                    <td><input type="text" name="cgpa_sem2" class="form-control" value="{{ mentoring.cgpa_sem2|default:'' }}"></td>
+                    <td><input type="text" name="cgpa_sem3" class="form-control" value="{{ mentoring.cgpa_sem3|default:'' }}"></td>
+                    <td><input type="text" name="cgpa_sem4" class="form-control" value="{{ mentoring.cgpa_sem4|default:'' }}"></td>
+                    <td><input type="text" name="cgpa_sem5" class="form-control" value="{{ mentoring.cgpa_sem5|default:'' }}"></td>
+                    <td><input type="text" name="cgpa_sem6" class="form-control" value="{{ mentoring.cgpa_sem6|default:'' }}"></td>
+                    <td><input type="text" name="cgpa_sem7" class="form-control" value="{{ mentoring.cgpa_sem7|default:'' }}"></td>
+                    <td><input type="text" name="cgpa_sem8" class="form-control" value="{{ mentoring.cgpa_sem8|default:'' }}"></td>
+                </tr>
+            </table>
+        </div>
 
-    <!-- FIRST SEMESTER SLOTS -->
-    <div class="mentoring-section">
-        <h6 class="section-title">First Semester &mdash; Mentoring Slots</h6>
-        <table>
-            <tr>
-                <th>Slot</th>
-                <th>Observations by mentor</th>
-                <th>Suggestions given by mentor</th>
-                <th>Is there any progress observed?</th>
-            </tr>
-            <tr>
-                <td><strong>1</strong></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-            </tr>
-            <tr>
-                <td><strong>2</strong></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-            </tr>
-        </table>
-    </div>
+        <!-- I B.Tech FIRST SEMESTER MENTORING -->
+        <div class="mentoring-section">
+            <h6 class="section-title">I B.Tech &mdash; First Semester</h6>
+            <table>
+                <tr>
+                    <th>Academic Year</th>
+                    <td colspan="3"><input type="text" name="academic_year" class="form-control" value="{{ mentoring.academic_year|default:'I B.Tech. First Semester' }}"></td>
+                </tr>
+                <tr>
+                    <th>Semester</th>
+                    <td colspan="3"><input type="text" name="semester" class="form-control" value="{{ mentoring.semester|default:'First Semester' }}"></td>
+                </tr>
+                <tr>
+                    <th>Name of the Mentor</th>
+                    <td colspan="3"><input type="text" name="mentor_name" class="form-control" value="{{ mentoring.mentor_name|default:'' }}"></td>
+                </tr>
+                <tr>
+                    <th>Designation</th>
+                    <td colspan="3"><input type="text" name="designation" class="form-control" value="{{ mentoring.designation|default:'' }}"></td>
+                </tr>
+                <tr>
+                    <th>Semester Starting Date</th>
+                    <td><input type="date" name="semester_start_date" class="form-control" value="{{ mentoring.semester_start_date|date:'Y-m-d' if mentoring.semester_start_date else '' }}"></td>
+                    <th>Semester Ending Date</th>
+                    <td><input type="date" name="semester_end_date" class="form-control" value="{{ mentoring.semester_end_date|date:'Y-m-d' if mentoring.semester_end_date else '' }}"></td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <div class="yesno">
+                            <input type="radio" name="is_hosteller" id="hosteller_yes" value="Yes" {% if mentoring.is_hosteller == 'Yes' %}checked{% endif %}>
+                            <label for="hosteller_yes">Hosteller</label>
+                            <input type="radio" name="is_hosteller" id="hosteller_no" value="No" {% if mentoring.is_hosteller == 'No' %}checked{% endif %}>
+                            <label for="hosteller_no">Day Scholar</label>
+                        </div>
+                    </td>
+                    <td colspan="2">
+                        <div class="yesno">
+                            <input type="radio" name="college_bus" id="bus_yes" value="Yes" {% if mentoring.college_bus == 'Yes' %}checked{% endif %}>
+                            <label for="bus_yes">College Bus</label>
+                            <input type="radio" name="college_bus" id="bus_no" value="No" {% if mentoring.college_bus == 'No' %}checked{% endif %}>
+                            <label for="bus_no">No Bus</label>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Reasons for Joining ANRK</th>
+                    <td colspan="3"><textarea name="reasons_for_joining" class="form-control" rows="2">{{ mentoring.reasons_for_joining|default:'' }}</textarea></td>
+                </tr>
+                <tr>
+                    <th>Ambition(s)</th>
+                    <td colspan="3"><textarea name="ambitions" class="form-control" rows="2">{{ mentoring.ambitions|default:'' }}</textarea></td>
+                </tr>
+                <tr>
+                    <th>Strengths</th>
+                    <td><textarea name="strengths" class="form-control" rows="2">{{ mentoring.strengths|default:'' }}</textarea></td>
+                    <th>Weaknesses</th>
+                    <td><textarea name="weaknesses" class="form-control" rows="2">{{ mentoring.weaknesses|default:'' }}</textarea></td>
+                </tr>
+                <tr>
+                    <th>Areas Where Support is Required</th>
+                    <td colspan="3"><textarea name="support_required" class="form-control" rows="2">{{ mentoring.support_required|default:'' }}</textarea></td>
+                </tr>
+            </table>
+        </div>
 
-    <!-- FIRST SEMESTER SIGN-OFF -->
-    <div class="mentoring-section">
-        <h6 class="section-title">First Semester &mdash; Sign-off</h6>
-        <table>
-            <tr>
-                <th>Date of Mentoring</th>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-            </tr>
-            <tr>
-                <th>Mentee Sign</th>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-            </tr>
-            <tr>
-                <th>Mentor Sign</th>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-            </tr>
-            <tr>
-                <th colspan="4">Signature of AC &nbsp;&nbsp;|&nbsp;&nbsp; Signature of HOD</th>
-            </tr>
-            <tr>
-                <td></td><td></td><td></td><td></td>
-            </tr>
-        </table>
-    </div>
+        <!-- FIRST SEMESTER SLOTS -->
+        <div class="mentoring-section">
+            <h6 class="section-title">First Semester &mdash; Mentoring Slots</h6>
+            <table>
+                <tr>
+                    <th>Slot</th>
+                    <th>Observations by mentor</th>
+                    <th>Suggestions given by mentor</th>
+                    <th>Is there any progress observed?</th>
+                </tr>
+                <tr>
+                    <td><strong>1</strong></td>
+                    <td><textarea name="slot1_observations" class="form-control" rows="2">{{ mentoring.slot1_observations|default:'' }}</textarea></td>
+                    <td><textarea name="slot1_suggestions" class="form-control" rows="2">{{ mentoring.slot1_suggestions|default:'' }}</textarea></td>
+                    <td><input type="text" name="slot1_progress" class="form-control" value="{{ mentoring.slot1_progress|default:'' }}"></td>
+                </tr>
+                <tr>
+                    <td><strong>2</strong></td>
+                    <td><textarea name="slot2_observations" class="form-control" rows="2">{{ mentoring.slot2_observations|default:'' }}</textarea></td>
+                    <td><textarea name="slot2_suggestions" class="form-control" rows="2">{{ mentoring.slot2_suggestions|default:'' }}</textarea></td>
+                    <td><input type="text" name="slot2_progress" class="form-control" value="{{ mentoring.slot2_progress|default:'' }}"></td>
+                </tr>
+            </table>
+        </div>
 
-    <!-- I B.Tech SECOND SEMESTER MENTORING -->
-    <div class="mentoring-section">
-        <h6 class="section-title">I B.Tech &mdash; Second Semester</h6>
-        <table>
-            <tr>
-                <th colspan="4">Academic Year: I B.Tech. Second Semester</th>
-                <th colspan="4">Academic Year: I B.Tech. Second Semester</th>
-            </tr>
-            <tr>
-                <th colspan="4">Name of the Mentor</th>
-                <th colspan="4">Designation</th>
-            </tr>
-            <tr>
-                <td></td><td></td><td></td><td></td>
-                <td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-                <td colspan="4">Date of Semester Starting</td>
-                <td colspan="4">Date of Semester Ending</td>
-            </tr>
-            <tr>
-                <td></td><td></td><td></td><td></td>
-                <td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-                <td colspan="4">Are you Hosteller? &nbsp;<span class="badge bg-light text-dark">Yes / No</span></td>
-                <td colspan="4">Travelling in College Bus? &nbsp;<span class="badge bg-light text-dark">Yes / No</span></td>
-            </tr>
-            <tr>
-                <td></td><td></td><td></td><td></td>
-                <td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-                <td colspan="4">Any Backlogs in previous Semester? &nbsp;<span class="badge bg-light text-dark">Yes / No</span></td>
-                <td colspan="4">If Yes, Name(s) of the Backlog Courses</td>
-            </tr>
-            <tr>
-                <td></td><td></td><td></td><td></td>
-                <td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-                <td colspan="4">Area(s) where support is required</td>
-                <td colspan="4"></td>
-            </tr>
-            <tr>
-                <td></td><td></td><td></td><td></td>
-                <td></td><td></td><td></td><td></td>
-            </tr>
-        </table>
-    </div>
+        <!-- FIRST SEMESTER SIGN-OFF -->
+        <div class="mentoring-section">
+            <h6 class="section-title">First Semester &mdash; Sign-off</h6>
+            <table>
+                <tr>
+                    <th>Date of Mentoring</th>
+                    <td><input type="date" name="date_of_mentoring" class="form-control" value="{{ mentoring.date_of_mentoring|date:'Y-m-d' if mentoring.date_of_mentoring else '' }}"></td>
+                    <td colspan="2"></td>
+                </tr>
+                <tr>
+                    <th>Mentee Sign</th>
+                    <td><input type="text" name="mentee_sign" class="form-control" value="{{ mentoring.mentee_sign|default:'' }}"></td>
+                    <td colspan="2"></td>
+                </tr>
+                <tr>
+                    <th>Mentor Sign</th>
+                    <td><input type="text" name="mentor_sign" class="form-control" value="{{ mentoring.mentor_sign|default:'' }}"></td>
+                    <td colspan="2"></td>
+                </tr>
+                <tr>
+                    <th>Signature of AC</th>
+                    <td><input type="text" name="signature_ac" class="form-control" value="{{ mentoring.signature_ac|default:'' }}"></td>
+                    <th>Signature of HOD</th>
+                    <td><input type="text" name="signature_hod" class="form-control" value="{{ mentoring.signature_hod|default:'' }}"></td>
+                </tr>
+            </table>
+        </div>
 
-    <!-- SECOND SEMESTER SLOTS -->
-    <div class="mentoring-section">
-        <h6 class="section-title">Second Semester &mdash; Mentoring Slots</h6>
-        <table>
-            <tr>
-                <th>Slot</th>
-                <th>Observations by Mentor</th>
-                <th>Suggestions given by mentor</th>
-                <th>Is there any progress observed?</th>
-            </tr>
-            <tr>
-                <td><strong>1</strong></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-            </tr>
-            <tr>
-                <td><strong>2</strong></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-            </tr>
-        </table>
-    </div>
+        <div class="actions-bar" style="margin-top: 1rem;">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-1"></i> Save Mentoring Details
+            </button>
+            <a href="{% url 'dashboard:students_data' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Students
+            </a>
+        </div>
 
-    <!-- SECOND SEMESTER SIGN-OFF -->
-    <div class="mentoring-section">
-        <h6 class="section-title">Second Semester &mdash; Sign-off</h6>
-        <table>
-            <tr>
-                <th>Date of Mentoring</th>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-            </tr>
-            <tr>
-                <th>Mentee Sign</th>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-            </tr>
-            <tr>
-                <th>Mentor Sign</th>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-            </tr>
-            <tr>
-                <th colspan="3">Signature of AC &nbsp;&nbsp;|&nbsp;&nbsp; Signature of HOD</th>
-            </tr>
-            <tr>
-                <td></td><td></td><td></td>
-            </tr>
-        </table>
-    </div>
+    </form>
 
     </div>
 </div>

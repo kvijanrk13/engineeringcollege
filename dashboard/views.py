@@ -7515,8 +7515,92 @@ def students_data(request):
 def mentoring_tab(request):
     if not request.session.get('student_logged_in') and not request.user.is_authenticated:
         return redirect('dashboard:student_login')
+    student = None
+    try:
+        student = get_session_student_record(request)
+    except Exception as e:
+        logger.error(f"Error getting student data: {e}")
+    mentoring = None
+    if student and hasattr(student, 'id'):
+        mentoring = StudentMentoring.objects.filter(student=student).order_by('-created_at').first()
+    if request.method == 'POST':
+        if not (student and hasattr(student, 'id')):
+            messages.error(request, "Student record not found.")
+            return redirect('dashboard:mentoring_tab')
+        mentoring = StudentMentoring.objects.filter(student=student).order_by('-created_at').first()
+        if not mentoring:
+            mentoring = StudentMentoring(student=student)
+        mentoring.academic_year = request.POST.get('academic_year', '')
+        mentoring.semester = request.POST.get('semester', '')
+        mentoring.batch = request.POST.get('batch', '')
+        mentoring.admission_year = request.POST.get('admission_year', '')
+        mentoring.father_name = request.POST.get('father_name', '')
+        mentoring.mother_name = request.POST.get('mother_name', '')
+        mentoring.address = request.POST.get('address', '')
+        mentoring.permanent_address = request.POST.get('permanent_address', '')
+        mentoring.communication_address = request.POST.get('communication_address', '')
+        mentoring.gender = request.POST.get('gender', '')
+        mentoring.blood_group = request.POST.get('blood_group', '')
+        mentoring.allergies = request.POST.get('allergies', '')
+        mentoring.student_mobile = request.POST.get('student_mobile', '')
+        mentoring.parent_mobile = request.POST.get('parent_mobile', '')
+        mentoring.student_email = request.POST.get('student_email', '')
+        mentoring.parent_email = request.POST.get('parent_email', '')
+        mentoring.ssc_school_name = request.POST.get('ssc_school_name', '')
+        mentoring.ssc_place = request.POST.get('ssc_place', '')
+        mentoring.ssc_board = request.POST.get('ssc_board', '')
+        mentoring.ssc_percentage = request.POST.get('ssc_percentage', '')
+        mentoring.inter_college_name = request.POST.get('inter_college_name', '')
+        mentoring.inter_place = request.POST.get('inter_place', '')
+        mentoring.inter_board = request.POST.get('inter_board', '')
+        mentoring.inter_percentage = request.POST.get('inter_percentage', '')
+        mentoring.sgpa_sem1 = request.POST.get('sgpa_sem1', '')
+        mentoring.sgpa_sem2 = request.POST.get('sgpa_sem2', '')
+        mentoring.sgpa_sem3 = request.POST.get('sgpa_sem3', '')
+        mentoring.sgpa_sem4 = request.POST.get('sgpa_sem4', '')
+        mentoring.sgpa_sem5 = request.POST.get('sgpa_sem5', '')
+        mentoring.sgpa_sem6 = request.POST.get('sgpa_sem6', '')
+        mentoring.sgpa_sem7 = request.POST.get('sgpa_sem7', '')
+        mentoring.sgpa_sem8 = request.POST.get('sgpa_sem8', '')
+        mentoring.cgpa_sem1 = request.POST.get('cgpa_sem1', '')
+        mentoring.cgpa_sem2 = request.POST.get('cgpa_sem2', '')
+        mentoring.cgpa_sem3 = request.POST.get('cgpa_sem3', '')
+        mentoring.cgpa_sem4 = request.POST.get('cgpa_sem4', '')
+        mentoring.cgpa_sem5 = request.POST.get('cgpa_sem5', '')
+        mentoring.cgpa_sem6 = request.POST.get('cgpa_sem6', '')
+        mentoring.cgpa_sem7 = request.POST.get('cgpa_sem7', '')
+        mentoring.cgpa_sem8 = request.POST.get('cgpa_sem8', '')
+        mentoring.mentor_name = request.POST.get('mentor_name', '')
+        mentoring.designation = request.POST.get('designation', '')
+        mentoring.semester_start_date = request.POST.get('semester_start_date') or None
+        mentoring.semester_end_date = request.POST.get('semester_end_date') or None
+        mentoring.is_hosteller = request.POST.get('is_hosteller', '')
+        mentoring.college_bus = request.POST.get('college_bus', '')
+        mentoring.backlogs_previous_semester = request.POST.get('backlogs_previous_semester', '')
+        mentoring.backlog_courses = request.POST.get('backlog_courses', '')
+        mentoring.reasons_for_joining = request.POST.get('reasons_for_joining', '')
+        mentoring.ambitions = request.POST.get('ambitions', '')
+        mentoring.strengths = request.POST.get('strengths', '')
+        mentoring.weaknesses = request.POST.get('weaknesses', '')
+        mentoring.support_required = request.POST.get('support_required', '')
+        mentoring.slot1_observations = request.POST.get('slot1_observations', '')
+        mentoring.slot1_suggestions = request.POST.get('slot1_suggestions', '')
+        mentoring.slot1_progress = request.POST.get('slot1_progress', '')
+        mentoring.slot2_observations = request.POST.get('slot2_observations', '')
+        mentoring.slot2_suggestions = request.POST.get('slot2_suggestions', '')
+        mentoring.slot2_progress = request.POST.get('slot2_progress', '')
+        mentoring.date_of_mentoring = request.POST.get('date_of_mentoring') or None
+        mentoring.mentee_sign = request.POST.get('mentee_sign', '')
+        mentoring.mentor_sign = request.POST.get('mentor_sign', '')
+        mentoring.signature_ac = request.POST.get('signature_ac', '')
+        mentoring.signature_hod = request.POST.get('signature_hod', '')
+        mentoring.save()
+        messages.success(request, "Mentoring details saved successfully.")
+        return redirect('dashboard:mentoring_tab')
     return render(request, "dashboard/mentoring_tab.html", {
         "title": "Mentoring Tab - Engineering College",
+        "student": student,
+        "mentoring": mentoring,
     })
 
 

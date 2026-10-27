@@ -625,9 +625,85 @@ class Student(models.Model):
 
     def __str__(self):
         return f"{self.student_name} ({self.ht_no})"
+    class Meta:
+        ordering = ['-created_at']
+
+
+class StudentMentoring(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='mentoring_records')
+    academic_year = models.CharField(max_length=50, blank=True, null=True)
+    semester = models.CharField(max_length=50, blank=True, null=True)
+    batch = models.CharField(max_length=50, blank=True, null=True)
+    admission_year = models.CharField(max_length=20, blank=True, null=True)
+    father_name = models.CharField(max_length=255, blank=True, null=True)
+    mother_name = models.CharField(max_length=255, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    permanent_address = models.TextField(blank=True, null=True)
+    communication_address = models.TextField(blank=True, null=True)
+    gender = models.CharField(max_length=20, blank=True, null=True)
+    blood_group = models.CharField(max_length=10, blank=True, null=True)
+    allergies = models.TextField(blank=True, null=True)
+    student_mobile = models.CharField(max_length=15, blank=True, null=True)
+    parent_mobile = models.CharField(max_length=15, blank=True, null=True)
+    student_email = models.EmailField(blank=True, null=True)
+    parent_email = models.EmailField(blank=True, null=True)
+    ssc_school_name = models.CharField(max_length=255, blank=True, null=True)
+    ssc_place = models.CharField(max_length=100, blank=True, null=True)
+    ssc_board = models.CharField(max_length=50, blank=True, null=True)
+    ssc_percentage = models.CharField(max_length=20, blank=True, null=True)
+    inter_college_name = models.CharField(max_length=255, blank=True, null=True)
+    inter_place = models.CharField(max_length=100, blank=True, null=True)
+    inter_board = models.CharField(max_length=50, blank=True, null=True)
+    inter_percentage = models.CharField(max_length=20, blank=True, null=True)
+    sgpa_sem1 = models.CharField(max_length=10, blank=True, null=True)
+    sgpa_sem2 = models.CharField(max_length=10, blank=True, null=True)
+    sgpa_sem3 = models.CharField(max_length=10, blank=True, null=True)
+    sgpa_sem4 = models.CharField(max_length=10, blank=True, null=True)
+    sgpa_sem5 = models.CharField(max_length=10, blank=True, null=True)
+    sgpa_sem6 = models.CharField(max_length=10, blank=True, null=True)
+    sgpa_sem7 = models.CharField(max_length=10, blank=True, null=True)
+    sgpa_sem8 = models.CharField(max_length=10, blank=True, null=True)
+    cgpa_sem1 = models.CharField(max_length=10, blank=True, null=True)
+    cgpa_sem2 = models.CharField(max_length=10, blank=True, null=True)
+    cgpa_sem3 = models.CharField(max_length=10, blank=True, null=True)
+    cgpa_sem4 = models.CharField(max_length=10, blank=True, null=True)
+    cgpa_sem5 = models.CharField(max_length=10, blank=True, null=True)
+    cgpa_sem6 = models.CharField(max_length=10, blank=True, null=True)
+    cgpa_sem7 = models.CharField(max_length=10, blank=True, null=True)
+    cgpa_sem8 = models.CharField(max_length=10, blank=True, null=True)
+    mentor_name = models.CharField(max_length=255, blank=True, null=True)
+    designation = models.CharField(max_length=100, blank=True, null=True)
+    semester_start_date = models.DateField(blank=True, null=True)
+    semester_end_date = models.DateField(blank=True, null=True)
+    is_hosteller = models.CharField(max_length=10, blank=True, null=True)
+    college_bus = models.CharField(max_length=10, blank=True, null=True)
+    backlogs_previous_semester = models.CharField(max_length=10, blank=True, null=True)
+    backlog_courses = models.TextField(blank=True, null=True)
+    reasons_for_joining = models.TextField(blank=True, null=True)
+    ambitions = models.TextField(blank=True, null=True)
+    strengths = models.TextField(blank=True, null=True)
+    weaknesses = models.TextField(blank=True, null=True)
+    support_required = models.TextField(blank=True, null=True)
+    slot1_observations = models.TextField(blank=True, null=True)
+    slot1_suggestions = models.TextField(blank=True, null=True)
+    slot1_progress = models.CharField(max_length=10, blank=True, null=True)
+    slot2_observations = models.TextField(blank=True, null=True)
+    slot2_suggestions = models.TextField(blank=True, null=True)
+    slot2_progress = models.CharField(max_length=10, blank=True, null=True)
+    date_of_mentoring = models.DateField(blank=True, null=True)
+    mentee_sign = models.CharField(max_length=255, blank=True, null=True)
+    mentor_sign = models.CharField(max_length=255, blank=True, null=True)
+    signature_ac = models.CharField(max_length=255, blank=True, null=True)
+    signature_hod = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Mentoring - {self.student.student_name} ({self.semester})"
 
     class Meta:
         ordering = ['-created_at']
+
 
 class Subject(models.Model):
     name = models.CharField(max_length=200)
