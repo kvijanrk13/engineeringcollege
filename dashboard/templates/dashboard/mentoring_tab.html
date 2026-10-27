@@ -346,9 +346,9 @@
                 </tr>
                 <tr>
                     <th>Semester Starting Date</th>
-                    <td><input type="date" name="semester_start_date" class="form-control" value="{{ mentoring.semester_start_date|date:'Y-m-d' if mentoring.semester_start_date else '' }}"></td>
+                    <td><input type="date" name="semester_start_date" class="form-control" value="{{ mentoring.semester_start_date }}"></td>
                     <th>Semester Ending Date</th>
-                    <td><input type="date" name="semester_end_date" class="form-control" value="{{ mentoring.semester_end_date|date:'Y-m-d' if mentoring.semester_end_date else '' }}"></td>
+                    <td><input type="date" name="semester_end_date" class="form-control" value="{{ mentoring.semester_end_date }}"></td>
                 </tr>
                 <tr>
                     <td colspan="2">
@@ -420,7 +420,7 @@
             <table>
                 <tr>
                     <th>Date of Mentoring</th>
-                    <td><input type="date" name="date_of_mentoring" class="form-control" value="{{ mentoring.date_of_mentoring|date:'Y-m-d' if mentoring.date_of_mentoring else '' }}"></td>
+                    <td><input type="date" name="date_of_mentoring" class="form-control" value="{{ mentoring.date_of_mentoring }}"></td>
                     <td colspan="2"></td>
                 </tr>
                 <tr>
