@@ -7512,6 +7512,14 @@ def students_data(request):
     })
 
 
+def mentoring_tab(request):
+    if not request.session.get('student_logged_in') and not request.user.is_authenticated:
+        return redirect('dashboard:student_login')
+    return render(request, "dashboard/mentoring_tab.html", {
+        "title": "Mentoring Tab - Engineering College",
+    })
+
+
 def add_student(request):
     if request.method == 'POST':
         try:

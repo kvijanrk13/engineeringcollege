@@ -96,6 +96,7 @@ urlpatterns = [
     path('students-list/', views.students_data, name='students-list'),
     path('students/data/', views.students_data, name='students_data'),
     path('students/data/password/', views.students_data_password, name='students_data_password'),
+    path('students/mentoring-tab/', views.mentoring_tab, name='mentoring_tab'),
 
     path('student-details/', views.students_data, name='student_details'),
     path('add-student/', views.add_student, name='add_student'),

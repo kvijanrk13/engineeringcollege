@@ -1,0 +1,488 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Mentoring Tab - Engineering College{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/students-experience.css' %}">
+<style>
+    .mentoring-page .card-body {
+        padding: 1.5rem;
+    }
+    .mentoring-page .page-header {
+        background: linear-gradient(135deg, #0f4c81 0%, #17324d 100%);
+        color: #fff;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    .mentoring-page .page-header h1 {
+        margin: 0;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+    }
+    .mentoring-page .page-header p {
+        margin: 0.5rem 0 0;
+        opacity: 0.9;
+    }
+    .mentoring-page .mentoring-section {
+        margin-bottom: 1.75rem;
+    }
+    .mentoring-page .section-title {
+        background: #eef5ff;
+        color: #0f4c81;
+        font-weight: 800;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        border-left: 6px solid #0f4c81;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+    }
+    .mentoring-page table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(15, 76, 129, 0.08);
+        margin-bottom: 1rem;
+    }
+    .mentoring-page th,
+    .mentoring-page td {
+        border: 1px solid rgba(15, 76, 129, 0.14);
+        padding: 0.6rem 0.8rem;
+        text-align: left;
+        vertical-align: middle;
+        font-size: 0.92rem;
+    }
+    .mentoring-page th {
+        background: linear-gradient(180deg, #f4f8fb 0%, #eaf2f9 100%);
+        color: #0f4c81;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        font-size: 0.85rem;
+    }
+    .mentoring-page td {
+        color: #163149;
+    }
+    .mentoring-page .sub-label {
+        font-weight: 700;
+        color: #5e7488;
+        font-size: 0.86rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .mentoring-page .empty-cell {
+        min-height: 34px;
+    }
+    .mentoring-page .actions-bar {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+    .mentoring-page .btn {
+        border-radius: 10px;
+        font-weight: 600;
+        padding: 0.5rem 1.25rem;
+    }
+    .mentoring-page .badge {
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 mentoring-page">
+    <div class="students-shell">
+    <section class="page-header">
+        <div>
+            <span class="d-block mb-1" style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.95;">
+                <i class="fas fa-user-tag me-1"></i> Mentoring Diary
+            </span>
+            <h1>B.Tech Mentoring Tab</h1>
+            <p>Department of Computer Science and Engineering &middot; Mentoring Diary (mentorship_file_b.tech)</p>
+        </div>
+    </section>
+
+    <div class="actions-bar">
+        <a href="{% url 'dashboard:students_data' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Students
+        </a>
+    </div>
+
+    <!-- BATCH -->
+    <div class="mentoring-section">
+        <h6 class="section-title">Batch</h6>
+        <table>
+            <tr><td class="sub-label" style="width:20%">Batch</td><td></td></tr>
+        </table>
+    </div>
+
+    <!-- STUDENT INFORMATION SHEET -->
+    <div class="mentoring-section">
+        <h6 class="section-title">Student Information Sheet</h6>
+        <table>
+            <tr>
+                <th colspan="2">Batch</th>
+                <th colspan="2">Admission Year</th>
+            </tr>
+            <tr>
+                <td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+                <td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+                <th colspan="4">Name of the Father</th>
+            </tr>
+            <tr>
+                <td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+                <th colspan="4">Name of the Mother</th>
+            </tr>
+            <tr>
+                <td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+                <th colspan="2">Full Address with Pincode</th>
+                <th colspan="2">Permanent Address</th>
+            </tr>
+            <tr>
+                <td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+                <td colspan="2"></td><td colspan="2">Communication Address</td>
+            </tr>
+            <tr>
+                <td></td><td></td><td></td><td></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- GENDER / BLOOD GROUP / ALLERGIES -->
+    <div class="mentoring-section">
+        <h6 class="section-title">Personal Details</h6>
+        <table>
+            <tr>
+                <th>Gender</th>
+                <th>Blood Group</th>
+                <th>Allergies, If any</th>
+            </tr>
+            <tr>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- MOBILE / EMAIL -->
+    <div class="mentoring-section">
+        <h6 class="section-title">Contact Details</h6>
+        <table>
+            <tr>
+                <th></th>
+                <th>Mobile No.</th>
+                <th>Email ID</th>
+            </tr>
+            <tr>
+                <td><strong>Student</strong></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+            </tr>
+            <tr>
+                <td><strong>Parent</strong></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- SCHOOL / COLLEGE DETAILS -->
+    <div class="mentoring-section">
+        <h6 class="section-title">Educational Background</h6>
+        <table>
+            <tr>
+                <th></th>
+                <th>Name of School / College</th>
+                <th>Place</th>
+                <th>Board</th>
+                <th>Percentage / CGPA</th>
+            </tr>
+            <tr>
+                <td><strong>SSC / 10th</strong></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+            </tr>
+            <tr>
+                <td><strong>Inter / 10+2</strong></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- SEMESTER SGPA / CGPA -->
+    <div class="mentoring-section">
+        <h6 class="section-title">Semester-wise SGPA / CGPA</h6>
+        <table>
+            <tr>
+                <th></th>
+                <th>Semester I</th>
+                <th>Semester II</th>
+                <th>Semester III</th>
+                <th>Semester IV</th>
+                <th>Semester V</th>
+                <th>Semester VI</th>
+                <th>Semester VII</th>
+                <th>Semester VIII</th>
+            </tr>
+            <tr>
+                <td><strong>SGPA</strong></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+            </tr>
+            <tr>
+                <td><strong>CGPA</strong></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- I B.Tech FIRST SEMESTER MENTORING -->
+    <div class="mentoring-section">
+        <h6 class="section-title">I B.Tech &mdash; First Semester</h6>
+        <table>
+            <tr>
+                <th colspan="4">Academic Year: I B.Tech. First Semester</th>
+                <th colspan="4">Academic Year: I B.Tech. First Semester</th>
+            </tr>
+            <tr>
+                <th colspan="4">Name of the Mentor</th>
+                <th colspan="4">Designation</th>
+            </tr>
+            <tr>
+                <td></td><td></td><td></td><td></td>
+                <td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+                <td colspan="4">Semester Starting Date</td>
+                <td colspan="4">Semester Ending Date</td>
+            </tr>
+            <tr>
+                <td></td><td></td><td></td><td></td>
+                <td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+                <td colspan="4">Are you Hosteller? &nbsp;<span class="badge bg-light text-dark">Yes / No</span></td>
+                <td colspan="4">Travelling in College Bus? &nbsp;<span class="badge bg-light text-dark">Yes / No</span></td>
+            </tr>
+            <tr>
+                <td></td><td></td><td></td><td></td>
+                <td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+                <th colspan="4">Reasons for Joining ANRK</th>
+                <th colspan="4">Ambition(s)</th>
+            </tr>
+            <tr>
+                <td></td><td></td><td></td><td></td>
+                <td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+                <th colspan="2">Strengths</th>
+                <th colspan="2">Weaknesses</th>
+                <th colspan="2">Weaknesses</th>
+                <th colspan="2">Areas Where Support is Required</th>
+            </tr>
+            <tr>
+                <td></td><td></td><td></td><td></td>
+                <td></td><td></td><td></td><td></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- FIRST SEMESTER SLOTS -->
+    <div class="mentoring-section">
+        <h6 class="section-title">First Semester &mdash; Mentoring Slots</h6>
+        <table>
+            <tr>
+                <th>Slot</th>
+                <th>Observations by mentor</th>
+                <th>Suggestions given by mentor</th>
+                <th>Is there any progress observed?</th>
+            </tr>
+            <tr>
+                <td><strong>1</strong></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+            </tr>
+            <tr>
+                <td><strong>2</strong></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- FIRST SEMESTER SIGN-OFF -->
+    <div class="mentoring-section">
+        <h6 class="section-title">First Semester &mdash; Sign-off</h6>
+        <table>
+            <tr>
+                <th>Date of Mentoring</th>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+            </tr>
+            <tr>
+                <th>Mentee Sign</th>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+            </tr>
+            <tr>
+                <th>Mentor Sign</th>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+            </tr>
+            <tr>
+                <th colspan="4">Signature of AC &nbsp;&nbsp;|&nbsp;&nbsp; Signature of HOD</th>
+            </tr>
+            <tr>
+                <td></td><td></td><td></td><td></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- I B.Tech SECOND SEMESTER MENTORING -->
+    <div class="mentoring-section">
+        <h6 class="section-title">I B.Tech &mdash; Second Semester</h6>
+        <table>
+            <tr>
+                <th colspan="4">Academic Year: I B.Tech. Second Semester</th>
+                <th colspan="4">Academic Year: I B.Tech. Second Semester</th>
+            </tr>
+            <tr>
+                <th colspan="4">Name of the Mentor</th>
+                <th colspan="4">Designation</th>
+            </tr>
+            <tr>
+                <td></td><td></td><td></td><td></td>
+                <td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+                <td colspan="4">Date of Semester Starting</td>
+                <td colspan="4">Date of Semester Ending</td>
+            </tr>
+            <tr>
+                <td></td><td></td><td></td><td></td>
+                <td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+                <td colspan="4">Are you Hosteller? &nbsp;<span class="badge bg-light text-dark">Yes / No</span></td>
+                <td colspan="4">Travelling in College Bus? &nbsp;<span class="badge bg-light text-dark">Yes / No</span></td>
+            </tr>
+            <tr>
+                <td></td><td></td><td></td><td></td>
+                <td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+                <td colspan="4">Any Backlogs in previous Semester? &nbsp;<span class="badge bg-light text-dark">Yes / No</span></td>
+                <td colspan="4">If Yes, Name(s) of the Backlog Courses</td>
+            </tr>
+            <tr>
+                <td></td><td></td><td></td><td></td>
+                <td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+                <td colspan="4">Area(s) where support is required</td>
+                <td colspan="4"></td>
+            </tr>
+            <tr>
+                <td></td><td></td><td></td><td></td>
+                <td></td><td></td><td></td><td></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- SECOND SEMESTER SLOTS -->
+    <div class="mentoring-section">
+        <h6 class="section-title">Second Semester &mdash; Mentoring Slots</h6>
+        <table>
+            <tr>
+                <th>Slot</th>
+                <th>Observations by Mentor</th>
+                <th>Suggestions given by mentor</th>
+                <th>Is there any progress observed?</th>
+            </tr>
+            <tr>
+                <td><strong>1</strong></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+            </tr>
+            <tr>
+                <td><strong>2</strong></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- SECOND SEMESTER SIGN-OFF -->
+    <div class="mentoring-section">
+        <h6 class="section-title">Second Semester &mdash; Sign-off</h6>
+        <table>
+            <tr>
+                <th>Date of Mentoring</th>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+            </tr>
+            <tr>
+                <th>Mentee Sign</th>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+            </tr>
+            <tr>
+                <th>Mentor Sign</th>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+            </tr>
+            <tr>
+                <th colspan="3">Signature of AC &nbsp;&nbsp;|&nbsp;&nbsp; Signature of HOD</th>
+            </tr>
+            <tr>
+                <td></td><td></td><td></td>
+            </tr>
+        </table>
+    </div>
+
+    </div>
+</div>
+{% endblock %}
