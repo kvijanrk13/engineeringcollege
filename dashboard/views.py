@@ -90,6 +90,7 @@ from .utils import (
 )
 from .nba_content import NBA_UG_CRITERIA
 from .nba_sar_samples import NBA_SAR_SAMPLES
+from .mentoring_document import create_mentoring_document
 from .naac_content import (
     NAAC_CRITERIA,
     NAAC_FACTS,
@@ -7773,45 +7774,9 @@ def mentoring_tab(request):
             required_field_labels[f'sgpa_sem{semester_number}'] = f'Semester {semester_number} SGPA'
             required_field_labels[f'cgpa_sem{semester_number}'] = f'Semester {semester_number} CGPA'
 
-        semester_required_fields = {
-            'academic_year': 'Academic Year',
-            'semester': 'Semester',
-            'mentor_name': 'Name of the Mentor',
-            'designation': 'Designation',
-            'start_date': 'Semester Starting Date',
-            'end_date': 'Semester Ending Date',
-            'is_hosteller': 'Hosteller or Day Scholar choice',
-            'college_bus': 'College Bus choice',
-            'backlogs': 'Backlogs in previous Semester choice',
-            'backlog_courses': 'Backlog Course Names',
-            'support_required': 'Areas where support is required',
-            'slot1_observations': 'Slot 1 Observations',
-            'slot1_suggestions': 'Slot 1 Suggestions',
-            'slot1_progress': 'Slot 1 Progress',
-            'slot2_observations': 'Slot 2 Observations',
-            'slot2_suggestions': 'Slot 2 Suggestions',
-            'slot2_progress': 'Slot 2 Progress',
-            'date_of_mentoring': 'Date of Mentoring',
-            'mentee_sign': 'Mentee Sign',
-            'mentor_sign': 'Mentor Sign',
-            'signature_ac': 'Signature of AC',
-            'signature_hod': 'Signature of HOD',
-        }
-        for semester_number in range(1, 9):
-            for suffix, label in semester_required_fields.items():
-                required_field_labels[f'sem{semester_number}_{suffix}'] = (
-                    f'Semester {semester_number}: {label}'
-                )
-
         radio_field_names = {
             'readmitted_student', 'lateral_entry_student',
         }
-        for semester_number in range(1, 9):
-            radio_field_names.update({
-                f'sem{semester_number}_is_hosteller',
-                f'sem{semester_number}_college_bus',
-                f'sem{semester_number}_backlogs',
-            })
 
         missing_fields = []
         for field_name, label in required_field_labels.items():
@@ -7821,6 +7786,13 @@ def mentoring_tab(request):
                     missing_fields.append(label)
             elif not (value or '').strip():
                 missing_fields.append(label)
+
+        if request.POST.get('gender') not in {'Male', 'Female'}:
+            if 'Gender' not in missing_fields:
+                missing_fields.append('Gender (choose Male or Female)')
+        student_email = (request.POST.get('student_email') or '').strip()
+        if student_email and not re.fullmatch(r'[^@\s]+@anurag\.ac\.in', student_email, re.IGNORECASE):
+            missing_fields.append('Student Email ID must use the @anurag.ac.in domain')
 
         has_uploaded_photo = bool(student.photo_url or getattr(student.photo, 'name', ''))
         if not has_uploaded_photo:
@@ -7837,7 +7809,7 @@ def mentoring_tab(request):
                 preview += f', and {remaining_count} more'
             messages.error(
                 request,
-                f'Complete every field, choose Yes or No for each radio question, and upload a student photo before saving. '
+                f'Complete the required student details, choose Yes or No for both student-status questions, and upload a student photo before saving. '
                 f'{len(missing_fields)} required item(s) need attention: {preview}.'
             )
             return render_submitted_mentoring_form()
@@ -7942,7 +7914,51 @@ def mentoring_tab(request):
                 }
             mentoring.semester_data = sem_data
             mentoring.save()
-            messages.success(request, "Mentoring details saved successfully.")
+            try:
+                if not is_cloudinary_configured():
+                    raise RuntimeError("Cloudinary is not configured")
+                student_photo_bytes = None
+                signed_photo_url = get_authenticated_student_photo_download_url(student)
+                if signed_photo_url:
+                    try:
+                        photo_response = requests.get(signed_photo_url, timeout=20)
+                        if photo_response.status_code == 200:
+                            student_photo_bytes = photo_response.content
+                    except requests.RequestException as photo_error:
+                        logger.warning("Could not retrieve the student photo for the Word document (%s): %s", student.ht_no, photo_error)
+                document_bytes = create_mentoring_document(
+                    student,
+                    mentoring,
+                    photo_bytes=student_photo_bytes,
+                )
+                ticket_slug = re.sub(r'[^A-Za-z0-9_-]', '_', student.ht_no or str(student.pk))
+                upload_result = cloudinary.uploader.upload(
+                    ContentFile(document_bytes, name="mentorship_file_b.tech.docx"),
+                    public_id=f"student_mentorship_documents/{ticket_slug}/mentorship_file_b.tech.docx",
+                    resource_type="raw",
+                    type="authenticated",
+                    overwrite=True,
+                    invalidate=True,
+                )
+                if not upload_result.get('public_id'):
+                    raise ValueError("Cloudinary did not return a document identifier")
+                record_cloudinary_upload(
+                    upload_type='mentorship_docx',
+                    upload_result=upload_result,
+                    uploaded_by=(getattr(request.user, 'username', '') or get_session_student_ht_no(request)),
+                    student=student,
+                )
+                messages.success(
+                    request,
+                    "Mentoring details were saved, and mentorship_file_b.tech.docx was uploaded to Cloudinary.",
+                )
+            except Exception as upload_error:
+                logger.exception("Mentoring record saved but its Word document could not be uploaded for %s: %s", student.ht_no, upload_error)
+                messages.success(request, "Mentoring details were saved successfully.")
+                messages.error(
+                    request,
+                    "The mentoring data was saved, but the Word document could not be uploaded to Cloudinary. Please try saving again.",
+                )
         except Exception as e:
             logger.error(f"Error saving mentoring data: {e}")
             messages.error(request, "Failed to save mentoring details. Please try again.")

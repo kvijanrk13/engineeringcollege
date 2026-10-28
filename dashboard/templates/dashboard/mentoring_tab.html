@@ -198,7 +198,7 @@
 
     <div class="save-notice">
         <i class="fas fa-info-circle me-1"></i>
-        Upload your photo, complete every field and choose Yes or No for each radio question, then click <strong>Save Mentoring Details</strong>.
+        Upload your photo, complete the required student details and choose Yes or No for both student-status questions. Semester mentoring sections may be left blank. Click <strong>Save Mentoring Details</strong> to save your record and Word document.
     </div>
 
     <form id="mentoring-details-form" method="POST" action="{% url 'dashboard:mentoring_tab' %}" enctype="multipart/form-data" novalidate data-photo-uploaded="{% if student.photo_url or student.photo %}true{% else %}false{% endif %}">
@@ -322,7 +322,13 @@
             <table>
                 <tr>
                     <th>Gender</th>
-                    <td><input type="text" name="gender" class="form-control" value="{{ mentoring.gender|default:'' }}"></td>
+                    <td>
+                        <select name="gender" class="form-control">
+                            <option value="">Select Gender</option>
+                            <option value="Male" {% if mentoring.gender == 'Male' %}selected{% endif %}>Male</option>
+                            <option value="Female" {% if mentoring.gender == 'Female' %}selected{% endif %}>Female</option>
+                        </select>
+                    </td>
                     <th>Blood Group</th>
                     <td><input type="text" name="blood_group" class="form-control" value="{{ mentoring.blood_group|default:'' }}"></td>
                     <th>Allergies, If any</th>
@@ -341,7 +347,7 @@
                     <th>Parent Mobile No.</th>
                     <td><input type="text" name="parent_mobile" class="form-control" value="{{ mentoring.parent_mobile|default:'' }}"></td>
                     <th>Student Email ID</th>
-                    <td><input type="email" name="student_email" class="form-control" value="{{ mentoring.student_email|default:'' }}"></td>
+                    <td><input type="email" name="student_email" class="form-control" value="{{ mentoring.student_email|default:'' }}" pattern="[^@\s]+@anurag\.ac\.in" title="Use your @anurag.ac.in email address." autocomplete="email"></td>
                 </tr>
                 <tr>
                     <th>Parent Email ID</th>
@@ -584,7 +590,8 @@
         const controls = Array.from(mentoringForm.querySelectorAll(
             'input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="file"]), select, textarea'
         ));
-        controls.forEach((control) => {
+        const validatedControls = controls.filter((control) => !/^sem[1-8]_/.test(control.name));
+        validatedControls.forEach((control) => {
             control.required = true;
             control.setAttribute('aria-required', 'true');
         });
@@ -639,15 +646,15 @@
                 return;
             }
 
-            controls.forEach((control) => control.classList.remove('is-invalid'));
+            validatedControls.forEach((control) => control.classList.remove('is-invalid'));
             const missing = [];
             const checkedRadioNames = new Set();
 
-            controls.forEach((control) => {
+            validatedControls.forEach((control) => {
                 if (control.type === 'radio') {
                     if (checkedRadioNames.has(control.name)) return;
                     checkedRadioNames.add(control.name);
-                    const group = controls.filter((candidate) => candidate.type === 'radio' && candidate.name === control.name);
+                    const group = validatedControls.filter((candidate) => candidate.type === 'radio' && candidate.name === control.name);
                     if (!group.some((radio) => radio.checked && ['Yes', 'No'].includes(radio.value))) {
                         group.forEach((radio) => radio.classList.add('is-invalid'));
                         missing.push({ control, label: getFieldLabel(control) });
@@ -675,7 +682,7 @@
                 if (validationAlert) {
                     const labels = missing.slice(0, 8).map((item) => item.label);
                     const remaining = missing.length - labels.length;
-                    validationAlert.textContent = `Complete every required field, select Yes or No for each radio question, and upload a student photo before saving. ${missing.length} item(s) need attention: ${labels.join(', ')}${remaining > 0 ? `, and ${remaining} more` : ''}.`;
+                    validationAlert.textContent = `Complete the required student details, choose Yes or No for both student-status questions, and upload a student photo. Semester mentoring sections may be left blank. ${missing.length} item(s) need attention: ${labels.join(', ')}${remaining > 0 ? `, and ${remaining} more` : ''}.`;
                     validationAlert.hidden = false;
                     validationAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
