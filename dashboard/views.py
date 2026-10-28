@@ -7690,6 +7690,7 @@ def mentoring_tab(request):
     return render(request, "dashboard/mentoring_tab.html", {
         "title": "Mentoring Tab - Engineering College",
         "student": student,
+        "student_ht_no": student.ht_no if student else get_session_student_ht_no(request),
         "mentoring": mentoring,
         "semester_data": semester_data,
         "branches": BRANCHES,
