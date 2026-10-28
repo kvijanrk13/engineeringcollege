@@ -7719,6 +7719,22 @@ def mentoring_tab(request):
             return redirect('dashboard:mentoring_tab')
 
         try:
+            submitted_ht_no = request.POST.get('ht_no')
+            if submitted_ht_no is not None:
+                submitted_ht_no = submitted_ht_no.strip().upper()
+                if not submitted_ht_no:
+                    messages.error(request, "Hall Ticket Number is required.")
+                    return redirect('dashboard:mentoring_tab')
+                if Student.objects.filter(ht_no__iexact=submitted_ht_no).exclude(pk=student.pk).exists():
+                    messages.error(request, "That Hall Ticket Number is already assigned to another student.")
+                    return redirect('dashboard:mentoring_tab')
+                if student.ht_no != submitted_ht_no:
+                    student.ht_no = submitted_ht_no
+                    student.save(update_fields=['ht_no', 'updated_at'])
+                    if request.session.get('student_logged_in'):
+                        request.session['student_username'] = submitted_ht_no
+                        request.session['student_ht_no'] = submitted_ht_no
+
             mentoring = StudentMentoring.objects.filter(student=student).order_by('-created_at').first()
             if not mentoring:
                 mentoring = StudentMentoring(student=student)
