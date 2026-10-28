@@ -78,6 +78,7 @@ from .models import (
     Subject, FacultyProfile, ResearchProject, Student,
     ResearchPublication, StudentResearchPublication, FDP, BTechProject,
     KavachSecureFile, ProjectDownloadPayment, SuspiciousActivity,
+    StudentMentoring,
 )
 from .forms import (
     StudentForm, CertificateForm, CASTE_CATEGORY_CHOICES, CASTE_CATEGORY_VALUES,
