@@ -623,6 +623,10 @@ class Student(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def save(self, *args, **kwargs):
+        self.ht_no = (self.ht_no or '').strip().upper()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.student_name} ({self.ht_no})"
     class Meta:

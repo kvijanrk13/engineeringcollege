@@ -124,7 +124,7 @@
                     </h5>
                     <p class="text-muted mb-3">
                         {% if student.ht_no %}
-                            {{ student.ht_no }}
+                            {{ student.ht_no|upper }}
                         {% elif student.username %}
                             {{ student.username }}
                         {% else %}
@@ -183,7 +183,7 @@
                             <tbody>
                                 {% for stu in recent_students %}
                                 <tr>
-                                    <td><strong>{{ stu.ht_no }}</strong></td>
+                                    <td><strong>{{ stu.ht_no|upper }}</strong></td>
                                     <td>{{ stu.student_name }}</td>
                                     <td>{{ stu.year }}</td>
                                     <td>{{ stu.sem }}</td>

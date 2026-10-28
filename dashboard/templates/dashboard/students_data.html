@@ -244,7 +244,7 @@
                                         <div class="student-photo-fallback" style="display: none;">No Photo</div>
                                     </td>
 
-                                    <td><span class="student-htno">{{ student.ht_no }}</span></td>
+                                    <td><span class="student-htno">{{ student.ht_no|upper }}</span></td>
 
                                     <td>
                                         <a href="{% url 'dashboard:student_detail' student.id %}" class="student-name-link text-decoration-none">

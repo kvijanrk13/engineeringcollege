@@ -73,7 +73,7 @@
         <tr>
             <td style="width: 75%; text-align: center; vertical-align: middle;">
                 <h1 style="margin: 10px 0; color: #3498db; font-size: 20px;">STUDENT PROFILE REPORT</h1>
-                <div style="font-size: 10px;">H.T.No: {{ student.ht_no }} | Generated: {{ current_date|date:"d-m-Y" }}</div>
+                <div style="font-size: 10px;">H.T.No: {{ student.ht_no|upper }} | Generated: {{ current_date|date:"d-m-Y" }}</div>
             </td>
             <td style="width: 25%; text-align: right;">
                 <div class="photo-box">
@@ -90,7 +90,7 @@
     <div class="section-title">1. PERSONAL INFORMATION</div>
     <table class="info-table">
         <tr><td class="label">Full Name</td><td>{{ student.student_name|default:"Not Specified" }}</td></tr>
-        <tr><td class="label">H.T.No</td><td>{{ student.ht_no|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">H.T.No</td><td>{{ student.ht_no|default:"Not Specified"|upper }}</td></tr>
         <tr><td class="label">Father's Name</td><td>{{ student.father_name|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Mother's Name</td><td>{{ student.mother_name|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Date of Birth</td><td>{% if student.dob %}{{ student.dob|date:"d M Y" }}{% else %}Not Specified{% endif %}</td></tr>

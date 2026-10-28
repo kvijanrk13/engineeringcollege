@@ -518,7 +518,7 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label class="required-field">Hall Ticket Number</label>
-                    <input type="text" name="ht_no" value="{{ student.ht_no|default:'' }}" placeholder="e.g., 23C11A1201" required>
+                    <input type="text" name="ht_no" value="{{ student.ht_no|default:''|upper }}" placeholder="e.g., 23C11A1201" autocapitalize="characters" spellcheck="false" oninput="this.value = this.value.toUpperCase()" required>
                 </div>
                 <div class="form-group">
                     <label class="required-field">Student Name</label>

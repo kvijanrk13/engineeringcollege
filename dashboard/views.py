@@ -547,7 +547,7 @@ def is_demo_student_session(request):
 
 
 def get_session_student_ht_no(request):
-    return (request.session.get('student_ht_no') or request.session.get('student_username') or '').strip()
+    return (request.session.get('student_ht_no') or request.session.get('student_username') or '').strip().upper()
 
 
 def get_session_student_record(request):
@@ -569,7 +569,7 @@ def get_session_student_record(request):
         return None
 
     try:
-        return Student.objects.filter(ht_no=student_ht_no).first()
+        return Student.objects.filter(ht_no__iexact=student_ht_no).first()
     except Exception as exc:
         logger.warning(f"Could not resolve student session by ht_no {student_ht_no}: {exc}")
         return None
@@ -586,7 +586,7 @@ def student_session_can_access_record(request, student):
     if session_student and student:
         return session_student.id == student.id
 
-    return get_session_student_ht_no(request) == getattr(student, 'ht_no', None)
+    return get_session_student_ht_no(request) == (getattr(student, 'ht_no', '') or '').strip().upper()
 
 
 def student_dashboard_redirect_route(request):
@@ -3302,9 +3302,9 @@ def google_callback_url(request):
 
 def set_student_session(request, student):
     request.session['student_logged_in'] = True
-    request.session['student_username'] = student.ht_no
+    request.session['student_username'] = student.ht_no.upper()
     request.session['student_id'] = student.id
-    request.session['student_ht_no'] = student.ht_no
+    request.session['student_ht_no'] = student.ht_no.upper()
     request.session['student_display_name'] = student.student_name
 
 
@@ -3646,17 +3646,20 @@ def student_login(request):
                 audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=username)
                 return redirect('dashboard:student_dashboard_view')
 
-            student = Student.objects.filter(ht_no=username).first()
+            student = Student.objects.filter(ht_no__iexact=username).first()
             if student:
-                valid_passwords = [student.student_phone, getattr(student, 'student_email', None), student.email, student.ht_no]
+                valid_passwords = [
+                    student.student_phone, getattr(student, 'student_email', None),
+                    student.email, student.ht_no, student.ht_no.upper(),
+                ]
                 if student.dob:
                     valid_passwords.append(student.dob.strftime('%Y-%m-%d'))
                     valid_passwords.append(student.dob.strftime('%d-%m-%Y'))
                 if any(p and password == p for p in valid_passwords):
                     request.session['student_logged_in'] = True
-                    request.session['student_username'] = username
+                    request.session['student_username'] = student.ht_no.upper()
                     request.session['student_id'] = student.id
-                    request.session['student_ht_no'] = student.ht_no
+                    request.session['student_ht_no'] = student.ht_no.upper()
                     audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=student.ht_no)
                     return redirect('dashboard:student_dashboard_view')
             error = 'Invalid student credentials'
@@ -7909,7 +7912,7 @@ def add_student(request):
                     dob_value = None
 
             student = Student(
-                ht_no=request.POST.get('ht_no'),
+                ht_no=(request.POST.get('ht_no') or '').strip().upper(),
                 student_name=request.POST.get('student_name'),
                 father_name=request.POST.get('father_name'),
                 mother_name=request.POST.get('mother_name'),

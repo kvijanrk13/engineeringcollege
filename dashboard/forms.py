@@ -38,6 +38,15 @@ class StudentForm(forms.ModelForm):
         label='Caste Category',
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        existing_ht_no = self.initial.get('ht_no')
+        if existing_ht_no:
+            self.initial['ht_no'] = str(existing_ht_no).strip().upper()
+
+    def clean_ht_no(self):
+        return (self.cleaned_data.get('ht_no') or '').strip().upper()
+
     class Meta:
         model = Student
         fields = [
@@ -61,7 +70,12 @@ class StudentForm(forms.ModelForm):
             'address': forms.Textarea(attrs={'rows': 3, 'maxlength': 1000}),
             'other_training': forms.Textarea(attrs={'rows': 2, 'maxlength': 1000}),
             # Enforce maxlength at HTML level for fields with database limits
-            'ht_no': forms.TextInput(attrs={'maxlength': 50}),
+            'ht_no': forms.TextInput(attrs={
+                'maxlength': 50,
+                'autocapitalize': 'characters',
+                'spellcheck': 'false',
+                'oninput': 'this.value = this.value.toUpperCase()',
+            }),
             'student_name': forms.TextInput(attrs={'maxlength': 255}),
             'father_name': forms.TextInput(attrs={'maxlength': 255}),
             'mother_name': forms.TextInput(attrs={'maxlength': 255}),

@@ -205,7 +205,7 @@
             <table>
                 <tr>
                     <th>Hall Ticket Number</th>
-                    <td colspan="3"><input type="text" class="form-control" value="{{ student_ht_no|default:'' }}" readonly></td>
+                    <td colspan="3"><input type="text" class="form-control" value="{{ student_ht_no|default:''|upper }}" readonly></td>
                 </tr>
                 <tr>
                     <th>Branch</th>
