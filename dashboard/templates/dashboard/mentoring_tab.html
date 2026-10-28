@@ -139,6 +139,26 @@
     .mentoring-page .save-notice i {
         margin-right: 0.5rem;
     }
+    .mentoring-page .student-photo-preview {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .mentoring-page .student-photo-preview[hidden] {
+        display: none;
+    }
+    .mentoring-page .student-photo-preview img {
+        width: 150px;
+        height: 180px;
+        object-fit: cover;
+        border: 1px solid rgba(15, 76, 129, 0.25);
+        border-radius: 8px;
+        background: #f4f8fb;
+    }
+    .mentoring-page .student-photo-preview p {
+        margin: 0.25rem 0 0;
+        color: #5e7488;
+    }
 </style>
 {% endblock %}
 
@@ -188,11 +208,13 @@
             {% if not student %}
             <small class="form-text text-muted d-block mt-2">Sign in with the student's linked account to save a photo.</small>
             {% endif %}
-            {% if student.photo_url or student.photo %}
-            <div class="mt-2">
-                <img src="{% url 'dashboard:student_photo_redirect' student.id %}" alt="{{ student.student_name }}" style="width: 90px; height: 110px; object-fit: cover; border-radius: 4px;">
+            <div id="student-photo-preview" class="student-photo-preview mt-3" {% if not student.photo_url and not student.photo %}hidden{% endif %}>
+                <img id="student-photo-preview-image" {% if student.photo_url or student.photo %}src="{% url 'dashboard:student_photo_redirect' student.id %}"{% endif %} alt="{% if student %}{{ student.student_name }}{% else %}Selected student photo{% endif %}">
+                <div>
+                    <strong id="student-photo-preview-title">{% if student.photo_url or student.photo %}Student photo{% else %}Photo preview{% endif %}</strong>
+                    <p id="student-photo-preview-help">{% if student.photo_url or student.photo %}This photo is saved to your student record.{% else %}Upload this photo to save it to your student record.{% endif %}</p>
+                </div>
             </div>
-            {% endif %}
         </form>
     </div>
 
@@ -513,4 +535,35 @@
 
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(() => {
+    const photoInput = document.getElementById('student-photo-upload');
+    const preview = document.getElementById('student-photo-preview');
+    const previewImage = document.getElementById('student-photo-preview-image');
+    const previewTitle = document.getElementById('student-photo-preview-title');
+    const previewHelp = document.getElementById('student-photo-preview-help');
+    let previewObjectUrl = null;
+
+    if (!photoInput || !preview || !previewImage) return;
+
+    photoInput.addEventListener('change', () => {
+        const selectedPhoto = photoInput.files && photoInput.files[0];
+        if (!selectedPhoto || !selectedPhoto.type.startsWith('image/')) return;
+
+        if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+        previewObjectUrl = URL.createObjectURL(selectedPhoto);
+        previewImage.src = previewObjectUrl;
+        preview.hidden = false;
+        if (previewTitle) previewTitle.textContent = 'Selected photo preview';
+        if (previewHelp) previewHelp.textContent = 'Upload this photo to save it to your student record.';
+    });
+
+    window.addEventListener('beforeunload', () => {
+        if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+    });
+})();
+</script>
 {% endblock %}
