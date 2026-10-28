@@ -208,6 +208,32 @@
                     <td colspan="3"><input type="text" name="ht_no" class="form-control" value="{{ student_ht_no|default:''|upper }}" maxlength="50" autocapitalize="characters" spellcheck="false" oninput="this.value = this.value.toUpperCase()" required></td>
                 </tr>
                 <tr>
+                    <th>Are you Re-admitted Student</th>
+                    <td colspan="3">
+                        <label class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="readmitted_student" value="Yes" {% if mentoring.readmitted_student == 'Yes' %}checked{% endif %}>
+                            <span class="form-check-label">Yes</span>
+                        </label>
+                        <label class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="readmitted_student" value="No" {% if mentoring.readmitted_student == 'No' %}checked{% endif %}>
+                            <span class="form-check-label">No</span>
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Are you Lateral Entry Student</th>
+                    <td colspan="3">
+                        <label class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="lateral_entry_student" value="Yes" {% if mentoring.lateral_entry_student == 'Yes' %}checked{% endif %}>
+                            <span class="form-check-label">Yes</span>
+                        </label>
+                        <label class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="lateral_entry_student" value="No" {% if mentoring.lateral_entry_student == 'No' %}checked{% endif %}>
+                            <span class="form-check-label">No</span>
+                        </label>
+                    </td>
+                </tr>
+                <tr>
                     <th>Branch</th>
                     <td>
                         <select name="branch" class="form-control">

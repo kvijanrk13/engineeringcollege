@@ -641,6 +641,8 @@ class StudentMentoring(models.Model):
     semester = models.CharField(max_length=50, blank=True, null=True)
     batch = models.CharField(max_length=50, blank=True, null=True)
     admission_year = models.CharField(max_length=20, blank=True, null=True)
+    readmitted_student = models.CharField(max_length=3, choices=[('Yes', 'Yes'), ('No', 'No')], blank=True, default='')
+    lateral_entry_student = models.CharField(max_length=3, choices=[('Yes', 'Yes'), ('No', 'No')], blank=True, default='')
     father_name = models.CharField(max_length=255, blank=True, null=True)
     mother_name = models.CharField(max_length=255, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
