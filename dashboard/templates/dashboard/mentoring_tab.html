@@ -21,10 +21,6 @@
         font-weight: 800;
         letter-spacing: 0.5px;
     }
-    .mentoring-page .page-header p {
-        margin: 0.5rem 0 0;
-        opacity: 0.9;
-    }
     .mentoring-page .mentoring-section {
         margin-bottom: 1.75rem;
     }
@@ -111,10 +107,6 @@
         background-position: right 0.75rem center;
         background-size: 16px 16px;
     }
-    .mentoring-page input[type="date"].form-control,
-    .mentoring-page input[type="email"].form-control {
-        padding: 0.5rem 0.75rem;
-    }
     .mentoring-page textarea.form-control {
         min-height: 70px;
         resize: vertical;
@@ -157,7 +149,6 @@
                 <i class="fas fa-user-tag me-1"></i> Mentoring Diary
             </span>
             <h1>B.Tech Mentoring Tab</h1>
-            <p>Department of Computer Science and Engineering &middot; Fill in your mentoring details (mentorship_file_b.tech)</p>
         </div>
     </section>
 
@@ -187,13 +178,24 @@
     <form method="POST" action="{% url 'dashboard:mentoring_tab' %}">
         {% csrf_token %}
 
-        <!-- BATCH -->
+        <!-- Student Identity -->
         <div class="mentoring-section">
-            <h6 class="section-title">Batch &amp; Admission</h6>
+            <h6 class="section-title">Student Identity</h6>
             <table>
                 <tr>
-                    <th>Batch</th>
-                    <td><input type="text" name="batch" class="form-control" value="{{ mentoring.batch|default:'' }}"></td>
+                    <th>Name of the Student</th>
+                    <td colspan="3"><input type="text" name="student_name" class="form-control" value="{{ mentoring.student_name|default:'' }}" placeholder="Enter student name"></td>
+                </tr>
+                <tr>
+                    <th>Branch</th>
+                    <td>
+                        <select name="branch" class="form-control">
+                            <option value="">Select Branch</option>
+                            {% for b in branches %}
+                            <option value="{{ b }}" {% if mentoring.branch == b %}selected{% endif %}>{{ b }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
                     <th>Admission Year</th>
                     <td><input type="text" name="admission_year" class="form-control" value="{{ mentoring.admission_year|default:'' }}"></td>
                 </tr>
@@ -205,24 +207,32 @@
             <h6 class="section-title">Student Information Sheet</h6>
             <table>
                 <tr>
+                    <th>Batch</th>
+                    <td colspan="5"><input type="text" name="batch" class="form-control" value="{{ mentoring.batch|default:'' }}"></td>
+                </tr>
+                <tr>
+                    <th>Name of the Student</th>
+                    <td colspan="5"><input type="text" name="info_student_name" class="form-control" value="{{ mentoring.student_name|default:'' }}"></td>
+                </tr>
+                <tr>
                     <th>Name of the Father</th>
-                    <td colspan="3"><input type="text" name="father_name" class="form-control" value="{{ mentoring.father_name|default:'' }}"></td>
+                    <td colspan="5"><input type="text" name="father_name" class="form-control" value="{{ mentoring.father_name|default:'' }}"></td>
                 </tr>
                 <tr>
                     <th>Name of the Mother</th>
-                    <td colspan="3"><input type="text" name="mother_name" class="form-control" value="{{ mentoring.mother_name|default:'' }}"></td>
+                    <td colspan="5"><input type="text" name="mother_name" class="form-control" value="{{ mentoring.mother_name|default:'' }}"></td>
                 </tr>
                 <tr>
                     <th>Full Address with Pincode</th>
-                    <td colspan="3"><textarea name="address" class="form-control" rows="2">{{ mentoring.address|default:'' }}</textarea></td>
+                    <td colspan="5"><textarea name="address" class="form-control" rows="2">{{ mentoring.address|default:'' }}</textarea></td>
                 </tr>
                 <tr>
                     <th>Permanent Address</th>
-                    <td colspan="3"><textarea name="permanent_address" class="form-control" rows="2">{{ mentoring.permanent_address|default:'' }}</textarea></td>
+                    <td colspan="5"><textarea name="permanent_address" class="form-control" rows="2">{{ mentoring.permanent_address|default:'' }}</textarea></td>
                 </tr>
                 <tr>
                     <th>Communication Address</th>
-                    <td colspan="3"><textarea name="communication_address" class="form-control" rows="2">{{ mentoring.communication_address|default:'' }}</textarea></td>
+                    <td colspan="5"><textarea name="communication_address" class="form-control" rows="2">{{ mentoring.communication_address|default:'' }}</textarea></td>
                 </tr>
             </table>
         </div>
@@ -236,10 +246,8 @@
                     <td><input type="text" name="gender" class="form-control" value="{{ mentoring.gender|default:'' }}"></td>
                     <th>Blood Group</th>
                     <td><input type="text" name="blood_group" class="form-control" value="{{ mentoring.blood_group|default:'' }}"></td>
-                </tr>
-                <tr>
                     <th>Allergies, If any</th>
-                    <td colspan="3"><input type="text" name="allergies" class="form-control" value="{{ mentoring.allergies|default:'' }}"></td>
+                    <td><input type="text" name="allergies" class="form-control" value="{{ mentoring.allergies|default:'' }}"></td>
                 </tr>
             </table>
         </div>
@@ -253,12 +261,12 @@
                     <td><input type="text" name="student_mobile" class="form-control" value="{{ mentoring.student_mobile|default:'' }}"></td>
                     <th>Parent Mobile No.</th>
                     <td><input type="text" name="parent_mobile" class="form-control" value="{{ mentoring.parent_mobile|default:'' }}"></td>
-                </tr>
-                <tr>
                     <th>Student Email ID</th>
                     <td><input type="email" name="student_email" class="form-control" value="{{ mentoring.student_email|default:'' }}"></td>
+                </tr>
+                <tr>
                     <th>Parent Email ID</th>
-                    <td><input type="email" name="parent_email" class="form-control" value="{{ mentoring.parent_email|default:'' }}"></td>
+                    <td colspan="5"><input type="email" name="parent_email" class="form-control" value="{{ mentoring.parent_email|default:'' }}"></td>
                 </tr>
             </table>
         </div>
@@ -273,6 +281,7 @@
                     <th>Place</th>
                     <th>Board</th>
                     <th>Percentage / CGPA</th>
+                    <th></th>
                 </tr>
                 <tr>
                     <td><strong>SSC / 10th</strong></td>
@@ -280,6 +289,7 @@
                     <td><input type="text" name="ssc_place" class="form-control" value="{{ mentoring.ssc_place|default:'' }}"></td>
                     <td><input type="text" name="ssc_board" class="form-control" value="{{ mentoring.ssc_board|default:'' }}"></td>
                     <td><input type="text" name="ssc_percentage" class="form-control" value="{{ mentoring.ssc_percentage|default:'' }}"></td>
+                    <td></td>
                 </tr>
                 <tr>
                     <td><strong>Inter / 10+2</strong></td>
@@ -287,11 +297,12 @@
                     <td><input type="text" name="inter_place" class="form-control" value="{{ mentoring.inter_place|default:'' }}"></td>
                     <td><input type="text" name="inter_board" class="form-control" value="{{ mentoring.inter_board|default:'' }}"></td>
                     <td><input type="text" name="inter_percentage" class="form-control" value="{{ mentoring.inter_percentage|default:'' }}"></td>
+                    <td></td>
                 </tr>
             </table>
         </div>
 
-        <!-- SEMESTER SGPA / CGPA -->
+        <!-- SEMESTER-WISE SGPA / CGPA -->
         <div class="mentoring-section">
             <h6 class="section-title">Semester-wise SGPA / CGPA</h6>
             <table>
@@ -324,74 +335,76 @@
             </table>
         </div>
 
-        <!-- I B.Tech FIRST SEMESTER MENTORING -->
+        <!-- 8 SEMESTERS MENTORING -->
+        {% for sem in semester_data %}
         <div class="mentoring-section">
-            <h6 class="section-title">I B.Tech &mdash; First Semester</h6>
+            <h6 class="section-title">{{ sem.year_label }} &mdash; {{ sem.sem_label }}</h6>
             <table>
                 <tr>
                     <th>Academic Year</th>
-                    <td colspan="3"><input type="text" name="academic_year" class="form-control" value="{{ mentoring.academic_year|default:'I B.Tech. First Semester' }}"></td>
+                    <td colspan="3"><input type="text" name="sem{{ sem.num }}_academic_year" class="form-control" value="{{ sem.academic_year }}"></td>
                 </tr>
                 <tr>
                     <th>Semester</th>
-                    <td colspan="3"><input type="text" name="semester" class="form-control" value="{{ mentoring.semester|default:'First Semester' }}"></td>
+                    <td colspan="3"><input type="text" name="sem{{ sem.num }}_semester" class="form-control" value="{{ sem.semester }}"></td>
                 </tr>
                 <tr>
                     <th>Name of the Mentor</th>
-                    <td colspan="3"><input type="text" name="mentor_name" class="form-control" value="{{ mentoring.mentor_name|default:'' }}"></td>
+                    <td colspan="3"><input type="text" name="sem{{ sem.num }}_mentor_name" class="form-control" value="{{ sem.mentor_name }}"></td>
                 </tr>
                 <tr>
                     <th>Designation</th>
-                    <td colspan="3"><input type="text" name="designation" class="form-control" value="{{ mentoring.designation|default:'' }}"></td>
+                    <td colspan="3"><input type="text" name="sem{{ sem.num }}_designation" class="form-control" value="{{ sem.designation }}"></td>
                 </tr>
                 <tr>
                     <th>Semester Starting Date</th>
-                    <td><input type="date" name="semester_start_date" class="form-control" value="{{ mentoring.semester_start_date }}"></td>
+                    <td><input type="date" name="sem{{ sem.num }}_start_date" class="form-control" value="{{ sem.start_date }}"></td>
                     <th>Semester Ending Date</th>
-                    <td><input type="date" name="semester_end_date" class="form-control" value="{{ mentoring.semester_end_date }}"></td>
+                    <td><input type="date" name="sem{{ sem.num }}_end_date" class="form-control" value="{{ sem.end_date }}"></td>
                 </tr>
                 <tr>
                     <td colspan="2">
                         <div class="yesno">
-                            <input type="radio" name="is_hosteller" id="hosteller_yes" value="Yes" {% if mentoring.is_hosteller == 'Yes' %}checked{% endif %}>
-                            <label for="hosteller_yes">Hosteller</label>
-                            <input type="radio" name="is_hosteller" id="hosteller_no" value="No" {% if mentoring.is_hosteller == 'No' %}checked{% endif %}>
-                            <label for="hosteller_no">Day Scholar</label>
+                            <input type="radio" name="sem{{ sem.num }}_is_hosteller" id="sem{{ sem.num }}_host_yes" value="Yes" {% if sem.is_hosteller == 'Yes' %}checked{% endif %}>
+                            <label for="sem{{ sem.num }}_host_yes">Hosteller</label>
+                            <input type="radio" name="sem{{ sem.num }}_is_hosteller" id="sem{{ sem.num }}_host_no" value="No" {% if sem.is_hosteller == 'No' %}checked{% endif %}>
+                            <label for="sem{{ sem.num }}_host_no">Day Scholar</label>
                         </div>
                     </td>
                     <td colspan="2">
                         <div class="yesno">
-                            <input type="radio" name="college_bus" id="bus_yes" value="Yes" {% if mentoring.college_bus == 'Yes' %}checked{% endif %}>
-                            <label for="bus_yes">College Bus</label>
-                            <input type="radio" name="college_bus" id="bus_no" value="No" {% if mentoring.college_bus == 'No' %}checked{% endif %}>
-                            <label for="bus_no">No Bus</label>
+                            <input type="radio" name="sem{{ sem.num }}_college_bus" id="sem{{ sem.num }}_bus_yes" value="Yes" {% if sem.college_bus == 'Yes' %}checked{% endif %}>
+                            <label for="sem{{ sem.num }}_bus_yes">College Bus</label>
+                            <input type="radio" name="sem{{ sem.num }}_college_bus" id="sem{{ sem.num }}_bus_no" value="No" {% if sem.college_bus == 'No' %}checked{% endif %}>
+                            <label for="sem{{ sem.num }}_bus_no">No Bus</label>
                         </div>
                     </td>
                 </tr>
                 <tr>
-                    <th>Reasons for Joining ANRK</th>
-                    <td colspan="3"><textarea name="reasons_for_joining" class="form-control" rows="2">{{ mentoring.reasons_for_joining|default:'' }}</textarea></td>
+                    <th>Backlogs in previous Semester?</th>
+                    <td colspan="3">
+                        <div class="yesno">
+                            <input type="radio" name="sem{{ sem.num }}_backlogs" id="sem{{ sem.num }}_back_yes" value="Yes" {% if sem.backlogs == 'Yes' %}checked{% endif %}>
+                            <label for="sem{{ sem.num }}_back_yes">Yes</label>
+                            <input type="radio" name="sem{{ sem.num }}_backlogs" id="sem{{ sem.num }}_back_no" value="No" {% if sem.backlogs == 'No' %}checked{% endif %}>
+                            <label for="sem{{ sem.num }}_back_no">No</label>
+                        </div>
+                    </td>
                 </tr>
                 <tr>
-                    <th>Ambition(s)</th>
-                    <td colspan="3"><textarea name="ambitions" class="form-control" rows="2">{{ mentoring.ambitions|default:'' }}</textarea></td>
+                    <th>If Yes, Name(s) of Backlog Courses</th>
+                    <td colspan="3"><input type="text" name="sem{{ sem.num }}_backlog_courses" class="form-control" value="{{ sem.backlog_courses }}"></td>
                 </tr>
                 <tr>
-                    <th>Strengths</th>
-                    <td><textarea name="strengths" class="form-control" rows="2">{{ mentoring.strengths|default:'' }}</textarea></td>
-                    <th>Weaknesses</th>
-                    <td><textarea name="weaknesses" class="form-control" rows="2">{{ mentoring.weaknesses|default:'' }}</textarea></td>
-                </tr>
-                <tr>
-                    <th>Areas Where Support is Required</th>
-                    <td colspan="3"><textarea name="support_required" class="form-control" rows="2">{{ mentoring.support_required|default:'' }}</textarea></td>
+                    <th>Area(s) where support is required</th>
+                    <td colspan="3"><textarea name="sem{{ sem.num }}_support_required" class="form-control" rows="2">{{ sem.support_required }}</textarea></td>
                 </tr>
             </table>
         </div>
 
-        <!-- FIRST SEMESTER SLOTS -->
+        <!-- {{ sem.year_label }} {{ sem.sem_label }} MENTORING SLOTS -->
         <div class="mentoring-section">
-            <h6 class="section-title">First Semester &mdash; Mentoring Slots</h6>
+            <h6 class="section-title">{{ sem.year_label }} {{ sem.sem_label }} &mdash; Mentoring Slots</h6>
             <table>
                 <tr>
                     <th>Slot</th>
@@ -401,46 +414,47 @@
                 </tr>
                 <tr>
                     <td><strong>1</strong></td>
-                    <td><textarea name="slot1_observations" class="form-control" rows="2">{{ mentoring.slot1_observations|default:'' }}</textarea></td>
-                    <td><textarea name="slot1_suggestions" class="form-control" rows="2">{{ mentoring.slot1_suggestions|default:'' }}</textarea></td>
-                    <td><input type="text" name="slot1_progress" class="form-control" value="{{ mentoring.slot1_progress|default:'' }}"></td>
+                    <td><textarea name="sem{{ sem.num }}_slot1_observations" class="form-control" rows="2">{{ sem.slot1_observations }}</textarea></td>
+                    <td><textarea name="sem{{ sem.num }}_slot1_suggestions" class="form-control" rows="2">{{ sem.slot1_suggestions }}</textarea></td>
+                    <td><input type="text" name="sem{{ sem.num }}_slot1_progress" class="form-control" value="{{ sem.slot1_progress }}"></td>
                 </tr>
                 <tr>
                     <td><strong>2</strong></td>
-                    <td><textarea name="slot2_observations" class="form-control" rows="2">{{ mentoring.slot2_observations|default:'' }}</textarea></td>
-                    <td><textarea name="slot2_suggestions" class="form-control" rows="2">{{ mentoring.slot2_suggestions|default:'' }}</textarea></td>
-                    <td><input type="text" name="slot2_progress" class="form-control" value="{{ mentoring.slot2_progress|default:'' }}"></td>
+                    <td><textarea name="sem{{ sem.num }}_slot2_observations" class="form-control" rows="2">{{ sem.slot2_observations }}</textarea></td>
+                    <td><textarea name="sem{{ sem.num }}_slot2_suggestions" class="form-control" rows="2">{{ sem.slot2_suggestions }}</textarea></td>
+                    <td><input type="text" name="sem{{ sem.num }}_slot2_progress" class="form-control" value="{{ sem.slot2_progress }}"></td>
                 </tr>
             </table>
         </div>
 
-        <!-- FIRST SEMESTER SIGN-OFF -->
+        <!-- {{ sem.year_label }} {{ sem.sem_label }} SIGN-OFF -->
         <div class="mentoring-section">
-            <h6 class="section-title">First Semester &mdash; Sign-off</h6>
+            <h6 class="section-title">{{ sem.year_label }} {{ sem.sem_label }} &mdash; Sign-off</h6>
             <table>
                 <tr>
                     <th>Date of Mentoring</th>
-                    <td><input type="date" name="date_of_mentoring" class="form-control" value="{{ mentoring.date_of_mentoring }}"></td>
+                    <td><input type="date" name="sem{{ sem.num }}_date_of_mentoring" class="form-control" value="{{ sem.date_of_mentoring }}"></td>
                     <td colspan="2"></td>
                 </tr>
                 <tr>
                     <th>Mentee Sign</th>
-                    <td><input type="text" name="mentee_sign" class="form-control" value="{{ mentoring.mentee_sign|default:'' }}"></td>
+                    <td><input type="text" name="sem{{ sem.num }}_mentee_sign" class="form-control" value="{{ sem.mentee_sign }}"></td>
                     <td colspan="2"></td>
                 </tr>
                 <tr>
                     <th>Mentor Sign</th>
-                    <td><input type="text" name="mentor_sign" class="form-control" value="{{ mentoring.mentor_sign|default:'' }}"></td>
+                    <td><input type="text" name="sem{{ sem.num }}_mentor_sign" class="form-control" value="{{ sem.mentor_sign }}"></td>
                     <td colspan="2"></td>
                 </tr>
                 <tr>
                     <th>Signature of AC</th>
-                    <td><input type="text" name="signature_ac" class="form-control" value="{{ mentoring.signature_ac|default:'' }}"></td>
+                    <td><input type="text" name="sem{{ sem.num }}_signature_ac" class="form-control" value="{{ sem.signature_ac }}"></td>
                     <th>Signature of HOD</th>
-                    <td><input type="text" name="signature_hod" class="form-control" value="{{ mentoring.signature_hod|default:'' }}"></td>
+                    <td><input type="text" name="sem{{ sem.num }}_signature_hod" class="form-control" value="{{ sem.signature_hod }}"></td>
                 </tr>
             </table>
         </div>
+        {% endfor %}
 
         <div class="actions-bar" style="margin-top: 1rem;">
             <button type="submit" class="btn btn-primary">

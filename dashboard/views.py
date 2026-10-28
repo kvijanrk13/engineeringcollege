@@ -7529,6 +7529,78 @@ def mentoring_tab(request):
             logger.error(f"Error fetching mentoring record: {e}")
     if not mentoring:
         mentoring = StudentMentoring()
+
+    SEMESTER_LABELS = [
+        ('I B.Tech', 'First Semester'),
+        ('I B.Tech', 'Second Semester'),
+        ('II B.Tech', 'First Semester'),
+        ('II B.Tech', 'Second Semester'),
+        ('III B.Tech', 'First Semester'),
+        ('III B.Tech', 'Second Semester'),
+        ('IV B.Tech', 'First Semester'),
+        ('IV B.Tech', 'Second Semester'),
+    ]
+
+    BRANCHES = [
+        'CSE', 'CSE(AI&ML)', 'IT', 'ECE', 'CE', 'EEE', 'ME', 'MBA',
+    ]
+
+    # Build semester_data list for template from JSON
+    semester_data = []
+    try:
+        raw = mentoring.semester_data or {}
+        if isinstance(raw, dict):
+            for i in range(8):
+                sd = raw.get(str(i + 1), {})
+                semester_data.append({
+                    'num': i + 1,
+                    'year_label': SEMESTER_LABELS[i][0],
+                    'sem_label': SEMESTER_LABELS[i][1],
+                    'academic_year': sd.get('academic_year', f'{SEMESTER_LABELS[i][0]} {SEMESTER_LABELS[i][1]}'),
+                    'semester': sd.get('semester', SEMESTER_LABELS[i][1]),
+                    'mentor_name': sd.get('mentor_name', ''),
+                    'designation': sd.get('designation', ''),
+                    'start_date': sd.get('start_date', ''),
+                    'end_date': sd.get('end_date', ''),
+                    'is_hosteller': sd.get('is_hosteller', ''),
+                    'college_bus': sd.get('college_bus', ''),
+                    'backlogs': sd.get('backlogs', ''),
+                    'backlog_courses': sd.get('backlog_courses', ''),
+                    'support_required': sd.get('support_required', ''),
+                    'slot1_observations': sd.get('slot1_observations', ''),
+                    'slot1_suggestions': sd.get('slot1_suggestions', ''),
+                    'slot1_progress': sd.get('slot1_progress', ''),
+                    'slot2_observations': sd.get('slot2_observations', ''),
+                    'slot2_suggestions': sd.get('slot2_suggestions', ''),
+                    'slot2_progress': sd.get('slot2_progress', ''),
+                    'date_of_mentoring': sd.get('date_of_mentoring', ''),
+                    'mentee_sign': sd.get('mentee_sign', ''),
+                    'mentor_sign': sd.get('mentor_sign', ''),
+                    'signature_ac': sd.get('signature_ac', ''),
+                    'signature_hod': sd.get('signature_hod', ''),
+                })
+        else:
+            semester_data = []
+    except Exception as e:
+        logger.error(f"Error parsing semester_data: {e}")
+        semester_data = []
+    # Ensure 8 entries
+    while len(semester_data) < 8:
+        i = len(semester_data) + 1
+        semester_data.append({
+            'num': i,
+            'year_label': SEMESTER_LABELS[i - 1][0],
+            'sem_label': SEMESTER_LABELS[i - 1][1],
+            'academic_year': f'{SEMESTER_LABELS[i - 1][0]} {SEMESTER_LABELS[i - 1][1]}',
+            'semester': SEMESTER_LABELS[i - 1][1],
+            'mentor_name': '', 'designation': '', 'start_date': '', 'end_date': '',
+            'is_hosteller': '', 'college_bus': '', 'backlogs': '', 'backlog_courses': '',
+            'support_required': '', 'slot1_observations': '', 'slot1_suggestions': '',
+            'slot1_progress': '', 'slot2_observations': '', 'slot2_suggestions': '',
+            'slot2_progress': '', 'date_of_mentoring': '', 'mentee_sign': '',
+            'mentor_sign': '', 'signature_ac': '', 'signature_hod': '',
+        })
+
     if request.method == 'POST':
         if not (student and hasattr(student, 'id')):
             messages.error(request, "Student record not found.")
@@ -7538,6 +7610,7 @@ def mentoring_tab(request):
             if not mentoring:
                 mentoring = StudentMentoring(student=student)
             mentoring.student = student
+            mentoring.branch = request.POST.get('branch', '')
             mentoring.academic_year = request.POST.get('academic_year', '')
             mentoring.semester = request.POST.get('semester', '')
             mentoring.batch = request.POST.get('batch', '')
@@ -7578,30 +7651,36 @@ def mentoring_tab(request):
             mentoring.cgpa_sem6 = request.POST.get('cgpa_sem6', '')
             mentoring.cgpa_sem7 = request.POST.get('cgpa_sem7', '')
             mentoring.cgpa_sem8 = request.POST.get('cgpa_sem8', '')
-            mentoring.mentor_name = request.POST.get('mentor_name', '')
-            mentoring.designation = request.POST.get('designation', '')
-            mentoring.semester_start_date = request.POST.get('semester_start_date') or None
-            mentoring.semester_end_date = request.POST.get('semester_end_date') or None
-            mentoring.is_hosteller = request.POST.get('is_hosteller', '')
-            mentoring.college_bus = request.POST.get('college_bus', '')
-            mentoring.backlogs_previous_semester = request.POST.get('backlogs_previous_semester', '')
-            mentoring.backlog_courses = request.POST.get('backlog_courses', '')
-            mentoring.reasons_for_joining = request.POST.get('reasons_for_joining', '')
-            mentoring.ambitions = request.POST.get('ambitions', '')
-            mentoring.strengths = request.POST.get('strengths', '')
-            mentoring.weaknesses = request.POST.get('weaknesses', '')
-            mentoring.support_required = request.POST.get('support_required', '')
-            mentoring.slot1_observations = request.POST.get('slot1_observations', '')
-            mentoring.slot1_suggestions = request.POST.get('slot1_suggestions', '')
-            mentoring.slot1_progress = request.POST.get('slot1_progress', '')
-            mentoring.slot2_observations = request.POST.get('slot2_observations', '')
-            mentoring.slot2_suggestions = request.POST.get('slot2_suggestions', '')
-            mentoring.slot2_progress = request.POST.get('slot2_progress', '')
-            mentoring.date_of_mentoring = request.POST.get('date_of_mentoring') or None
-            mentoring.mentee_sign = request.POST.get('mentee_sign', '')
-            mentoring.mentor_sign = request.POST.get('mentor_sign', '')
-            mentoring.signature_ac = request.POST.get('signature_ac', '')
-            mentoring.signature_hod = request.POST.get('signature_hod', '')
+
+            # Build per-semester data from POST
+            sem_data = {}
+            for i in range(8):
+                n = i + 1
+                sem_data[str(n)] = {
+                    'academic_year': request.POST.get(f'sem{n}_academic_year', f'{SEMESTER_LABELS[i][0]} {SEMESTER_LABELS[i][1]}'),
+                    'semester': request.POST.get(f'sem{n}_semester', SEMESTER_LABELS[i][1]),
+                    'mentor_name': request.POST.get(f'sem{n}_mentor_name', ''),
+                    'designation': request.POST.get(f'sem{n}_designation', ''),
+                    'start_date': request.POST.get(f'sem{n}_start_date') or None,
+                    'end_date': request.POST.get(f'sem{n}_end_date') or None,
+                    'is_hosteller': request.POST.get(f'sem{n}_is_hosteller', ''),
+                    'college_bus': request.POST.get(f'sem{n}_college_bus', ''),
+                    'backlogs': request.POST.get(f'sem{n}_backlogs', ''),
+                    'backlog_courses': request.POST.get(f'sem{n}_backlog_courses', ''),
+                    'support_required': request.POST.get(f'sem{n}_support_required', ''),
+                    'slot1_observations': request.POST.get(f'sem{n}_slot1_observations', ''),
+                    'slot1_suggestions': request.POST.get(f'sem{n}_slot1_suggestions', ''),
+                    'slot1_progress': request.POST.get(f'sem{n}_slot1_progress', ''),
+                    'slot2_observations': request.POST.get(f'sem{n}_slot2_observations', ''),
+                    'slot2_suggestions': request.POST.get(f'sem{n}_slot2_suggestions', ''),
+                    'slot2_progress': request.POST.get(f'sem{n}_slot2_progress', ''),
+                    'date_of_mentoring': request.POST.get(f'sem{n}_date_of_mentoring') or None,
+                    'mentee_sign': request.POST.get(f'sem{n}_mentee_sign', ''),
+                    'mentor_sign': request.POST.get(f'sem{n}_mentor_sign', ''),
+                    'signature_ac': request.POST.get(f'sem{n}_signature_ac', ''),
+                    'signature_hod': request.POST.get(f'sem{n}_signature_hod', ''),
+                }
+            mentoring.semester_data = sem_data
             mentoring.save()
             messages.success(request, "Mentoring details saved successfully.")
         except Exception as e:
@@ -7612,6 +7691,8 @@ def mentoring_tab(request):
         "title": "Mentoring Tab - Engineering College",
         "student": student,
         "mentoring": mentoring,
+        "semester_data": semester_data,
+        "branches": BRANCHES,
     })
 
 
