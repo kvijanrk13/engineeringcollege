@@ -171,7 +171,6 @@
         Fill in the fields below and click <strong>Save Mentoring Details</strong> to store your records.
     </div>
 
-    {% if student %}
     <div class="photo-upload-panel mb-3 p-3 border rounded">
         <form method="POST" action="{% url 'dashboard:mentoring_tab' %}" enctype="multipart/form-data">
             {% csrf_token %}
@@ -186,6 +185,9 @@
                     <i class="fas fa-upload me-1"></i> Upload Photo
                 </button>
             </div>
+            {% if not student %}
+            <small class="form-text text-muted d-block mt-2">Sign in with the student's linked account to save a photo.</small>
+            {% endif %}
             {% if student.photo_url or student.photo %}
             <div class="mt-2">
                 <img src="{% url 'dashboard:student_photo_redirect' student.id %}" alt="{{ student.student_name }}" style="width: 90px; height: 110px; object-fit: cover; border-radius: 4px;">
@@ -193,7 +195,6 @@
             {% endif %}
         </form>
     </div>
-    {% endif %}
 
     <form method="POST" action="{% url 'dashboard:mentoring_tab' %}">
         {% csrf_token %}

@@ -7664,7 +7664,10 @@ def mentoring_tab(request):
 
     if request.method == 'POST':
         if not (student and hasattr(student, 'id')):
-            messages.error(request, "Student record not found.")
+            if request.POST.get('action') == 'upload_student_photo':
+                messages.error(request, "Log in with the student's linked account to upload a photo.")
+            else:
+                messages.error(request, "Student record not found.")
             return redirect('dashboard:mentoring_tab')
 
         if request.POST.get('action') == 'upload_student_photo':
