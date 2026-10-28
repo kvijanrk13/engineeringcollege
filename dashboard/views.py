@@ -7613,7 +7613,7 @@ def mentoring_tab(request):
             mentoring.branch = request.POST.get('branch', '')
             mentoring.academic_year = request.POST.get('academic_year', '')
             mentoring.semester = request.POST.get('semester', '')
-            mentoring.batch = request.POST.get('batch', '')
+            mentoring.batch = request.POST.get('regulation', request.POST.get('batch', ''))
             mentoring.admission_year = request.POST.get('admission_year', '')
             mentoring.father_name = request.POST.get('father_name', '')
             mentoring.mother_name = request.POST.get('mother_name', '')
