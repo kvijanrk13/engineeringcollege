@@ -862,7 +862,7 @@
             {% if student.photo_url or student.photo %}
             <div style="margin-bottom: 15px; text-align: center;">
                 <p>Current Photo:</p>
-                <img src="{% if student.photo_url %}{{ student.photo_url }}{% else %}{{ student.photo.url }}{% endif %}" alt="Current Photo" style="max-width: 150px; border: 1px solid #0f0;">
+                <img src="{% url 'dashboard:student_photo_redirect' student.id %}" alt="Current Photo" style="max-width: 150px; border: 1px solid #0f0;">
             </div>
             {% endif %}
             <label class="file-upload" for="photoInput" style="display: block;">

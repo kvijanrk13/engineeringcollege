@@ -322,6 +322,14 @@ def get_cloudinary_public_id(url, keep_extension=False):
         return None
 
 
+def safe_asset_reference(url):
+    """Hide signed URL query strings from application logs."""
+    parsed = urlparse(url or '')
+    if parsed.query:
+        return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+    return url
+
+
 def get_cloudinary_public_id_candidates(url):
     """Return likely Cloudinary public_id variants for image and raw resources."""
     candidates = []
@@ -896,7 +904,7 @@ def download_remote_asset(url, default_suffix='.pdf'):
                     continue
 
         if response.status_code != 200:
-            print(f"  [SKIP] All fallbacks failed for: {url} (HTTP {response.status_code})")
+            print(f"  [SKIP] All fallbacks failed for: {safe_asset_reference(url)} (HTTP {response.status_code})")
             return None, False
 
         content_type = (response.headers.get('content-type') or '').lower()
@@ -912,7 +920,7 @@ def download_remote_asset(url, default_suffix='.pdf'):
         print(f"  [OK] Downloaded {len(response.content)} bytes -> {tmp.name}")
         return tmp.name, is_pdf
     except Exception as e:
-        print(f"  [ERR] Download error for {url}: {e}")
+        print(f"  [ERR] Download error for {safe_asset_reference(url)}: {e}")
         return None, False
 
 
@@ -1083,6 +1091,52 @@ def resolve_faculty_photo_for_pdf(faculty):
     return None, None, temp_paths, None
 
 
+def is_authenticated_cloudinary_photo_url(url):
+    return '/image/authenticated/' in urlparse(url or '').path
+
+
+def get_authenticated_student_photo_download_url(student, photo_url=None, upload=None):
+    photo_url = normalize_optional_url(photo_url or getattr(student, 'photo_url', None))
+    if not photo_url or not is_authenticated_cloudinary_photo_url(photo_url):
+        return None
+
+    upload = upload or CloudinaryUpload.objects.filter(
+        student=student, upload_type='photo'
+    ).order_by('-upload_date').first()
+    photo_path_parts = [part for part in unquote(urlparse(photo_url).path).split('/') if part]
+    try:
+        authenticated_index = photo_path_parts.index('authenticated')
+        asset_parts = photo_path_parts[authenticated_index + 1:]
+    except ValueError:
+        return None
+    if asset_parts and asset_parts[0].startswith('v') and asset_parts[0][1:].isdigit():
+        asset_parts = asset_parts[1:]
+    if not asset_parts:
+        return None
+
+    image_format = Path(asset_parts[-1]).suffix.lstrip('.').lower()
+    public_id = getattr(upload, 'public_id', None)
+    if not public_id:
+        public_id = '/'.join(asset_parts)
+        if image_format:
+            public_id = public_id.rsplit('.', 1)[0]
+    if not image_format or not public_id:
+        return None
+
+    try:
+        return cloudinary.utils.private_download_url(
+            public_id,
+            image_format,
+            resource_type='image',
+            type='authenticated',
+            expires_at=int(timezone.now().timestamp()) + 900,
+            attachment=False,
+        )
+    except Exception as exc:
+        logger.warning("Unable to create signed photo URL for %s: %s", student.ht_no, exc)
+        return None
+
+
 def collect_student_photo_candidates(student, photo_override_path=None):
     """Return ordered student photo candidates for generated PDFs."""
     candidates = []
@@ -1108,16 +1162,23 @@ def collect_student_photo_candidates(student, photo_override_path=None):
         candidates.append({'source': source, 'url': normalized_url})
 
     add_path(photo_override_path, 'photo_override_path')
-    add_url(getattr(student, 'photo_url', None), 'student.photo_url')
-
-    latest_upload_url = (
+    photo_url = normalize_optional_url(getattr(student, 'photo_url', None))
+    latest_upload = (
         CloudinaryUpload.objects
         .filter(student=student, upload_type='photo')
         .order_by('-upload_date')
-        .values_list('cloudinary_url', flat=True)
         .first()
     )
-    add_url(latest_upload_url, 'cloudinary_upload_history')
+    latest_upload_url = normalize_optional_url(getattr(latest_upload, 'cloudinary_url', None))
+    effective_photo_url = photo_url or latest_upload_url
+    if is_authenticated_cloudinary_photo_url(effective_photo_url):
+        signed_photo_url = get_authenticated_student_photo_download_url(
+            student, photo_url=effective_photo_url, upload=latest_upload
+        )
+        add_url(signed_photo_url, 'authenticated_student_photo')
+    else:
+        add_url(photo_url, 'student.photo_url')
+        add_url(latest_upload_url, 'cloudinary_upload_history')
 
     photo_field = getattr(student, 'photo', None)
     if photo_field and getattr(photo_field, 'name', ''):
@@ -1234,14 +1295,14 @@ def resolve_student_photo_for_pdf(student, photo_override_path=None):
 
             temp_paths.append(downloaded_path)
             if is_pdf:
-                logger.warning(f"Student photo candidate from {source} resolved to a PDF, skipping: {url_value}")
+                logger.warning("Student photo candidate from %s resolved to a PDF, skipping.", source)
                 continue
 
             data_uri = encode_image_as_data_uri(downloaded_path)
             if data_uri:
                 return data_uri, downloaded_path, temp_paths, source
 
-            logger.warning(f"Downloaded student photo candidate from {source} could not be encoded: {url_value}")
+            logger.warning("Downloaded student photo candidate from %s could not be encoded.", source)
             return build_file_uri(downloaded_path), downloaded_path, temp_paths, source
 
     return None, None, temp_paths, None
@@ -7605,6 +7666,52 @@ def mentoring_tab(request):
         if not (student and hasattr(student, 'id')):
             messages.error(request, "Student record not found.")
             return redirect('dashboard:mentoring_tab')
+
+        if request.POST.get('action') == 'upload_student_photo':
+            uploaded_photo = request.FILES.get('student_photo')
+            if not uploaded_photo:
+                messages.error(request, "Choose a student photo to upload.")
+                return redirect('dashboard:mentoring_tab')
+            if uploaded_photo.size > 10 * 1024 * 1024:
+                messages.error(request, "The photo must be 10 MB or smaller.")
+                return redirect('dashboard:mentoring_tab')
+            if not is_cloudinary_configured():
+                messages.error(request, "Secure photo storage is unavailable right now. Please try again later.")
+                return redirect('dashboard:mentoring_tab')
+
+            try:
+                uploaded_photo.seek(0)
+                with PILImage.open(uploaded_photo) as image:
+                    image.verify()
+                uploaded_photo.seek(0)
+
+                public_id_suffix = re.sub(r'[^A-Za-z0-9_-]', '_', student.ht_no)
+                upload_result = cloudinary.uploader.upload(
+                    uploaded_photo,
+                    folder="student_photos",
+                    public_id=f"student_{public_id_suffix}_{datetime.now().strftime('%Y%m%d%H%M%S%f')}_photo",
+                    overwrite=True,
+                    resource_type="image",
+                    type="authenticated",
+                )
+                photo_url = upload_result.get('secure_url')
+                if not photo_url:
+                    raise ValueError("Cloudinary did not return a photo URL")
+                student.photo_url = photo_url
+                student.save(update_fields=['photo_url'])
+                record_cloudinary_upload(
+                    upload_type='photo',
+                    upload_result=upload_result,
+                    uploaded_by=(getattr(request.user, 'username', '') or get_session_student_ht_no(request)),
+                    student=student,
+                )
+
+                messages.success(request, "Student photo uploaded successfully.")
+            except Exception as exc:
+                logger.warning("Unable to upload student photo for %s: %s", student.ht_no, exc)
+                messages.error(request, "Photo upload failed. Please choose a valid image and try again.")
+            return redirect('dashboard:mentoring_tab')
+
         try:
             mentoring = StudentMentoring.objects.filter(student=student).order_by('-created_at').first()
             if not mentoring:
@@ -8236,17 +8343,40 @@ def edit_student(request, student_id):
 def student_photo_redirect(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     photo_url = normalize_optional_url(getattr(student, 'photo_url', None))
-    if photo_url:
-        return redirect(photo_url)
-
-    latest_upload_url = (
+    latest_upload = (
         CloudinaryUpload.objects
         .filter(student=student, upload_type='photo')
         .order_by('-upload_date')
-        .values_list('cloudinary_url', flat=True)
         .first()
     )
-    latest_upload_url = normalize_optional_url(latest_upload_url)
+    latest_upload_url = normalize_optional_url(getattr(latest_upload, 'cloudinary_url', None))
+    effective_photo_url = photo_url or latest_upload_url
+
+    if is_authenticated_cloudinary_photo_url(effective_photo_url):
+        user = getattr(request, 'user', None)
+        staff_access = bool(user and user.is_authenticated and (user.is_staff or user.is_superuser))
+        student_access = bool(
+            request.session.get('student_logged_in')
+            and not is_demo_student_session(request)
+            and student_session_can_access_record(request, student)
+        )
+        if not (staff_access or student_access):
+            return redirect('dashboard:student_login')
+
+        signed_photo_url = get_authenticated_student_photo_download_url(
+            student, photo_url=effective_photo_url, upload=latest_upload
+        )
+        if signed_photo_url:
+            response = redirect(signed_photo_url)
+            response['Cache-Control'] = 'private, no-store'
+            response['Referrer-Policy'] = 'no-referrer'
+            response['X-Robots-Tag'] = 'noindex, nofollow'
+            return response
+        raise Http404("Photo not found")
+
+    if photo_url:
+        return redirect(photo_url)
+
     if latest_upload_url:
         return redirect(latest_upload_url)
 

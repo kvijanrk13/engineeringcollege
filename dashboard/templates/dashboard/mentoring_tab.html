@@ -171,6 +171,30 @@
         Fill in the fields below and click <strong>Save Mentoring Details</strong> to store your records.
     </div>
 
+    {% if student %}
+    <div class="photo-upload-panel mb-3 p-3 border rounded">
+        <form method="POST" action="{% url 'dashboard:mentoring_tab' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="upload_student_photo">
+            <div class="d-flex flex-wrap align-items-end gap-2">
+                <div class="flex-grow-1">
+                    <label for="student-photo-upload" class="form-label">Student Photo</label>
+                    <input type="file" id="student-photo-upload" name="student_photo" class="form-control" accept="image/*" required>
+                    <small class="form-text text-muted">Image files up to 10 MB.</small>
+                </div>
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="fas fa-upload me-1"></i> Upload Photo
+                </button>
+            </div>
+            {% if student.photo_url or student.photo %}
+            <div class="mt-2">
+                <img src="{% url 'dashboard:student_photo_redirect' student.id %}" alt="{{ student.student_name }}" style="width: 90px; height: 110px; object-fit: cover; border-radius: 4px;">
+            </div>
+            {% endif %}
+        </form>
+    </div>
+    {% endif %}
+
     <form method="POST" action="{% url 'dashboard:mentoring_tab' %}">
         {% csrf_token %}
 
