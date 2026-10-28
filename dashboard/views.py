@@ -7665,6 +7665,28 @@ def mentoring_tab(request):
             'mentor_sign': '', 'signature_ac': '', 'signature_hod': '',
         })
 
+    def mentoring_page_context(submitted_form_data=None):
+        return {
+            "title": "Mentoring Tab - Engineering College",
+            "student": student,
+            "student_ht_no": student.ht_no if student else get_session_student_ht_no(request),
+            "mentoring": mentoring,
+            "semester_data": semester_data,
+            "branches": BRANCHES,
+            "submitted_form_data": submitted_form_data,
+        }
+
+    def render_submitted_mentoring_form():
+        submitted_form_data = {
+            key: value for key, value in request.POST.items()
+            if key not in {'csrfmiddlewaretoken', 'action'}
+        }
+        return render(
+            request,
+            "dashboard/mentoring_tab.html",
+            mentoring_page_context(submitted_form_data),
+        )
+
     if request.method == 'POST':
         if not (student and hasattr(student, 'id')):
             if request.POST.get('action') == 'upload_student_photo':
@@ -7677,13 +7699,13 @@ def mentoring_tab(request):
             uploaded_photo = request.FILES.get('student_photo')
             if not uploaded_photo:
                 messages.error(request, "Choose a student photo to upload.")
-                return redirect('dashboard:mentoring_tab')
+                return render_submitted_mentoring_form()
             if uploaded_photo.size > 10 * 1024 * 1024:
                 messages.error(request, "The photo must be 10 MB or smaller.")
-                return redirect('dashboard:mentoring_tab')
+                return render_submitted_mentoring_form()
             if not is_cloudinary_configured():
                 messages.error(request, "Secure photo storage is unavailable right now. Please try again later.")
-                return redirect('dashboard:mentoring_tab')
+                return render_submitted_mentoring_form()
 
             try:
                 uploaded_photo.seek(0)
@@ -7716,7 +7738,109 @@ def mentoring_tab(request):
             except Exception as exc:
                 logger.warning("Unable to upload student photo for %s: %s", student.ht_no, exc)
                 messages.error(request, "Photo upload failed. Please choose a valid image and try again.")
-            return redirect('dashboard:mentoring_tab')
+            return render_submitted_mentoring_form()
+
+        required_field_labels = {
+            'ht_no': 'Hall Ticket Number',
+            'readmitted_student': 'Re-admitted Student choice',
+            'lateral_entry_student': 'Lateral Entry Student choice',
+            'branch': 'Branch',
+            'admission_year': 'Admission Year',
+            'regulation': 'Regulation',
+            'info_student_name': 'Name of the Student',
+            'father_name': 'Name of the Father',
+            'mother_name': 'Name of the Mother',
+            'address': 'Full Address with Pincode',
+            'permanent_address': 'Permanent Address',
+            'communication_address': 'Communication Address',
+            'gender': 'Gender',
+            'blood_group': 'Blood Group',
+            'allergies': 'Allergies',
+            'student_mobile': 'Student Mobile Number',
+            'parent_mobile': 'Parent Mobile Number',
+            'student_email': 'Student Email ID',
+            'parent_email': 'Parent Email ID',
+            'ssc_school_name': 'SSC School Name',
+            'ssc_place': 'SSC Place',
+            'ssc_board': 'SSC Board',
+            'ssc_percentage': 'SSC Percentage',
+            'inter_college_name': 'Intermediate College Name',
+            'inter_place': 'Intermediate Place',
+            'inter_board': 'Intermediate Board',
+            'inter_percentage': 'Intermediate Percentage',
+        }
+        for semester_number in range(1, 9):
+            required_field_labels[f'sgpa_sem{semester_number}'] = f'Semester {semester_number} SGPA'
+            required_field_labels[f'cgpa_sem{semester_number}'] = f'Semester {semester_number} CGPA'
+
+        semester_required_fields = {
+            'academic_year': 'Academic Year',
+            'semester': 'Semester',
+            'mentor_name': 'Name of the Mentor',
+            'designation': 'Designation',
+            'start_date': 'Semester Starting Date',
+            'end_date': 'Semester Ending Date',
+            'is_hosteller': 'Hosteller or Day Scholar choice',
+            'college_bus': 'College Bus choice',
+            'backlogs': 'Backlogs in previous Semester choice',
+            'backlog_courses': 'Backlog Course Names',
+            'support_required': 'Areas where support is required',
+            'slot1_observations': 'Slot 1 Observations',
+            'slot1_suggestions': 'Slot 1 Suggestions',
+            'slot1_progress': 'Slot 1 Progress',
+            'slot2_observations': 'Slot 2 Observations',
+            'slot2_suggestions': 'Slot 2 Suggestions',
+            'slot2_progress': 'Slot 2 Progress',
+            'date_of_mentoring': 'Date of Mentoring',
+            'mentee_sign': 'Mentee Sign',
+            'mentor_sign': 'Mentor Sign',
+            'signature_ac': 'Signature of AC',
+            'signature_hod': 'Signature of HOD',
+        }
+        for semester_number in range(1, 9):
+            for suffix, label in semester_required_fields.items():
+                required_field_labels[f'sem{semester_number}_{suffix}'] = (
+                    f'Semester {semester_number}: {label}'
+                )
+
+        radio_field_names = {
+            'readmitted_student', 'lateral_entry_student',
+        }
+        for semester_number in range(1, 9):
+            radio_field_names.update({
+                f'sem{semester_number}_is_hosteller',
+                f'sem{semester_number}_college_bus',
+                f'sem{semester_number}_backlogs',
+            })
+
+        missing_fields = []
+        for field_name, label in required_field_labels.items():
+            value = request.POST.get(field_name, '')
+            if field_name in radio_field_names:
+                if value not in {'Yes', 'No'}:
+                    missing_fields.append(label)
+            elif not (value or '').strip():
+                missing_fields.append(label)
+
+        has_uploaded_photo = bool(student.photo_url or getattr(student.photo, 'name', ''))
+        if not has_uploaded_photo:
+            has_uploaded_photo = CloudinaryUpload.objects.filter(
+                student=student, upload_type='photo'
+            ).exists()
+        if not has_uploaded_photo:
+            missing_fields.insert(0, 'Student Photo (upload above)')
+
+        if missing_fields:
+            preview = ', '.join(missing_fields[:6])
+            remaining_count = len(missing_fields) - 6
+            if remaining_count > 0:
+                preview += f', and {remaining_count} more'
+            messages.error(
+                request,
+                f'Complete every field, choose Yes or No for each radio question, and upload a student photo before saving. '
+                f'{len(missing_fields)} required item(s) need attention: {preview}.'
+            )
+            return render_submitted_mentoring_form()
 
         try:
             submitted_ht_no = request.POST.get('ht_no')
@@ -7727,13 +7851,18 @@ def mentoring_tab(request):
                     return redirect('dashboard:mentoring_tab')
                 if Student.objects.filter(ht_no__iexact=submitted_ht_no).exclude(pk=student.pk).exists():
                     messages.error(request, "That Hall Ticket Number is already assigned to another student.")
-                    return redirect('dashboard:mentoring_tab')
+                    return render_submitted_mentoring_form()
                 if student.ht_no != submitted_ht_no:
                     student.ht_no = submitted_ht_no
                     student.save(update_fields=['ht_no', 'updated_at'])
                     if request.session.get('student_logged_in'):
                         request.session['student_username'] = submitted_ht_no
                         request.session['student_ht_no'] = submitted_ht_no
+
+            submitted_student_name = request.POST.get('info_student_name', '').strip()
+            if submitted_student_name and student.student_name != submitted_student_name:
+                student.student_name = submitted_student_name
+                student.save(update_fields=['student_name', 'updated_at'])
 
             mentoring = StudentMentoring.objects.filter(student=student).order_by('-created_at').first()
             if not mentoring:
@@ -7817,15 +7946,9 @@ def mentoring_tab(request):
         except Exception as e:
             logger.error(f"Error saving mentoring data: {e}")
             messages.error(request, "Failed to save mentoring details. Please try again.")
+            return render_submitted_mentoring_form()
         return redirect('dashboard:mentoring_tab')
-    return render(request, "dashboard/mentoring_tab.html", {
-        "title": "Mentoring Tab - Engineering College",
-        "student": student,
-        "student_ht_no": student.ht_no if student else get_session_student_ht_no(request),
-        "mentoring": mentoring,
-        "semester_data": semester_data,
-        "branches": BRANCHES,
-    })
+    return render(request, "dashboard/mentoring_tab.html", mentoring_page_context())
 
 
 def add_student(request):
