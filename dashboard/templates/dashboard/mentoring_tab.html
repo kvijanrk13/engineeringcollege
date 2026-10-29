@@ -147,6 +147,21 @@
     .mentoring-page .field-validation-alert[hidden] {
         display: none;
     }
+    .mentoring-page .student-photo-preview.hidden {
+        display: none;
+    }
+    .mentoring-page .student-photo-preview img {
+        width: 150px;
+        height: 180px;
+        object-fit: cover;
+        border: 1px solid rgba(15, 76, 129, 0.25);
+        border-radius: 8px;
+        background: #f4f8fb;
+    }
+    .mentoring-page .student-photo-preview p {
+        margin: 0.25rem 0 0;
+        color: #5e7488;
+    }
     .mentoring-page .is-invalid {
         border-color: #dc3545 !important;
     }
@@ -186,9 +201,26 @@
         Complete the required student details and choose Yes or No for both student-status questions. Semester mentoring sections may be left blank. Click <strong>Save Mentoring Details</strong> to save your record and Word document.
     </div>
 
-    <form id="mentoring-details-form" method="POST" action="{% url 'dashboard:mentoring_tab' %}" enctype="multipart/form-data" novalidate data-photo-uploaded="true">
+    <form id="mentoring-details-form" method="POST" action="{% url 'dashboard:mentoring_tab' %}" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
         <div id="mentoring-validation-alert" class="alert alert-danger field-validation-alert" role="alert" aria-live="assertive" hidden></div>
+
+        <div class="photo-preview-panel mb-3 p-3 border rounded">
+            <div class="d-flex flex-wrap align-items-end gap-2">
+                <div class="flex-grow-1">
+                    <label for="student-photo-upload" class="form-label">Browse Student Photo</label>
+                    <input type="file" id="student-photo-upload" name="student_photo" class="form-control" accept="image/*">
+                    <small class="form-text text-muted">Preview only. Image files up to 10 MB.</small>
+                </div>
+            </div>
+            <div id="student-photo-preview" class="student-photo-preview mt-3 hidden">
+                <img id="student-photo-preview-image" src="" alt="Photo preview">
+                <div>
+                    <strong id="student-photo-preview-title">Photo Preview</strong>
+                    <p id="student-photo-preview-help">Preview of the selected photo.</p>
+                </div>
+            </div>
+        </div>
 
         <!-- Student Identity -->
         <div class="mentoring-section">
@@ -516,8 +548,28 @@
 {{ submitted_form_data|json_script:"submitted-mentoring-form-data" }}
 <script>
 (() => {
+    const photoInput = document.getElementById('student-photo-upload');
+    const preview = document.getElementById('student-photo-preview');
+    const previewImage = document.getElementById('student-photo-preview-image');
+    const previewTitle = document.getElementById('student-photo-preview-title');
+    const previewHelp = document.getElementById('student-photo-preview-help');
     const mentoringForm = document.getElementById('mentoring-details-form');
     const validationAlert = document.getElementById('mentoring-validation-alert');
+    let previewObjectUrl = null;
+
+    if (photoInput && preview && previewImage) {
+        photoInput.addEventListener('change', () => {
+            const selectedPhoto = photoInput.files && photoInput.files[0];
+            if (!selectedPhoto || !selectedPhoto.type.startsWith('image/')) return;
+
+            if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+            previewObjectUrl = URL.createObjectURL(selectedPhoto);
+            previewImage.src = previewObjectUrl;
+            preview.classList.remove('hidden');
+            if (previewTitle) previewTitle.textContent = 'Photo Preview';
+            if (previewHelp) previewHelp.textContent = 'Preview of the selected photo.';
+        });
+    }
 
     if (mentoringForm) {
         const controls = Array.from(mentoringForm.querySelectorAll(
@@ -616,6 +668,10 @@
             }
         });
     }
+
+    window.addEventListener('beforeunload', () => {
+        if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+    });
 })();
 </script>
 {% endblock %}
