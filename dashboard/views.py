@@ -7690,56 +7690,8 @@ def mentoring_tab(request):
 
     if request.method == 'POST':
         if not (student and hasattr(student, 'id')):
-            if request.POST.get('action') == 'upload_student_photo':
-                messages.error(request, "Log in with the student's linked account to upload a photo.")
-            else:
-                messages.error(request, "Student record not found.")
+            messages.error(request, "Student record not found.")
             return redirect('dashboard:mentoring_tab')
-
-        if request.POST.get('action') == 'upload_student_photo':
-            uploaded_photo = request.FILES.get('student_photo')
-            if not uploaded_photo:
-                messages.error(request, "Choose a student photo to upload.")
-                return render_submitted_mentoring_form()
-            if uploaded_photo.size > 10 * 1024 * 1024:
-                messages.error(request, "The photo must be 10 MB or smaller.")
-                return render_submitted_mentoring_form()
-            if not is_cloudinary_configured():
-                messages.error(request, "Secure photo storage is unavailable right now. Please try again later.")
-                return render_submitted_mentoring_form()
-
-            try:
-                uploaded_photo.seek(0)
-                with PILImage.open(uploaded_photo) as image:
-                    image.verify()
-                uploaded_photo.seek(0)
-
-                public_id_suffix = re.sub(r'[^A-Za-z0-9_-]', '_', student.ht_no)
-                upload_result = cloudinary.uploader.upload(
-                    uploaded_photo,
-                    folder="student_photos",
-                    public_id=f"student_{public_id_suffix}_{datetime.now().strftime('%Y%m%d%H%M%S%f')}_photo",
-                    overwrite=True,
-                    resource_type="image",
-                    type="authenticated",
-                )
-                photo_url = upload_result.get('secure_url')
-                if not photo_url:
-                    raise ValueError("Cloudinary did not return a photo URL")
-                student.photo_url = photo_url
-                student.save(update_fields=['photo_url'])
-                record_cloudinary_upload(
-                    upload_type='photo',
-                    upload_result=upload_result,
-                    uploaded_by=(getattr(request.user, 'username', '') or get_session_student_ht_no(request)),
-                    student=student,
-                )
-
-                messages.success(request, "Student photo uploaded successfully.")
-            except Exception as exc:
-                logger.warning("Unable to upload student photo for %s: %s", student.ht_no, exc)
-                messages.error(request, "Photo upload failed. Please choose a valid image and try again.")
-            return render_submitted_mentoring_form()
 
         required_field_labels = {
             'ht_no': 'Hall Ticket Number',
@@ -7794,14 +7746,6 @@ def mentoring_tab(request):
         if student_email and not re.fullmatch(r'[^@\s]+@anurag\.ac\.in', student_email, re.IGNORECASE):
             missing_fields.append('Student Email ID must use the @anurag.ac.in domain')
 
-        has_uploaded_photo = bool(student.photo_url or getattr(student.photo, 'name', ''))
-        if not has_uploaded_photo:
-            has_uploaded_photo = CloudinaryUpload.objects.filter(
-                student=student, upload_type='photo'
-            ).exists()
-        if not has_uploaded_photo:
-            missing_fields.insert(0, 'Student Photo (upload above)')
-
         if missing_fields:
             preview = ', '.join(missing_fields[:6])
             remaining_count = len(missing_fields) - 6
@@ -7809,7 +7753,7 @@ def mentoring_tab(request):
                 preview += f', and {remaining_count} more'
             messages.error(
                 request,
-                f'Complete the required student details, choose Yes or No for both student-status questions, and upload a student photo before saving. '
+                f'Complete the required student details, choose Yes or No for both student-status questions before saving. '
                 f'{len(missing_fields)} required item(s) need attention: {preview}.'
             )
             return render_submitted_mentoring_form()

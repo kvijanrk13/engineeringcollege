@@ -144,21 +144,6 @@
         align-items: center;
         gap: 1rem;
     }
-    .mentoring-page .student-photo-preview[hidden] {
-        display: none;
-    }
-    .mentoring-page .student-photo-preview img {
-        width: 150px;
-        height: 180px;
-        object-fit: cover;
-        border: 1px solid rgba(15, 76, 129, 0.25);
-        border-radius: 8px;
-        background: #f4f8fb;
-    }
-    .mentoring-page .student-photo-preview p {
-        margin: 0.25rem 0 0;
-        color: #5e7488;
-    }
     .mentoring-page .field-validation-alert[hidden] {
         display: none;
     }
@@ -198,37 +183,11 @@
 
     <div class="save-notice">
         <i class="fas fa-info-circle me-1"></i>
-        Upload your photo, complete the required student details and choose Yes or No for both student-status questions. Semester mentoring sections may be left blank. Click <strong>Save Mentoring Details</strong> to save your record and Word document.
+        Complete the required student details and choose Yes or No for both student-status questions. Semester mentoring sections may be left blank. Click <strong>Save Mentoring Details</strong> to save your record and Word document.
     </div>
 
-    <form id="mentoring-details-form" method="POST" action="{% url 'dashboard:mentoring_tab' %}" enctype="multipart/form-data" novalidate data-photo-uploaded="{% if student.photo_url or student.photo %}true{% else %}false{% endif %}">
+    <form id="mentoring-details-form" method="POST" action="{% url 'dashboard:mentoring_tab' %}" enctype="multipart/form-data" novalidate data-photo-uploaded="true">
         {% csrf_token %}
-        <div class="photo-upload-panel mb-3 p-3 border rounded">
-            <div class="d-flex flex-wrap align-items-end gap-2">
-                <div class="flex-grow-1">
-                    <label for="student-photo-upload" class="form-label">Student Photo</label>
-                    <input type="file" id="student-photo-upload" name="student_photo" class="form-control" accept="image/*" required>
-                    <small class="form-text text-muted">Image files up to 10 MB.</small>
-                </div>
-                <button type="submit" name="action" value="upload_student_photo" class="btn btn-outline-primary">
-                    <i class="fas fa-upload me-1"></i> Upload Photo
-                </button>
-            </div>
-            {% if not student %}
-            <small class="form-text text-muted d-block mt-2">Sign in with the student's linked account to save a photo.</small>
-            {% endif %}
-            {% if student and not student.photo_url and not student.photo %}
-            <div class="alert alert-warning mt-3 mb-0" role="status">Upload and save a student photo before saving the mentoring form.</div>
-            {% endif %}
-            <div id="student-photo-preview" class="student-photo-preview mt-3" {% if not student.photo_url and not student.photo %}hidden{% endif %}>
-                <img id="student-photo-preview-image" {% if student.photo_url or student.photo %}src="{% url 'dashboard:student_photo_redirect' student.id %}"{% endif %} alt="{% if student %}{{ student.student_name }}{% else %}Selected student photo{% endif %}">
-                <div>
-                    <strong id="student-photo-preview-title">{% if student.photo_url or student.photo %}Student photo{% else %}Photo preview{% endif %}</strong>
-                    <p id="student-photo-preview-help">{% if student.photo_url or student.photo %}This photo is saved to your student record.{% else %}Upload this photo to save it to your student record.{% endif %}</p>
-                </div>
-            </div>
-        </div>
-
         <div id="mentoring-validation-alert" class="alert alert-danger field-validation-alert" role="alert" aria-live="assertive" hidden></div>
 
         <!-- Student Identity -->
@@ -557,36 +516,10 @@
 {{ submitted_form_data|json_script:"submitted-mentoring-form-data" }}
 <script>
 (() => {
-    const photoInput = document.getElementById('student-photo-upload');
-    const preview = document.getElementById('student-photo-preview');
-    const previewImage = document.getElementById('student-photo-preview-image');
-    const previewTitle = document.getElementById('student-photo-preview-title');
-    const previewHelp = document.getElementById('student-photo-preview-help');
     const mentoringForm = document.getElementById('mentoring-details-form');
     const validationAlert = document.getElementById('mentoring-validation-alert');
-    const photoUploadButton = document.querySelector('#mentoring-details-form button[name="action"][value="upload_student_photo"]');
-    let previewObjectUrl = null;
-    let photoUploadRequested = false;
-
-    if (photoInput && preview && previewImage) {
-        photoInput.addEventListener('change', () => {
-            const selectedPhoto = photoInput.files && photoInput.files[0];
-            if (!selectedPhoto || !selectedPhoto.type.startsWith('image/')) return;
-
-            if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
-            previewObjectUrl = URL.createObjectURL(selectedPhoto);
-            previewImage.src = previewObjectUrl;
-            preview.hidden = false;
-            if (previewTitle) previewTitle.textContent = 'Selected photo preview';
-            if (previewHelp) previewHelp.textContent = 'Upload this photo to save it to your student record.';
-        });
-    }
 
     if (mentoringForm) {
-        if (photoUploadButton) {
-            photoUploadButton.addEventListener('click', () => { photoUploadRequested = true; });
-        }
-
         const controls = Array.from(mentoringForm.querySelectorAll(
             'input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="file"]), select, textarea'
         ));
@@ -642,10 +575,6 @@
         };
 
         mentoringForm.addEventListener('submit', (event) => {
-            if (photoUploadRequested || (event.submitter && event.submitter.name === 'action' && event.submitter.value === 'upload_student_photo')) {
-                return;
-            }
-
             validatedControls.forEach((control) => control.classList.remove('is-invalid'));
             const missing = [];
             const checkedRadioNames = new Set();
@@ -670,19 +599,12 @@
                 }
             });
 
-            if (mentoringForm.dataset.photoUploaded !== 'true') {
-                missing.unshift({
-                    control: photoInput,
-                    label: 'Student Photo (upload above)',
-                });
-            }
-
             if (missing.length) {
                 event.preventDefault();
                 if (validationAlert) {
                     const labels = missing.slice(0, 8).map((item) => item.label);
                     const remaining = missing.length - labels.length;
-                    validationAlert.textContent = `Complete the required student details, choose Yes or No for both student-status questions, and upload a student photo. Semester mentoring sections may be left blank. ${missing.length} item(s) need attention: ${labels.join(', ')}${remaining > 0 ? `, and ${remaining} more` : ''}.`;
+                    validationAlert.textContent = `Complete the required student details, choose Yes or No for both student-status questions. Semester mentoring sections may be left blank. ${missing.length} item(s) need attention: ${labels.join(', ')}${remaining > 0 ? `, and ${remaining} more` : ''}.`;
                     validationAlert.hidden = false;
                     validationAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
@@ -694,10 +616,6 @@
             }
         });
     }
-
-    window.addEventListener('beforeunload', () => {
-        if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
-    });
 })();
 </script>
 {% endblock %}
