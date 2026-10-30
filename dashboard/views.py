@@ -7690,8 +7690,8 @@ def mentoring_tab(request):
 
     if request.method == 'POST':
         if not (student and hasattr(student, 'id')):
-            messages.error(request, "Student record not found.")
-            return redirect('dashboard:mentoring_tab')
+            messages.error(request, "Student record not found. Please log in again.")
+            return redirect('dashboard:student_login')
 
         required_field_labels = {
             'ht_no': 'Hall Ticket Number',
