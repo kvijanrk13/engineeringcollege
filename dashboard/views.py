@@ -7579,19 +7579,11 @@ def students_data(request):
 
 
 def mentoring_tab(request):
-    if not request.session.get('student_logged_in') and not request.user.is_authenticated:
-        return redirect('dashboard:student_login')
-    student = None
-    try:
-        student = get_session_student_record(request)
-    except Exception as e:
-        logger.error(f"Error getting student data: {e}")
     mentoring = None
-    if student and hasattr(student, 'id'):
-        try:
-            mentoring = StudentMentoring.objects.filter(student=student).order_by('-created_at').first()
-        except Exception as e:
-            logger.error(f"Error fetching mentoring record: {e}")
+    try:
+        mentoring = StudentMentoring.objects.filter(student__isnull=True).order_by('-created_at').first()
+    except Exception as e:
+        logger.error(f"Error fetching mentoring record: {e}")
     if not mentoring:
         mentoring = StudentMentoring()
 
@@ -7669,8 +7661,8 @@ def mentoring_tab(request):
     def mentoring_page_context(submitted_form_data=None):
         return {
             "title": "Mentoring Tab - Engineering College",
-            "student": student,
-            "student_ht_no": student.ht_no if student else get_session_student_ht_no(request),
+            "student": None,
+            "student_ht_no": get_session_student_ht_no(request),
             "mentoring": mentoring,
             "semester_data": semester_data,
             "branches": BRANCHES,
@@ -7689,10 +7681,6 @@ def mentoring_tab(request):
         )
 
     if request.method == 'POST':
-        if not (student and hasattr(student, 'id')):
-            messages.error(request, "Student record not found. Please log in again.")
-            return redirect('dashboard:student_login')
-
         required_field_labels = {
             'ht_no': 'Hall Ticket Number',
             'readmitted_student': 'Re-admitted Student choice',
@@ -7759,31 +7747,15 @@ def mentoring_tab(request):
             return render_submitted_mentoring_form()
 
         try:
-            submitted_ht_no = request.POST.get('ht_no')
-            if submitted_ht_no is not None:
-                submitted_ht_no = submitted_ht_no.strip().upper()
-                if not submitted_ht_no:
-                    messages.error(request, "Hall Ticket Number is required.")
-                    return redirect('dashboard:mentoring_tab')
-                if Student.objects.filter(ht_no__iexact=submitted_ht_no).exclude(pk=student.pk).exists():
-                    messages.error(request, "That Hall Ticket Number is already assigned to another student.")
-                    return render_submitted_mentoring_form()
-                if student.ht_no != submitted_ht_no:
-                    student.ht_no = submitted_ht_no
-                    student.save(update_fields=['ht_no', 'updated_at'])
-                    if request.session.get('student_logged_in'):
-                        request.session['student_username'] = submitted_ht_no
-                        request.session['student_ht_no'] = submitted_ht_no
+            submitted_ht_no = request.POST.get('ht_no', '').strip().upper()
+            if not submitted_ht_no:
+                messages.error(request, "Hall Ticket Number is required.")
+                return redirect('dashboard:mentoring_tab')
 
-            submitted_student_name = request.POST.get('info_student_name', '').strip()
-            if submitted_student_name and student.student_name != submitted_student_name:
-                student.student_name = submitted_student_name
-                student.save(update_fields=['student_name', 'updated_at'])
-
-            mentoring = StudentMentoring.objects.filter(student=student).order_by('-created_at').first()
+            mentoring = StudentMentoring.objects.filter(student__isnull=True, ht_no__iexact=submitted_ht_no).order_by('-created_at').first()
             if not mentoring:
-                mentoring = StudentMentoring(student=student)
-            mentoring.student = student
+                mentoring = StudentMentoring()
+            mentoring.student = None
             mentoring.branch = request.POST.get('branch', '')
             mentoring.academic_year = request.POST.get('academic_year', '')
             mentoring.semester = request.POST.get('semester', '')
@@ -7861,21 +7833,12 @@ def mentoring_tab(request):
             try:
                 if not is_cloudinary_configured():
                     raise RuntimeError("Cloudinary is not configured")
-                student_photo_bytes = None
-                signed_photo_url = get_authenticated_student_photo_download_url(student)
-                if signed_photo_url:
-                    try:
-                        photo_response = requests.get(signed_photo_url, timeout=20)
-                        if photo_response.status_code == 200:
-                            student_photo_bytes = photo_response.content
-                    except requests.RequestException as photo_error:
-                        logger.warning("Could not retrieve the student photo for the Word document (%s): %s", student.ht_no, photo_error)
                 document_bytes = create_mentoring_document(
-                    student,
+                    None,
                     mentoring,
-                    photo_bytes=student_photo_bytes,
+                    photo_bytes=None,
                 )
-                ticket_slug = re.sub(r'[^A-Za-z0-9_-]', '_', student.ht_no or str(student.pk))
+                ticket_slug = re.sub(r'[^A-Za-z0-9_-]', '_', submitted_ht_no or str(mentoring.pk))
                 upload_result = cloudinary.uploader.upload(
                     ContentFile(document_bytes, name="mentorship_file_b.tech.docx"),
                     public_id=f"student_mentorship_documents/{ticket_slug}/mentorship_file_b.tech.docx",
@@ -7890,14 +7853,14 @@ def mentoring_tab(request):
                     upload_type='mentorship_docx',
                     upload_result=upload_result,
                     uploaded_by=(getattr(request.user, 'username', '') or get_session_student_ht_no(request)),
-                    student=student,
+                    student=None,
                 )
                 messages.success(
                     request,
                     "Mentoring details were saved, and mentorship_file_b.tech.docx was uploaded to Cloudinary.",
                 )
             except Exception as upload_error:
-                logger.exception("Mentoring record saved but its Word document could not be uploaded for %s: %s", student.ht_no, upload_error)
+                logger.exception("Mentoring record saved but its Word document could not be uploaded for %s: %s", submitted_ht_no, upload_error)
                 messages.success(request, "Mentoring details were saved successfully.")
                 messages.error(
                     request,

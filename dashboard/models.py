@@ -634,7 +634,7 @@ class Student(models.Model):
 
 
 class StudentMentoring(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='mentoring_records')
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='mentoring_records', null=True, blank=True)
     branch = models.CharField(max_length=100, blank=True, null=True)
     academic_year = models.CharField(max_length=50, blank=True, null=True)
     semester_data = models.JSONField(default=dict, blank=True)
