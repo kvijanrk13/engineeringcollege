@@ -7835,6 +7835,8 @@ def mentoring_tab(request):
                     None,
                     mentoring,
                     photo_bytes=None,
+                    student_name=request.POST.get('info_student_name', '').strip(),
+                    hall_ticket_no=submitted_ht_no,
                 )
                 ticket_slug = re.sub(r'[^A-Za-z0-9_-]', '_', submitted_ht_no or str(mentoring.pk))
                 upload_result = cloudinary.uploader.upload(

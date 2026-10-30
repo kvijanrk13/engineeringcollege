@@ -111,7 +111,7 @@ def _add_continuation_semester(document, semester_number, semester_data):
                     run.font.size = Pt(9)
 
 
-def create_mentoring_document(student, mentoring, photo_bytes=None):
+def create_mentoring_document(student, mentoring, photo_bytes=None, student_name="", hall_ticket_no=""):
     """Return a populated B.Tech mentoring record as DOCX bytes."""
     if not TEMPLATE_PATH.is_file():
         raise FileNotFoundError("The B.Tech mentoring Word template is missing.")
@@ -122,8 +122,8 @@ def create_mentoring_document(student, mentoring, photo_bytes=None):
         raise ValueError("The supplied mentoring template has an unexpected table layout.")
 
     semester_data = mentoring.semester_data if isinstance(mentoring.semester_data, dict) else {}
-    student_name = _text(getattr(student, "student_name", ""))
-    hall_ticket = _text(getattr(student, "ht_no", ""))
+    student_name = student_name or _text(getattr(student, "student_name", ""))
+    hall_ticket = hall_ticket_no or _text(getattr(student, "ht_no", ""))
     branch = _text(getattr(mentoring, "branch", ""))
     batch = _text(getattr(mentoring, "batch", ""))
     admission_year = _text(getattr(mentoring, "admission_year", ""))
@@ -137,7 +137,7 @@ def create_mentoring_document(student, mentoring, photo_bytes=None):
         f"Hall Ticket No.: {hall_ticket}    Name of the Student: {student_name}    "
         f"Program: B.Tech    Branch / Specialization: {branch}    "
         f"Re-admitted Student: {_text(mentoring.readmitted_student)}    "
-        f"Lateral Entry Student: {_text(mentoring.lateral_entry_student)}    Photograph: Uploaded"
+        f"Lateral Entry Student: {_text(mentoring.lateral_entry_student)}"
     )
     _set_cell_text(info.rows[3].cells[0], identity)
     if photo_bytes:
