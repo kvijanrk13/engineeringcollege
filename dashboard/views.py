@@ -7752,9 +7752,7 @@ def mentoring_tab(request):
                 messages.error(request, "Hall Ticket Number is required.")
                 return redirect('dashboard:mentoring_tab')
 
-            mentoring = StudentMentoring.objects.filter(student__isnull=True, ht_no__iexact=submitted_ht_no).order_by('-created_at').first()
-            if not mentoring:
-                mentoring = StudentMentoring()
+            mentoring = StudentMentoring()
             mentoring.student = None
             mentoring.branch = request.POST.get('branch', '')
             mentoring.academic_year = request.POST.get('academic_year', '')
