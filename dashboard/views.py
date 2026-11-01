@@ -7839,9 +7839,10 @@ def mentoring_tab(request):
                     hall_ticket_no=submitted_ht_no,
                 )
                 ticket_slug = re.sub(r'[^A-Za-z0-9_-]', '_', submitted_ht_no or str(mentoring.pk))
+                document_filename = f"{ticket_slug}.docx"
                 upload_result = cloudinary.uploader.upload(
-                    ContentFile(document_bytes, name="mentorship_file_b.tech.docx"),
-                    public_id=f"student_mentorship_documents/{ticket_slug}/mentorship_file_b.tech.docx",
+                    ContentFile(document_bytes, name=document_filename),
+                    public_id=f"student_mentorship_documents/{ticket_slug}/{document_filename}",
                     resource_type="raw",
                     type="authenticated",
                     overwrite=True,
@@ -7857,7 +7858,7 @@ def mentoring_tab(request):
                 )
                 messages.success(
                     request,
-                    "Mentoring details were saved, and mentorship_file_b.tech.docx was uploaded to Cloudinary.",
+                    f"Mentoring details were saved, and the document was uploaded to Cloudinary as {document_filename}.",
                 )
             except Exception as upload_error:
                 logger.exception("Mentoring record saved but its Word document could not be uploaded for %s: %s", submitted_ht_no, upload_error)

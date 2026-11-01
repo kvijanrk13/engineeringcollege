@@ -48,6 +48,75 @@ def make_test_pdf_bytes(label='Test PDF'):
     return buffer.getvalue()
 
 
+class MentoringTabTests(TestCase):
+    @override_settings(
+        ROOT_URLCONF='engineeringcollege.urls',
+        SECURE_SSL_REDIRECT=False,
+    )
+    @patch('dashboard.views.record_cloudinary_upload')
+    @patch('dashboard.views.cloudinary.uploader.upload')
+    @patch('dashboard.views.create_mentoring_document', return_value=b'test document')
+    @patch('dashboard.views.is_cloudinary_configured', return_value=True)
+    def test_cloudinary_mentoring_document_uses_hall_ticket_as_filename(
+        self,
+        _mock_cloudinary_configured,
+        _mock_create_document,
+        mock_upload,
+        _mock_record_upload,
+    ):
+        mock_upload.return_value = {
+            'public_id': 'student_mentorship_documents/24C11A1201/24C11A1201.docx',
+            'secure_url': 'https://res.cloudinary.com/test/raw/upload/24C11A1201.docx',
+            'resource_type': 'raw',
+        }
+        post_data = {
+            'ht_no': '24c11a1201',
+            'readmitted_student': 'No',
+            'lateral_entry_student': 'No',
+            'branch': 'IT',
+            'admission_year': '2024',
+            'regulation': 'R22',
+            'info_student_name': 'Test Student',
+            'father_name': 'Test Father',
+            'mother_name': 'Test Mother',
+            'address': 'Test Address',
+            'permanent_address': 'Test Address',
+            'communication_address': 'Test Address',
+            'gender': 'Male',
+            'blood_group': 'O+',
+            'allergies': 'None',
+            'student_mobile': '9876543210',
+            'parent_mobile': '9876543211',
+            'student_email': 'student@anurag.ac.in',
+            'parent_email': 'parent@example.com',
+            'ssc_school_name': 'Test School',
+            'ssc_place': 'Test Place',
+            'ssc_board': 'State Board',
+            'ssc_percentage': '90',
+            'inter_college_name': 'Test College',
+            'inter_place': 'Test Place',
+            'inter_board': 'State Board',
+            'inter_percentage': '90',
+        }
+        for semester_number in range(1, 9):
+            post_data[f'sgpa_sem{semester_number}'] = '8'
+            post_data[f'cgpa_sem{semester_number}'] = '8'
+
+        response = self.client.post(reverse('dashboard:mentoring_tab'), post_data)
+
+        self.assertTrue(
+            mock_upload.called,
+            f"status={response.status_code}, location={response.get('Location')}",
+        )
+        self.assertEqual(response.status_code, 302)
+        uploaded_file = mock_upload.call_args.args[0]
+        self.assertEqual(uploaded_file.name, '24C11A1201.docx')
+        self.assertEqual(
+            mock_upload.call_args.kwargs['public_id'],
+            'student_mentorship_documents/24C11A1201/24C11A1201.docx',
+        )
+
+
 class DashboardTests(TestCase):
     @override_settings(SECURE_SSL_REDIRECT=False)
     def test_project_catalog_shows_only_federated_folder(self):
