@@ -7727,6 +7727,9 @@ def mentoring_tab(request):
                     missing_fields.append(label)
             elif not (value or '').strip():
                 missing_fields.append(label)
+        student_photo = request.FILES.get('student_photo')
+        if not student_photo:
+            missing_fields.append('Student Photo')
 
         if request.POST.get('gender') not in {'Male', 'Female'}:
             if 'Gender' not in missing_fields:
@@ -7748,7 +7751,6 @@ def mentoring_tab(request):
             return render_submitted_mentoring_form()
 
         photo_bytes = None
-        student_photo = request.FILES.get('student_photo')
         if student_photo:
             if student_photo.size > MENTORING_PHOTO_MAX_UPLOAD_SIZE:
                 messages.error(request, "The student photo must be 10 MB or smaller.")

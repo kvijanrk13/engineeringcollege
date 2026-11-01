@@ -7,7 +7,9 @@ from pathlib import Path
 from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT, WD_CELL_VERTICAL_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
+from docx.text.paragraph import Paragraph
 
 
 TEMPLATE_PATH = Path(__file__).parent / "document_templates" / "mentorship_file_b.tech.docx"
@@ -56,6 +58,51 @@ def _set_semester_radio(row, yes_cell_index, no_cell_index, value):
     yes_text, no_text = _selected_yes_no(value)
     _set_cell_text(row.cells[yes_cell_index], yes_text)
     _set_cell_text(row.cells[no_cell_index], no_text)
+
+
+def _fill_photograph_placeholder(document, photo_bytes):
+    photo_textbox = next(
+        (
+            textbox for textbox in document._element.xpath(".//w:txbxContent")
+            if "photograph" in "".join(
+                element.text or ""
+                for element in textbox.iter()
+                if element.tag == qn("w:t")
+            ).casefold()
+        ),
+        None,
+    )
+    if photo_textbox is None:
+        raise ValueError("The supplied mentoring template has no Photograph placeholder.")
+
+    photo_paragraph_element = next(
+        (
+            paragraph for paragraph in photo_textbox.iter()
+            if paragraph.tag == qn("w:p")
+            and "photograph" in "".join(
+                element.text or ""
+                for element in paragraph.iter()
+                if element.tag == qn("w:t")
+            ).casefold()
+        ),
+        None,
+    )
+    if photo_paragraph_element is None:
+        raise ValueError("The mentoring template Photograph placeholder has no text paragraph.")
+
+    for paragraph in list(photo_textbox):
+        if paragraph.tag == qn("w:p") and paragraph is not photo_paragraph_element:
+            photo_textbox.remove(paragraph)
+
+    photo_paragraph = Paragraph(photo_paragraph_element, document._body)
+    photo_paragraph.clear()
+    photo_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    picture = photo_paragraph.add_run().add_picture(
+        BytesIO(photo_bytes),
+        width=Inches(1.8),
+        height=Inches(2.16),
+    )
+    picture._inline.docPr.set("descr", "Student photograph")
 
 
 def _add_continuation_semester(document, semester_number, semester_data):
@@ -163,14 +210,7 @@ def create_mentoring_document(student, mentoring, photo_bytes=None, student_name
         run.font.name = "Arial"
         run.font.size = Pt(9)
     if photo_bytes:
-        photo_paragraph = info.rows[3].cells[0].add_paragraph()
-        photo_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        photo_paragraph.paragraph_format.space_before = Pt(24)
-        photo_paragraph.add_run().add_picture(
-            BytesIO(photo_bytes),
-            width=Inches(1.8),
-            height=Inches(2.16),
-        )
+        _fill_photograph_placeholder(document, photo_bytes)
     _set_cell_text(info.rows[6].cells[5], mentoring.father_name)
     _set_cell_text(info.rows[8].cells[5], mentoring.mother_name)
     _set_cell_text(info.rows[11].cells[0], mentoring.address)

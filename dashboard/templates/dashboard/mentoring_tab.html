@@ -209,8 +209,8 @@
             <div class="d-flex flex-wrap align-items-end gap-2">
                 <div class="flex-grow-1">
                     <label for="student-photo-upload" class="form-label">Browse Student Photo</label>
-                    <input type="file" id="student-photo-upload" name="student_photo" class="form-control" accept="image/*">
-                    <small class="form-text text-muted">The selected photo preview will be included in the saved mentoring document. Image files up to 10 MB.</small>
+                    <input type="file" id="student-photo-upload" name="student_photo" class="form-control" accept="image/*" required>
+                    <small class="form-text text-muted">Required. The selected photo will fill the Photograph box in the saved mentoring document. Image files up to 10 MB.</small>
                 </div>
             </div>
             <div id="student-photo-preview" class="student-photo-preview mt-3 hidden">
@@ -558,9 +558,22 @@
     let previewObjectUrl = null;
 
     if (photoInput && preview && previewImage) {
+        photoInput.required = true;
         photoInput.addEventListener('change', () => {
             const selectedPhoto = photoInput.files && photoInput.files[0];
-            if (!selectedPhoto || !selectedPhoto.type.startsWith('image/')) return;
+            if (!selectedPhoto) {
+                preview.classList.add('hidden');
+                return;
+            }
+            if (!selectedPhoto.type.startsWith('image/')) {
+                photoInput.value = '';
+                preview.classList.add('hidden');
+                if (validationAlert) {
+                    validationAlert.textContent = 'Please select a valid image file for the student photo.';
+                    validationAlert.hidden = false;
+                }
+                return;
+            }
 
             if (selectedPhoto.size > 10 * 1024 * 1024) {
                 photoInput.value = '';
@@ -639,6 +652,7 @@
 
         mentoringForm.addEventListener('submit', (event) => {
             validatedControls.forEach((control) => control.classList.remove('is-invalid'));
+            if (photoInput) photoInput.classList.remove('is-invalid');
             const missing = [];
             const checkedRadioNames = new Set();
 
@@ -661,6 +675,11 @@
                     missing.push({ control, label: getFieldLabel(control) });
                 }
             });
+
+            if (photoInput && (!photoInput.files || photoInput.files.length === 0)) {
+                photoInput.classList.add('is-invalid');
+                missing.push({ control: photoInput, label: 'Student Photo' });
+            }
 
             if (missing.length) {
                 event.preventDefault();

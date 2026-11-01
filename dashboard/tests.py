@@ -99,6 +99,11 @@ class MentoringTabTests(TestCase):
             'inter_place': 'Test Place',
             'inter_board': 'State Board',
             'inter_percentage': '90',
+            'student_photo': SimpleUploadedFile(
+                'student-photo.jpg',
+                make_test_image_bytes(),
+                content_type='image/jpeg',
+            ),
         }
         for semester_number in range(1, 9):
             post_data[f'sgpa_sem{semester_number}'] = '8'
@@ -111,6 +116,7 @@ class MentoringTabTests(TestCase):
             f"status={response.status_code}, location={response.get('Location')}",
         )
         self.assertEqual(response.status_code, 302)
+        self.assertTrue(_mock_create_document.call_args.kwargs['photo_bytes'])
         uploaded_file = mock_upload.call_args.args[0]
         self.assertEqual(uploaded_file.name, '24C11A1201.docx')
         self.assertEqual(
@@ -214,7 +220,19 @@ class MentoringTabTests(TestCase):
             [row.cells[1].text for row in identity_rows.rows],
             ['22C11A1218', 'Cloudinary Test Student', 'B.Tech', 'CSE(AI&ML)'],
         )
-        self.assertEqual(len(identity_cell._tc.xpath('.//w:drawing')), 1)
+        photo_textbox = next(
+            textbox for textbox in document._element.xpath('.//w:txbxContent')
+            if any(element.tag.endswith('}drawing') for element in textbox.iter())
+        )
+        self.assertNotIn(
+            'Photograph',
+            ''.join(
+                element.text or ''
+                for element in photo_textbox.iter()
+                if element.tag.endswith('}t')
+            ),
+        )
+        self.assertEqual(len(document.inline_shapes), 1)
         image_width = document.inline_shapes[0].width
         image_height = document.inline_shapes[0].height
         self.assertAlmostEqual(image_width / image_height, 5 / 6, places=2)
