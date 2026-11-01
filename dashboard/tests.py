@@ -17,12 +17,14 @@ from django.http import HttpResponse
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from docx import Document
 
 from dashboard import views as dashboard_views
 from dashboard.models import (
     AuditLog, Certificate, CloudinaryUpload, FDP, Faculty, KavachSecureFile, ProjectDownloadPayment,
-    ResearchPublication, Student, SuspiciousActivity,
+    ResearchPublication, Student, StudentMentoring, SuspiciousActivity,
 )
+from dashboard.mentoring_document import create_mentoring_document
 from dashboard.pdf_generation import (
     FACULTY_PDF_TEMPLATE,
     STUDENT_PDF_TEMPLATE,
@@ -115,6 +117,35 @@ class MentoringTabTests(TestCase):
             mock_upload.call_args.kwargs['public_id'],
             'student_mentorship_documents/24C11A1201/24C11A1201.docx',
         )
+
+    def test_generated_document_contains_student_identity_table(self):
+        mentoring = StudentMentoring(
+            branch='IT',
+            batch='R22',
+            admission_year='2024',
+            readmitted_student='No',
+            lateral_entry_student='Yes',
+        )
+
+        document = Document(io.BytesIO(create_mentoring_document(
+            None,
+            mentoring,
+            student_name='Test Student',
+            hall_ticket_no='24C11A1201',
+        )))
+        identity_table = document.tables[1].rows[3].cells[0].tables[0]
+
+        self.assertEqual(
+            [[cell.text for cell in row.cells] for row in identity_table.rows],
+            [
+                ['Hall Ticket No.', '24C11A1201'],
+                ['Name of the Student', 'Test Student'],
+                ['Program', 'B.Tech'],
+                ['Branch / Specialization', 'IT'],
+            ],
+        )
+        self.assertIn('Re-admitted Student: No', document.tables[1].rows[3].cells[0].text)
+        self.assertIn('Lateral Entry Student: Yes', document.tables[1].rows[3].cells[0].text)
 
 
 class DashboardTests(TestCase):

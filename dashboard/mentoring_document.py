@@ -7,7 +7,7 @@ from pathlib import Path
 from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT, WD_CELL_VERTICAL_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.shared import Inches, Pt
+from docx.shared import Inches, Pt, RGBColor
 
 
 TEMPLATE_PATH = Path(__file__).parent / "document_templates" / "mentorship_file_b.tech.docx"
@@ -133,13 +133,35 @@ def create_mentoring_document(student, mentoring, photo_bytes=None, student_name
     info = tables[1]
     _set_cell_text(info.rows[2].cells[2], batch)
     _set_cell_text(info.rows[2].cells[9], admission_year)
-    identity = (
-        f"Hall Ticket No.: {hall_ticket}    Name of the Student: {student_name}    "
-        f"Program: B.Tech    Branch / Specialization: {branch}    "
+    identity_cell = info.rows[3].cells[0]
+    identity_table = identity_cell.add_table(4, 2)
+    identity_table.style = "Table Grid"
+    identity_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    identity_table.autofit = False
+    identity_rows = (
+        ("Hall Ticket No.", hall_ticket),
+        ("Name of the Student", student_name),
+        ("Program", "B.Tech"),
+        ("Branch / Specialization", branch),
+    )
+    for row, (label, value) in zip(identity_table.rows, identity_rows):
+        row.cells[0].width = Inches(2.4)
+        row.cells[1].width = Inches(3.8)
+        for cell in row.cells:
+            cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+        _set_cell_text(row.cells[0], label)
+        _set_cell_text(row.cells[1], value)
+        for run in row.cells[0].paragraphs[0].runs:
+            run.font.name = "Arial"
+            run.font.size = Pt(11)
+            run.font.color.rgb = RGBColor(0, 51, 102)
+    status_paragraph = identity_cell.add_paragraph(
         f"Re-admitted Student: {_text(mentoring.readmitted_student)}    "
         f"Lateral Entry Student: {_text(mentoring.lateral_entry_student)}"
     )
-    _set_cell_text(info.rows[3].cells[0], identity)
+    for run in status_paragraph.runs:
+        run.font.name = "Arial"
+        run.font.size = Pt(9)
     if photo_bytes:
         photo_paragraph = info.rows[3].cells[0].add_paragraph()
         photo_paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
