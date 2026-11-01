@@ -164,8 +164,13 @@ def create_mentoring_document(student, mentoring, photo_bytes=None, student_name
         run.font.size = Pt(9)
     if photo_bytes:
         photo_paragraph = info.rows[3].cells[0].add_paragraph()
-        photo_paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-        photo_paragraph.add_run().add_picture(BytesIO(photo_bytes), width=Inches(1.0))
+        photo_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        photo_paragraph.paragraph_format.space_before = Pt(24)
+        photo_paragraph.add_run().add_picture(
+            BytesIO(photo_bytes),
+            width=Inches(1.8),
+            height=Inches(2.16),
+        )
     _set_cell_text(info.rows[6].cells[5], mentoring.father_name)
     _set_cell_text(info.rows[8].cells[5], mentoring.mother_name)
     _set_cell_text(info.rows[11].cells[0], mentoring.address)

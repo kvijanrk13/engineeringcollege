@@ -210,7 +210,7 @@
                 <div class="flex-grow-1">
                     <label for="student-photo-upload" class="form-label">Browse Student Photo</label>
                     <input type="file" id="student-photo-upload" name="student_photo" class="form-control" accept="image/*">
-                    <small class="form-text text-muted">Preview only. Image files up to 10 MB.</small>
+                    <small class="form-text text-muted">The selected photo preview will be included in the saved mentoring document. Image files up to 10 MB.</small>
                 </div>
             </div>
             <div id="student-photo-preview" class="student-photo-preview mt-3 hidden">
@@ -562,10 +562,21 @@
             const selectedPhoto = photoInput.files && photoInput.files[0];
             if (!selectedPhoto || !selectedPhoto.type.startsWith('image/')) return;
 
+            if (selectedPhoto.size > 10 * 1024 * 1024) {
+                photoInput.value = '';
+                if (validationAlert) {
+                    validationAlert.textContent = 'The student photo must be 10 MB or smaller.';
+                    validationAlert.hidden = false;
+                }
+                preview.classList.add('hidden');
+                return;
+            }
+
             if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
             previewObjectUrl = URL.createObjectURL(selectedPhoto);
             previewImage.src = previewObjectUrl;
             preview.classList.remove('hidden');
+            if (validationAlert) validationAlert.hidden = true;
             if (previewTitle) previewTitle.textContent = 'Photo Preview';
             if (previewHelp) previewHelp.textContent = 'Preview of the selected photo.';
         });

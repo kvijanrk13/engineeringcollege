@@ -64,7 +64,7 @@ from cryptography.hazmat.primitives.asymmetric import ed25519, x25519
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 # from PyPDF2 import PdfMerger  # Deprecated, using pypdf instead
-from PIL import Image as PILImage
+from PIL import Image as PILImage, ImageOps as PILImageOps
 # Additional imports for PDF to image conversion
 import fitz  # PyMuPDF
 # Cloudinary imports
@@ -107,6 +107,7 @@ DECRYPTION_FAILURE_WINDOW = timedelta(minutes=15)
 DOWNLOAD_BURST_ALERT_LIMIT = 5
 DOWNLOAD_BURST_WINDOW = timedelta(minutes=10)
 KAVACH_MAX_UPLOAD_SIZE = 100 * 1024 * 1024
+MENTORING_PHOTO_MAX_UPLOAD_SIZE = 10 * 1024 * 1024
 KAVACH_SUPPORTED_FORMAT_LABELS = [
     'images',
     'PDF',
@@ -7746,6 +7747,42 @@ def mentoring_tab(request):
             )
             return render_submitted_mentoring_form()
 
+        photo_bytes = None
+        student_photo = request.FILES.get('student_photo')
+        if student_photo:
+            if student_photo.size > MENTORING_PHOTO_MAX_UPLOAD_SIZE:
+                messages.error(request, "The student photo must be 10 MB or smaller.")
+                return render_submitted_mentoring_form()
+            try:
+                with PILImage.open(student_photo) as uploaded_image:
+                    uploaded_image.verify()
+                student_photo.seek(0)
+                with PILImage.open(student_photo) as uploaded_image:
+                    photo = PILImageOps.exif_transpose(uploaded_image).convert('RGB')
+                photo_width, photo_height = photo.size
+                target_ratio = 5 / 6
+                if photo_width / photo_height > target_ratio:
+                    crop_width = int(photo_height * target_ratio)
+                    left = (photo_width - crop_width) // 2
+                    photo = photo.crop((left, 0, left + crop_width, photo_height))
+                else:
+                    crop_height = int(photo_width / target_ratio)
+                    top = (photo_height - crop_height) // 2
+                    photo = photo.crop((0, top, photo_width, top + crop_height))
+                photo.thumbnail((900, 1080), PILImage.Resampling.LANCZOS)
+                photo_buffer = io.BytesIO()
+                photo.save(photo_buffer, format='JPEG', quality=90, optimize=True)
+                photo_bytes = photo_buffer.getvalue()
+            except (
+                PILImage.UnidentifiedImageError,
+                PILImage.DecompressionBombError,
+                OSError,
+                ValueError,
+            ) as photo_error:
+                logger.warning("Invalid mentoring photo upload: %s", photo_error)
+                messages.error(request, "Please upload a valid image file for the student photo.")
+                return render_submitted_mentoring_form()
+
         try:
             submitted_ht_no = request.POST.get('ht_no', '').strip().upper()
             if not submitted_ht_no:
@@ -7834,7 +7871,7 @@ def mentoring_tab(request):
                 document_bytes = create_mentoring_document(
                     None,
                     mentoring,
-                    photo_bytes=None,
+                    photo_bytes=photo_bytes,
                     student_name=request.POST.get('info_student_name', '').strip(),
                     hall_ticket_no=submitted_ht_no,
                 )
@@ -7858,7 +7895,7 @@ def mentoring_tab(request):
                 )
                 messages.success(
                     request,
-                    f"Mentoring details were saved, and the document was uploaded to Cloudinary as {document_filename}.",
+                    f"Mentoring details were saved, and the document (including the student photo, if provided) was uploaded to Cloudinary as {document_filename}.",
                 )
             except Exception as upload_error:
                 logger.exception("Mentoring record saved but its Word document could not be uploaded for %s: %s", submitted_ht_no, upload_error)

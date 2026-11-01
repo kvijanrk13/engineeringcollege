@@ -147,6 +147,82 @@ class MentoringTabTests(TestCase):
         self.assertIn('Re-admitted Student: No', document.tables[1].rows[3].cells[0].text)
         self.assertIn('Lateral Entry Student: Yes', document.tables[1].rows[3].cells[0].text)
 
+    @override_settings(
+        ROOT_URLCONF='engineeringcollege.urls',
+        SECURE_SSL_REDIRECT=False,
+    )
+    @patch('dashboard.views.record_cloudinary_upload')
+    @patch('dashboard.views.cloudinary.uploader.upload')
+    @patch('dashboard.views.is_cloudinary_configured', return_value=True)
+    def test_save_embeds_uploaded_photo_and_form_identity_in_cloudinary_document(
+        self,
+        _mock_cloudinary_configured,
+        mock_upload,
+        _mock_record_upload,
+    ):
+        mock_upload.return_value = {
+            'public_id': 'student_mentorship_documents/22C11A1218/22C11A1218.docx',
+            'secure_url': 'https://res.cloudinary.com/test/raw/upload/22C11A1218.docx',
+            'resource_type': 'raw',
+        }
+        post_data = {
+            'ht_no': '22c11a1218',
+            'readmitted_student': 'No',
+            'lateral_entry_student': 'No',
+            'branch': 'CSE(AI&ML)',
+            'admission_year': '2022',
+            'regulation': 'R22',
+            'info_student_name': 'Cloudinary Test Student',
+            'father_name': 'Test Father',
+            'mother_name': 'Test Mother',
+            'address': 'Test Address',
+            'permanent_address': 'Test Address',
+            'communication_address': 'Test Address',
+            'gender': 'Male',
+            'blood_group': 'O+',
+            'allergies': 'None',
+            'student_mobile': '9876543210',
+            'parent_mobile': '9876543211',
+            'student_email': 'student@anurag.ac.in',
+            'parent_email': 'parent@example.com',
+            'ssc_school_name': 'Test School',
+            'ssc_place': 'Test Place',
+            'ssc_board': 'State Board',
+            'ssc_percentage': '90',
+            'inter_college_name': 'Test College',
+            'inter_place': 'Test Place',
+            'inter_board': 'State Board',
+            'inter_percentage': '90',
+            'student_photo': SimpleUploadedFile(
+                'student-photo.jpg',
+                make_test_image_bytes(),
+                content_type='image/jpeg',
+            ),
+        }
+        for semester_number in range(1, 9):
+            post_data[f'sgpa_sem{semester_number}'] = '8'
+            post_data[f'cgpa_sem{semester_number}'] = '8'
+
+        response = self.client.post(reverse('dashboard:mentoring_tab'), post_data)
+
+        self.assertEqual(response.status_code, 302)
+        uploaded_document = mock_upload.call_args.args[0]
+        document = Document(io.BytesIO(uploaded_document.read()))
+        identity_cell = document.tables[1].rows[3].cells[0]
+        identity_rows = identity_cell.tables[0]
+        self.assertEqual(
+            [row.cells[1].text for row in identity_rows.rows],
+            ['22C11A1218', 'Cloudinary Test Student', 'B.Tech', 'CSE(AI&ML)'],
+        )
+        self.assertEqual(len(identity_cell._tc.xpath('.//w:drawing')), 1)
+        image_width = document.inline_shapes[0].width
+        image_height = document.inline_shapes[0].height
+        self.assertAlmostEqual(image_width / image_height, 5 / 6, places=2)
+        self.assertEqual(
+            mock_upload.call_args.kwargs['public_id'],
+            'student_mentorship_documents/22C11A1218/22C11A1218.docx',
+        )
+
 
 class DashboardTests(TestCase):
     @override_settings(SECURE_SSL_REDIRECT=False)
