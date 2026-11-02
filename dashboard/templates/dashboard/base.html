@@ -78,9 +78,18 @@
             {% if is_mentoring_page or request.path == '/students/mentoring-tab/' %}
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'dashboard:login' %}">
+                    {% if is_mentoring_authenticated %}
+                    <form method="post" action="{% url 'dashboard:mentoring_logout' %}">
+                        {% csrf_token %}
+                        <button class="nav-link bg-transparent border-0" type="submit">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </button>
+                    </form>
+                    {% else %}
+                    <a class="nav-link" href="{% url 'dashboard:mentoring_login' %}">
                         <i class="fas fa-sign-in-alt me-1"></i>Login
                     </a>
+                    {% endif %}
                 </li>
             </ul>
             {% else %}

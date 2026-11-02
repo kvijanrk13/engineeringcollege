@@ -44,6 +44,7 @@ urlpatterns = [
     path('google/login/', views.google_login, name='google_login'),
     path('google/callback/', views.google_callback, name='google_callback'),
     path('students/mentoring-login/', views.mentoring_login, name='mentoring_login'),
+    path('students/mentoring-logout/', views.mentoring_logout, name='mentoring_logout'),
     path('google/mobile-complete/', views.google_mobile_complete, name='google_mobile_complete'),
     path('logout/', views.logout_view, name='logout'),
     path('student-logout/', views.student_logout, name='student_logout'),

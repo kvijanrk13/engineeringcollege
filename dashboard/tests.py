@@ -59,6 +59,7 @@ class MentoringTabTests(TestCase):
         )
         session = self.client.session
         session['mentoring_google_verified'] = True
+        session['mentoring_google_email'] = email
         session['mentoring_student_id'] = student.id
         session['google_oauth_email'] = email
         session['student_logged_in'] = True
@@ -134,6 +135,10 @@ class MentoringTabTests(TestCase):
         )
         self.assertEqual(self.client.session['mentoring_student_id'], student.id)
         self.assertTrue(self.client.session['mentoring_google_verified'])
+        self.assertEqual(
+            self.client.session['mentoring_google_email'],
+            'student@anurag.ac.in',
+        )
         mock_profile_request.assert_called_once()
 
     @override_settings(
@@ -176,6 +181,46 @@ class MentoringTabTests(TestCase):
             fetch_redirect_response=False,
         )
         self.assertFalse(self.client.session.get('mentoring_google_verified', False))
+
+    @override_settings(
+        ROOT_URLCONF='engineeringcollege.urls',
+        SECURE_SSL_REDIRECT=False,
+    )
+    def test_mentoring_header_shows_gmail_login_and_logout_actions(self):
+        self.sign_in_student('22C11A1218')
+        session = self.client.session
+        session['unrelated_session_value'] = 'preserved'
+        session.save()
+
+        mentoring_form = self.client.get(reverse('dashboard:mentoring_tab'))
+        self.assertEqual(mentoring_form.status_code, 200)
+        navbar = mentoring_form.content.decode().split('<nav ', 1)[1].split('</nav>', 1)[0]
+        self.assertIn('Logout', navbar)
+        self.assertIn(reverse('dashboard:mentoring_logout'), navbar)
+        self.assertNotIn('Login</a>', navbar)
+        for hidden_label in (
+            'Dashboard',
+            'Faculty',
+            'Students',
+            'Syllabus',
+            'Gallery',
+            'Exam Branch',
+            'NBA',
+            'NAAC',
+        ):
+            self.assertNotIn(hidden_label, navbar)
+
+        logout_response = self.client.post(reverse('dashboard:mentoring_logout'))
+        self.assertRedirects(
+            logout_response,
+            reverse('dashboard:mentoring_login'),
+            fetch_redirect_response=False,
+        )
+        self.assertFalse(self.client.session.get('mentoring_google_verified', False))
+        self.assertNotIn('mentoring_google_email', self.client.session)
+        self.assertNotIn('mentoring_student_id', self.client.session)
+        self.assertEqual(self.client.session['unrelated_session_value'], 'preserved')
+        self.assertTrue(self.client.session.get('student_logged_in'))
 
     @override_settings(
         ROOT_URLCONF='engineeringcollege.urls',
@@ -239,9 +284,9 @@ class MentoringTabTests(TestCase):
                 self.assertContains(mentoring_form, 'Hall Ticket Number')
                 rendered_html = mentoring_form.content.decode()
                 navbar = rendered_html.split('<nav ', 1)[1].split('</nav>', 1)[0]
-                self.assertEqual(navbar.count('<a class="nav-link'), 1)
-                self.assertIn(reverse('dashboard:login'), navbar)
-                self.assertIn('Login', navbar)
+                self.assertEqual(navbar.count('class="nav-link'), 1)
+                self.assertIn(reverse('dashboard:mentoring_logout'), navbar)
+                self.assertIn('Logout', navbar)
                 for hidden_label in (
                     'Engineering College',
                     'ENGINEERING COLLEGE - INFORMATION TECHNOLOGY',

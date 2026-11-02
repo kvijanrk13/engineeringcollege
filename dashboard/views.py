@@ -3500,6 +3500,7 @@ def google_callback(request):
             request.session['google_oauth_email'] = email
             request.session['google_oauth_name'] = profile.get('name', '')
             request.session['mentoring_google_verified'] = True
+            request.session['mentoring_google_email'] = email
             request.session['mentoring_student_id'] = student.id if student else None
             audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=email)
             messages.success(
@@ -7601,8 +7602,20 @@ def mentoring_login(request):
     })
 
 
+@require_POST
+def mentoring_logout(request):
+    request.session.pop('mentoring_google_verified', None)
+    request.session.pop('mentoring_google_email', None)
+    request.session.pop('mentoring_student_id', None)
+    if request.session.get('google_oauth_target') == 'mentoring':
+        request.session.pop('google_oauth_target', None)
+        request.session.pop('google_oauth_state', None)
+    messages.success(request, 'You have signed out of Gmail for the mentoring form.')
+    return redirect('dashboard:mentoring_login')
+
+
 def _is_mentoring_google_authenticated(request):
-    email = (request.session.get('google_oauth_email') or '').strip().lower()
+    email = (request.session.get('mentoring_google_email') or '').strip().lower()
     return bool(
         request.session.get('mentoring_google_verified')
         and email.endswith('@anurag.ac.in')
@@ -7613,7 +7626,7 @@ def _get_mentoring_authenticated_student(request):
     if not _is_mentoring_google_authenticated(request):
         return None
 
-    email = (request.session.get('google_oauth_email') or '').strip().lower()
+    email = (request.session.get('mentoring_google_email') or '').strip().lower()
     student_id = request.session.get('mentoring_student_id')
     if not student_id:
         return None
@@ -7758,6 +7771,7 @@ def mentoring_tab(request):
         return {
             "title": "Mentoring Tab - Engineering College",
             "is_mentoring_page": True,
+            "is_mentoring_authenticated": _is_mentoring_google_authenticated(request),
             "student": None,
             "student_ht_no": (
                 mentoring_student.ht_no
