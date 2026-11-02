@@ -418,7 +418,14 @@
             <table>
                 <tr>
                     <th>Academic Year</th>
-                    <td colspan="3"><input type="text" name="sem{{ sem.num }}_academic_year" class="form-control" value="{{ sem.academic_year }}"></td>
+                    <td colspan="3">
+                        <select name="sem{{ sem.num }}_academic_year" class="form-select">
+                            <option value="">Select academic year</option>
+                            {% for academic_year in academic_year_choices %}
+                            <option value="{{ academic_year }}" {% if sem.academic_year == academic_year %}selected{% endif %}>{{ academic_year }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
                 </tr>
                 <tr>
                     <th>Semester</th>

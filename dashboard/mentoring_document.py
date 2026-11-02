@@ -64,6 +64,13 @@ def _set_xml_cell_text(cell_element, value, parent):
     run.font.size = Pt(11)
 
 
+def _semester_heading(semester_number, academic_year=""):
+    year_label, semester_label = SEMESTER_LABELS[semester_number - 1]
+    academic_year = _text(academic_year)
+    year_prefix = f"{academic_year} " if academic_year else ""
+    return f"ACADEMIC YEAR: {year_prefix}{year_label}. {semester_label.upper()}"
+
+
 def _selected_yes_no(value):
     return ("Yes [X]", "No [ ]") if value == "Yes" else ("Yes [ ]", "No [X]") if value == "No" else ("Yes [ ]", "No [ ]")
 
@@ -127,7 +134,6 @@ def _add_continuation_semester(
     template_slots_table,
     template_signoff_table,
 ):
-    year_label, semester_label = SEMESTER_LABELS[semester_number - 1]
     document.add_page_break()
 
     semester_element = deepcopy(template_semester_table._tbl)
@@ -138,7 +144,7 @@ def _add_continuation_semester(
     semester_table = Table(semester_element, document._body)
     _set_cell_text(
         semester_table.rows[0].cells[0],
-        f"ACADEMIC YEAR: {year_label}. {semester_label.upper()}",
+        _semester_heading(semester_number, semester_data.get("academic_year")),
     )
     _set_cell_text(semester_table.rows[1].cells[2], semester_data.get("mentor_name"))
     _set_cell_text(semester_table.rows[1].cells[8], semester_data.get("designation"))
@@ -271,6 +277,7 @@ def create_mentoring_document(student, mentoring, photo_bytes=None, student_name
     # Semester I details are built into the supplied template.
     sem1 = semester_data.get("1", {})
     sem1_table = tables[6]
+    _set_cell_text(sem1_table.rows[0].cells[0], _semester_heading(1, sem1.get("academic_year")))
     _set_cell_text(sem1_table.rows[1].cells[1], sem1.get("mentor_name"))
     _set_cell_text(sem1_table.rows[1].cells[8], sem1.get("designation"))
     _set_cell_text(
@@ -299,7 +306,7 @@ def create_mentoring_document(student, mentoring, photo_bytes=None, student_name
     _set_cell_text(sem1_signoff.rows[6].cells[8], sem2.get("designation"))
     _set_cell_text(
         sem1_signoff.rows[5].cells[0],
-        "ACADEMIC YEAR: I B.Tech. SECOND SEMESTER",
+        _semester_heading(2, sem2.get("academic_year")),
     )
     _set_cell_text(
         sem1_signoff.rows[8].cells[0],

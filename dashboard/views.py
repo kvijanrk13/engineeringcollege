@@ -7598,6 +7598,16 @@ def mentoring_tab(request):
         ('IV B.Tech', 'First Semester'),
         ('IV B.Tech', 'Second Semester'),
     ]
+    ACADEMIC_YEAR_CHOICES = (
+        '2022-2023',
+        '2023-2024',
+        '2024-2025',
+        '2025-2026',
+        '2026-2027',
+        '2027-2028',
+        '2028-2029',
+        '2029-2030',
+    )
 
     BRANCHES = [
         'CSE', 'CSE(AI&ML)', 'IT', 'ECE', 'CE', 'EEE', 'ME', 'MBA',
@@ -7614,7 +7624,7 @@ def mentoring_tab(request):
                     'num': i + 1,
                     'year_label': SEMESTER_LABELS[i][0],
                     'sem_label': SEMESTER_LABELS[i][1],
-                    'academic_year': sd.get('academic_year', f'{SEMESTER_LABELS[i][0]} {SEMESTER_LABELS[i][1]}'),
+                    'academic_year': sd.get('academic_year', ''),
                     'semester': sd.get('semester', SEMESTER_LABELS[i][1]),
                     'mentor_name': sd.get('mentor_name', ''),
                     'designation': sd.get('designation', ''),
@@ -7650,7 +7660,7 @@ def mentoring_tab(request):
             'num': i,
             'year_label': SEMESTER_LABELS[i - 1][0],
             'sem_label': SEMESTER_LABELS[i - 1][1],
-            'academic_year': f'{SEMESTER_LABELS[i - 1][0]} {SEMESTER_LABELS[i - 1][1]}',
+            'academic_year': '',
             'semester': SEMESTER_LABELS[i - 1][1],
             'mentor_name': '', 'designation': '', 'start_date': '', 'end_date': '',
             'attendance': '',
@@ -7668,6 +7678,7 @@ def mentoring_tab(request):
             "student_ht_no": get_session_student_ht_no(request),
             "mentoring": mentoring,
             "semester_data": semester_data,
+            "academic_year_choices": ACADEMIC_YEAR_CHOICES,
             "branches": BRANCHES,
             "submitted_form_data": submitted_form_data,
         }
@@ -7747,8 +7758,17 @@ def mentoring_tab(request):
             value = (request.POST.get(field_name) or '').strip()
             if value and not re.fullmatch(r'[0-9]+(?:\.[0-9]+)?', value):
                 invalid_numeric_fields.append(label)
+        invalid_academic_years = []
+        for semester_number in range(1, 9):
+            field_name = f'sem{semester_number}_academic_year'
+            value = (request.POST.get(field_name) or '').strip()
+            if value and value not in ACADEMIC_YEAR_CHOICES:
+                invalid_academic_years.append(f'Semester {semester_number} Academic Year')
         missing_fields.extend(
             f'{label} (numbers only)' for label in invalid_numeric_fields
+        )
+        missing_fields.extend(
+            f'{label} (select a listed year)' for label in invalid_academic_years
         )
         student_photo = request.FILES.get('student_photo')
         if not student_photo:
@@ -7773,6 +7793,10 @@ def mentoring_tab(request):
                 + (
                     ' SGPA, CGPA, and semester attendance fields must contain numbers only.'
                     if invalid_numeric_fields else ''
+                )
+                + (
+                    ' Select an academic year from the provided list.'
+                    if invalid_academic_years else ''
                 )
             )
             return render_submitted_mentoring_form()
@@ -7869,7 +7893,7 @@ def mentoring_tab(request):
             for i in range(8):
                 n = i + 1
                 sem_data[str(n)] = {
-                    'academic_year': request.POST.get(f'sem{n}_academic_year', f'{SEMESTER_LABELS[i][0]} {SEMESTER_LABELS[i][1]}'),
+                    'academic_year': request.POST.get(f'sem{n}_academic_year', '').strip(),
                     'semester': request.POST.get(f'sem{n}_semester', SEMESTER_LABELS[i][1]),
                     'mentor_name': request.POST.get(f'sem{n}_mentor_name', ''),
                     'designation': request.POST.get(f'sem{n}_designation', ''),

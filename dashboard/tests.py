@@ -118,6 +118,24 @@ class MentoringTabTests(TestCase):
                 form_response,
                 f'name="sem{semester_number}_attendance"',
             )
+            self.assertContains(
+                form_response,
+                f'name="sem{semester_number}_academic_year"',
+            )
+        for academic_year in (
+            '2022-2023',
+            '2023-2024',
+            '2024-2025',
+            '2025-2026',
+            '2026-2027',
+            '2027-2028',
+            '2028-2029',
+            '2029-2030',
+        ):
+            self.assertEqual(
+                form_response.content.count(f'value="{academic_year}"'.encode()),
+                8,
+            )
 
         for field_name in ('sgpa_sem1', 'cgpa_sem1', 'sem1_attendance'):
             invalid_data = post_data.copy()
@@ -133,6 +151,19 @@ class MentoringTabTests(TestCase):
             )
             self.assertEqual(invalid_response.status_code, 200)
             self.assertContains(invalid_response, 'numbers only')
+        invalid_year_data = post_data.copy()
+        invalid_year_data['sem1_academic_year'] = '2030-2031'
+        invalid_year_data['student_photo'] = SimpleUploadedFile(
+            'student-photo.jpg',
+            make_test_image_bytes(),
+            content_type='image/jpeg',
+        )
+        invalid_year_response = self.client.post(
+            reverse('dashboard:mentoring_tab'),
+            invalid_year_data,
+        )
+        self.assertEqual(invalid_year_response.status_code, 200)
+        self.assertContains(invalid_year_response, 'Select an academic year from the provided list')
         self.assertFalse(mock_upload.called)
 
         response = self.client.post(reverse('dashboard:mentoring_tab'), post_data)
@@ -162,7 +193,7 @@ class MentoringTabTests(TestCase):
             lateral_entry_student='Yes',
             semester_data={
                 '1': {'attendance': '84.5'},
-                '3': {'attendance': '87'},
+                '3': {'attendance': '87', 'academic_year': '2024-2025'},
             },
         )
 
@@ -212,12 +243,23 @@ class MentoringTabTests(TestCase):
         )
         self.assertIn('SEMESTER ATTENDANCE: 84.5', document_text)
         self.assertIn('SEMESTER ATTENDANCE: 87', document_text)
+        self.assertIn('ACADEMIC YEAR: 2024-2025 II B.Tech. FIRST SEMESTER', document_text)
 
     def test_generated_document_repeats_full_mentoring_form_for_all_semesters(self):
         semester_data = {
             str(number): {
                 'mentor_name': f'Mentor {number}',
                 'designation': f'Designation {number}',
+                'academic_year': (
+                    '2022-2023',
+                    '2023-2024',
+                    '2024-2025',
+                    '2025-2026',
+                    '2026-2027',
+                    '2027-2028',
+                    '2028-2029',
+                    '2029-2030',
+                )[number - 1],
                 'start_date': f'2026-0{number}-01',
                 'end_date': f'2026-0{number}-28',
                 'attendance': str(80 + number),
@@ -258,17 +300,17 @@ class MentoringTabTests(TestCase):
             for cell in row.cells
         ]
 
-        for year_label, semester_label in (
-            ('I B.Tech', 'FIRST SEMESTER'),
-            ('I B.Tech', 'SECOND SEMESTER'),
-            ('II B.Tech', 'FIRST SEMESTER'),
-            ('II B.Tech', 'SECOND SEMESTER'),
-            ('III B.Tech', 'FIRST SEMESTER'),
-            ('III B.Tech', 'SECOND SEMESTER'),
-            ('IV B.Tech', 'FIRST SEMESTER'),
-            ('IV B.Tech', 'SECOND SEMESTER'),
+        for academic_year, year_label, semester_label in (
+            ('2022-2023', 'I B.Tech', 'FIRST SEMESTER'),
+            ('2023-2024', 'I B.Tech', 'SECOND SEMESTER'),
+            ('2024-2025', 'II B.Tech', 'FIRST SEMESTER'),
+            ('2025-2026', 'II B.Tech', 'SECOND SEMESTER'),
+            ('2026-2027', 'III B.Tech', 'FIRST SEMESTER'),
+            ('2027-2028', 'III B.Tech', 'SECOND SEMESTER'),
+            ('2028-2029', 'IV B.Tech', 'FIRST SEMESTER'),
+            ('2029-2030', 'IV B.Tech', 'SECOND SEMESTER'),
         ):
-            expected_heading = f'ACADEMIC YEAR: {year_label}. {semester_label}'
+            expected_heading = f'ACADEMIC YEAR: {academic_year} {year_label}. {semester_label}'
             self.assertTrue(
                 any(expected_heading in text for text in table_texts),
                 expected_heading,
@@ -335,10 +377,37 @@ class MentoringTabTests(TestCase):
             post_data[f'sgpa_sem{semester_number}'] = '8'
             post_data[f'cgpa_sem{semester_number}'] = '8'
             post_data[f'sem{semester_number}_attendance'] = '85.5'
+            post_data[f'sem{semester_number}_academic_year'] = (
+                '2022-2023',
+                '2023-2024',
+                '2024-2025',
+                '2025-2026',
+                '2026-2027',
+                '2027-2028',
+                '2028-2029',
+                '2029-2030',
+            )[semester_number - 1]
 
         response = self.client.post(reverse('dashboard:mentoring_tab'), post_data)
 
         self.assertEqual(response.status_code, 302)
+        saved_mentoring = StudentMentoring.objects.order_by('-created_at').first()
+        self.assertEqual(
+            [
+                saved_mentoring.semester_data[str(number)]['academic_year']
+                for number in range(1, 9)
+            ],
+            [
+                '2022-2023',
+                '2023-2024',
+                '2024-2025',
+                '2025-2026',
+                '2026-2027',
+                '2027-2028',
+                '2028-2029',
+                '2029-2030',
+            ],
+        )
         uploaded_document = mock_upload.call_args.args[0]
         document = Document(io.BytesIO(uploaded_document.read()))
         document_text = ''.join(
@@ -351,17 +420,17 @@ class MentoringTabTests(TestCase):
             for row in table.rows
             for cell in row.cells
         ]
-        for year_label, semester_label in (
-            ('I B.Tech', 'FIRST SEMESTER'),
-            ('I B.Tech', 'SECOND SEMESTER'),
-            ('II B.Tech', 'FIRST SEMESTER'),
-            ('II B.Tech', 'SECOND SEMESTER'),
-            ('III B.Tech', 'FIRST SEMESTER'),
-            ('III B.Tech', 'SECOND SEMESTER'),
-            ('IV B.Tech', 'FIRST SEMESTER'),
-            ('IV B.Tech', 'SECOND SEMESTER'),
+        for academic_year, year_label, semester_label in (
+            ('2022-2023', 'I B.Tech', 'FIRST SEMESTER'),
+            ('2023-2024', 'I B.Tech', 'SECOND SEMESTER'),
+            ('2024-2025', 'II B.Tech', 'FIRST SEMESTER'),
+            ('2025-2026', 'II B.Tech', 'SECOND SEMESTER'),
+            ('2026-2027', 'III B.Tech', 'FIRST SEMESTER'),
+            ('2027-2028', 'III B.Tech', 'SECOND SEMESTER'),
+            ('2028-2029', 'IV B.Tech', 'FIRST SEMESTER'),
+            ('2029-2030', 'IV B.Tech', 'SECOND SEMESTER'),
         ):
-            expected_heading = f'ACADEMIC YEAR: {year_label}. {semester_label}'
+            expected_heading = f'ACADEMIC YEAR: {academic_year} {year_label}. {semester_label}'
             self.assertTrue(any(expected_heading in text for text in table_texts))
         self.assertEqual(document_text.count('85.5'), 8)
         self.assertIn('SEMESTER ATTENDANCE', document_text)
