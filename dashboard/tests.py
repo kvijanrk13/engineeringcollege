@@ -236,6 +236,11 @@ class MentoringTabTests(TestCase):
                 mentoring_form = self.client.get(reverse('dashboard:mentoring_tab'))
                 self.assertEqual(mentoring_form.status_code, 200)
                 self.assertContains(mentoring_form, 'Hall Ticket Number')
+                self.assertContains(mentoring_form, reverse('dashboard:login'))
+                self.assertContains(mentoring_form, 'Login')
+                self.assertNotContains(mentoring_form, 'ENGINEERING COLLEGE - INFORMATION TECHNOLOGY')
+                self.assertNotContains(mentoring_form, '>Dashboard</a>')
+                self.assertNotContains(mentoring_form, '>Gallery</a>')
             Student.objects.all().delete()
 
     @override_settings(
