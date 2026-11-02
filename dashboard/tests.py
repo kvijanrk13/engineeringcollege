@@ -132,7 +132,6 @@ class MentoringTabTests(TestCase):
         )
         self.assertEqual(self.client.session['mentoring_student_id'], student.id)
         self.assertTrue(self.client.session['mentoring_google_verified'])
-        self.assertEqual(self.client.session['student_ht_no'], student.ht_no)
         mock_profile_request.assert_called_once()
 
     @override_settings(
@@ -184,7 +183,7 @@ class MentoringTabTests(TestCase):
     )
     @patch('dashboard.views.requests.get')
     @patch('dashboard.views.requests.post')
-    def test_google_sign_in_rejects_unverified_or_unmatched_student_email(
+    def test_google_sign_in_rejects_unverified_email_but_allows_unmatched_college_email(
         self,
         mock_token_request,
         mock_profile_request,
@@ -195,17 +194,11 @@ class MentoringTabTests(TestCase):
         }
         mock_profile_request.return_value = Mock(status_code=200)
         cases = (
-            ('unverified@anurag.ac.in', False, True),
-            ('not-registered@anurag.ac.in', True, False),
+            ('unverified@anurag.ac.in', False, False),
+            ('not-registered@anurag.ac.in', True, True),
         )
 
-        for email, email_verified, create_student in cases:
-            if create_student:
-                Student.objects.create(
-                    ht_no='22C11A1218',
-                    student_name='Mentoring Test Student',
-                    email=email,
-                )
+        for email, email_verified, should_sign_in in cases:
             mock_profile_request.return_value.json.return_value = {
                 'email': email,
                 'email_verified': email_verified,
@@ -222,12 +215,25 @@ class MentoringTabTests(TestCase):
                 {'state': oauth_state, 'code': 'test-code'},
             )
 
+            expected_url = (
+                reverse('dashboard:mentoring_tab')
+                if should_sign_in
+                else reverse('dashboard:mentoring_login')
+            )
             self.assertRedirects(
                 callback_response,
-                reverse('dashboard:mentoring_login'),
+                expected_url,
                 fetch_redirect_response=False,
             )
-            self.assertFalse(self.client.session.get('mentoring_google_verified', False))
+            self.assertEqual(
+                self.client.session.get('mentoring_google_verified', False),
+                should_sign_in,
+            )
+            if should_sign_in:
+                self.assertIsNone(self.client.session.get('mentoring_student_id'))
+                mentoring_form = self.client.get(reverse('dashboard:mentoring_tab'))
+                self.assertEqual(mentoring_form.status_code, 200)
+                self.assertContains(mentoring_form, 'Hall Ticket Number')
             Student.objects.all().delete()
 
     @override_settings(

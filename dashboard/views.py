@@ -3495,22 +3495,17 @@ def google_callback(request):
             matching_students = Student.objects.annotate(
                 normalized_email=Lower(Trim('email')),
             ).filter(normalized_email=email)
-            if matching_students.count() != 1:
-                messages.error(
-                    request,
-                    'This Google account must match exactly one student record. Contact the college if your email is not registered.',
-                )
-                return redirect('dashboard:mentoring_login')
-
-            student = matching_students.first()
+            student = matching_students.first() if matching_students.count() == 1 else None
             request.session.cycle_key()
-            set_student_session(request, student)
             request.session['google_oauth_email'] = email
             request.session['google_oauth_name'] = profile.get('name', '')
             request.session['mentoring_google_verified'] = True
-            request.session['mentoring_student_id'] = student.id
+            request.session['mentoring_student_id'] = student.id if student else None
             audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=email)
-            messages.success(request, f'Gmail sign-in successful. Welcome, {student.student_name}.')
+            messages.success(
+                request,
+                f'Gmail sign-in successful. Welcome, {student.student_name if student else email}.',
+            )
             return redirect('dashboard:mentoring_tab')
 
         if state_payload.get('target') == 'aeclibrary':
@@ -7598,7 +7593,7 @@ def students(request):
 
 
 def mentoring_login(request):
-    if _get_mentoring_authenticated_student(request):
+    if _is_mentoring_google_authenticated(request):
         return redirect('dashboard:mentoring_tab')
     return render(request, 'dashboard/mentoring_login.html', {
         'title': 'Mentoring Sign In',
@@ -7606,13 +7601,21 @@ def mentoring_login(request):
     })
 
 
+def _is_mentoring_google_authenticated(request):
+    email = (request.session.get('google_oauth_email') or '').strip().lower()
+    return bool(
+        request.session.get('mentoring_google_verified')
+        and email.endswith('@anurag.ac.in')
+    )
+
+
 def _get_mentoring_authenticated_student(request):
-    if not request.session.get('mentoring_google_verified'):
+    if not _is_mentoring_google_authenticated(request):
         return None
 
     email = (request.session.get('google_oauth_email') or '').strip().lower()
     student_id = request.session.get('mentoring_student_id')
-    if not email.endswith('@anurag.ac.in') or not student_id:
+    if not student_id:
         return None
 
     return Student.objects.annotate(
@@ -7652,17 +7655,19 @@ def students_data(request):
 
 
 def mentoring_tab(request):
-    mentoring_student = _get_mentoring_authenticated_student(request)
-    if not mentoring_student:
+    if not _is_mentoring_google_authenticated(request):
         return redirect('dashboard:mentoring_login')
 
+    mentoring_student = _get_mentoring_authenticated_student(request)
+
     mentoring = None
-    try:
-        mentoring = StudentMentoring.objects.filter(
-            student=mentoring_student,
-        ).order_by('-created_at').first()
-    except Exception as e:
-        logger.error(f"Error fetching mentoring record: {e}")
+    if mentoring_student:
+        try:
+            mentoring = StudentMentoring.objects.filter(
+                student=mentoring_student,
+            ).order_by('-created_at').first()
+        except Exception as e:
+            logger.error(f"Error fetching mentoring record: {e}")
     if not mentoring:
         mentoring = StudentMentoring()
 
@@ -7753,7 +7758,11 @@ def mentoring_tab(request):
         return {
             "title": "Mentoring Tab - Engineering College",
             "student": None,
-            "student_ht_no": mentoring_student.ht_no,
+            "student_ht_no": (
+                mentoring_student.ht_no
+                if mentoring_student
+                else (request.POST.get('ht_no', '') if request.method == 'POST' else '')
+            ),
             "mentoring": mentoring,
             "semester_data": semester_data,
             "academic_year_choices": ACADEMIC_YEAR_CHOICES,
@@ -7831,7 +7840,10 @@ def mentoring_tab(request):
                     missing_fields.append(label)
             elif not (value or '').strip():
                 missing_fields.append(label)
-        if (request.POST.get('ht_no') or '').strip().upper() != mentoring_student.ht_no.upper():
+        if (
+            mentoring_student
+            and (request.POST.get('ht_no') or '').strip().upper() != mentoring_student.ht_no.upper()
+        ):
             missing_fields.append('Hall Ticket Number must match your student record')
         invalid_numeric_fields = []
         for field_name, label in numeric_field_labels.items():
@@ -7917,7 +7929,11 @@ def mentoring_tab(request):
                 return render_submitted_mentoring_form()
 
         try:
-            submitted_ht_no = mentoring_student.ht_no.upper()
+            submitted_ht_no = (
+                mentoring_student.ht_no.upper()
+                if mentoring_student
+                else (request.POST.get('ht_no') or '').strip().upper()
+            )
 
             mentoring = StudentMentoring(student=mentoring_student)
             mentoring.branch = request.POST.get('branch', '')
@@ -8020,7 +8036,11 @@ def mentoring_tab(request):
                 record_cloudinary_upload(
                     upload_type='mentorship_docx',
                     upload_result=upload_result,
-                    uploaded_by=(getattr(request.user, 'username', '') or get_session_student_ht_no(request)),
+                    uploaded_by=(
+                        getattr(request.user, 'username', '')
+                        or get_session_student_ht_no(request)
+                        or request.session.get('google_oauth_email')
+                    ),
                     student=mentoring_student,
                 )
                 messages.success(
