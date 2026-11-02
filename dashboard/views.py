@@ -7757,6 +7757,7 @@ def mentoring_tab(request):
     def mentoring_page_context(submitted_form_data=None):
         return {
             "title": "Mentoring Tab - Engineering College",
+            "is_mentoring_page": True,
             "student": None,
             "student_ht_no": (
                 mentoring_student.ht_no
