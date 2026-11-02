@@ -85,6 +85,8 @@ class MentoringTabTests(TestCase):
         self.assertContains(login_page, 'Mentoring Sign In')
         self.assertContains(login_page, 'Sign in with Gmail')
         self.assertContains(login_page, '?target=mentoring')
+        self.assertContains(login_page, 'any verified college Google account')
+        self.assertNotContains(login_page, 'must match your student record')
 
     @override_settings(
         ROOT_URLCONF='engineeringcollege.urls',
