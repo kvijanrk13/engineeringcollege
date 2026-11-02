@@ -75,7 +75,7 @@
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            {% if is_mentoring_page %}
+            {% if is_mentoring_page or request.path == '/students/mentoring-tab/' %}
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'dashboard:login' %}">

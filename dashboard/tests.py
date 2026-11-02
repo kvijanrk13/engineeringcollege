@@ -237,12 +237,24 @@ class MentoringTabTests(TestCase):
                 self.assertEqual(mentoring_form.status_code, 200)
                 self.assertTrue(mentoring_form.context['is_mentoring_page'])
                 self.assertContains(mentoring_form, 'Hall Ticket Number')
-                self.assertContains(mentoring_form, reverse('dashboard:login'))
-                self.assertContains(mentoring_form, 'Login')
-                self.assertEqual(mentoring_form.content.count(b'class="nav-link'), 1)
-                self.assertNotContains(mentoring_form, 'ENGINEERING COLLEGE - INFORMATION TECHNOLOGY')
-                self.assertNotContains(mentoring_form, '>Dashboard</a>')
-                self.assertNotContains(mentoring_form, '>Gallery</a>')
+                rendered_html = mentoring_form.content.decode()
+                navbar = rendered_html.split('<nav ', 1)[1].split('</nav>', 1)[0]
+                self.assertEqual(navbar.count('<a class="nav-link'), 1)
+                self.assertIn(reverse('dashboard:login'), navbar)
+                self.assertIn('Login', navbar)
+                for hidden_label in (
+                    'Engineering College',
+                    'ENGINEERING COLLEGE - INFORMATION TECHNOLOGY',
+                    'Dashboard',
+                    'Faculty',
+                    'Students',
+                    'Syllabus',
+                    'Gallery',
+                    'Exam Branch',
+                    'NBA',
+                    'NAAC',
+                ):
+                    self.assertNotIn(hidden_label, navbar)
             Student.objects.all().delete()
 
     @override_settings(
