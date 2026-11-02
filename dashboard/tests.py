@@ -266,12 +266,27 @@ class MentoringTabTests(TestCase):
         for semester_number in range(1, 9):
             post_data[f'sgpa_sem{semester_number}'] = '8'
             post_data[f'cgpa_sem{semester_number}'] = '8'
+            post_data[f'sem{semester_number}_attendance'] = '85.5'
 
         response = self.client.post(reverse('dashboard:mentoring_tab'), post_data)
 
         self.assertEqual(response.status_code, 302)
         uploaded_document = mock_upload.call_args.args[0]
         document = Document(io.BytesIO(uploaded_document.read()))
+        document_text = ''.join(
+            element.text or ''
+            for element in document._element.xpath('.//w:t')
+        )
+        self.assertEqual(document_text.count('85.5'), 8)
+        self.assertIn('SEMESTER ATTENDANCE', document_text)
+        self.assertEqual(
+            [
+                ''.join(text.text or '' for text in row.cells[index]._tc.xpath('.//w:t'))
+                for index in range(1, 9)
+                for row in (document.tables[5].rows[2], document.tables[5].rows[3])
+            ],
+            ['8'] * 16,
+        )
         identity_labels = (
             'Hall Ticket No.',
             'Name of the Student',
