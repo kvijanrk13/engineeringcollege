@@ -139,10 +139,28 @@ class MentoringTabTests(TestCase):
             student_name='Test Student',
             hall_ticket_no='24C11A1201',
         )))
-        identity_table = document.tables[1].rows[3].cells[0].tables[0]
+        identity_labels = (
+            'Hall Ticket No.',
+            'Name of the Student',
+            'Program',
+            'Branch / Specialization',
+        )
+        identity_table = next(
+            table for table in document._element.xpath('.//w:tbl')
+            if tuple(
+                ''.join(text.text or '' for text in row.xpath('./w:tc[1]//w:t')).strip()
+                for row in table.xpath('./w:tr')
+            ) == identity_labels
+        )
 
         self.assertEqual(
-            [[cell.text for cell in row.cells] for row in identity_table.rows],
+            [
+                [
+                    ''.join(text.text or '' for text in cell.xpath('.//w:t')).strip()
+                    for cell in row.xpath('./w:tc')
+                ]
+                for row in identity_table.xpath('./w:tr')
+            ],
             [
                 ['Hall Ticket No.', '24C11A1201'],
                 ['Name of the Student', 'Test Student'],
@@ -150,6 +168,7 @@ class MentoringTabTests(TestCase):
                 ['Branch / Specialization', 'IT'],
             ],
         )
+        self.assertFalse(document.tables[1].rows[3].cells[0].tables)
         self.assertIn('Re-admitted Student: No', document.tables[1].rows[3].cells[0].text)
         self.assertIn('Lateral Entry Student: Yes', document.tables[1].rows[3].cells[0].text)
 
@@ -214,10 +233,27 @@ class MentoringTabTests(TestCase):
         self.assertEqual(response.status_code, 302)
         uploaded_document = mock_upload.call_args.args[0]
         document = Document(io.BytesIO(uploaded_document.read()))
-        identity_cell = document.tables[1].rows[3].cells[0]
-        identity_rows = identity_cell.tables[0]
+        identity_labels = (
+            'Hall Ticket No.',
+            'Name of the Student',
+            'Program',
+            'Branch / Specialization',
+        )
+        identity_table = next(
+            table for table in document._element.xpath('.//w:tbl')
+            if tuple(
+                ''.join(text.text or '' for text in row.xpath('./w:tc[1]//w:t')).strip()
+                for row in table.xpath('./w:tr')
+            ) == identity_labels
+        )
         self.assertEqual(
-            [row.cells[1].text for row in identity_rows.rows],
+            [
+                ''.join(
+                    text.text or ''
+                    for text in row.xpath('./w:tc[2]//w:t')
+                ).strip()
+                for row in identity_table.xpath('./w:tr')
+            ],
             ['22C11A1218', 'Cloudinary Test Student', 'B.Tech', 'CSE(AI&ML)'],
         )
         photo_textbox = next(

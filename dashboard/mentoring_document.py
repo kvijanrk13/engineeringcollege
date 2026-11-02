@@ -50,6 +50,18 @@ def _set_cell_text(cell, value):
         extra_paragraph._element.getparent().remove(extra_paragraph._element)
 
 
+def _set_xml_cell_text(cell_element, value, parent):
+    paragraphs = cell_element.xpath("./w:p")
+    if not paragraphs:
+        raise ValueError("The mentoring template identity cell has no paragraph.")
+
+    paragraph = Paragraph(paragraphs[0], parent)
+    paragraph.clear()
+    run = paragraph.add_run(_text(value))
+    run.font.name = "Arial"
+    run.font.size = Pt(11)
+
+
 def _selected_yes_no(value):
     return ("Yes [X]", "No [ ]") if value == "Yes" else ("Yes [ ]", "No [X]") if value == "No" else ("Yes [ ]", "No [ ]")
 
@@ -180,28 +192,36 @@ def create_mentoring_document(student, mentoring, photo_bytes=None, student_name
     info = tables[1]
     _set_cell_text(info.rows[2].cells[2], batch)
     _set_cell_text(info.rows[2].cells[9], admission_year)
-    identity_cell = info.rows[3].cells[0]
-    identity_table = identity_cell.add_table(4, 2)
-    identity_table.style = "Table Grid"
-    identity_table.alignment = WD_TABLE_ALIGNMENT.CENTER
-    identity_table.autofit = False
-    identity_rows = (
-        ("Hall Ticket No.", hall_ticket),
-        ("Name of the Student", student_name),
-        ("Program", "B.Tech"),
-        ("Branch / Specialization", branch),
+    identity_labels = (
+        "Hall Ticket No.",
+        "Name of the Student",
+        "Program",
+        "Branch / Specialization",
     )
-    for row, (label, value) in zip(identity_table.rows, identity_rows):
-        row.cells[0].width = Inches(2.4)
-        row.cells[1].width = Inches(3.8)
-        for cell in row.cells:
-            cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
-        _set_cell_text(row.cells[0], label)
-        _set_cell_text(row.cells[1], value)
-        for run in row.cells[0].paragraphs[0].runs:
-            run.font.name = "Arial"
-            run.font.size = Pt(11)
-            run.font.color.rgb = RGBColor(0, 51, 102)
+    identity_table = next(
+        (
+            table
+            for table in document._element.xpath(".//w:tbl")
+            if len(table.xpath("./w:tr")) == len(identity_labels)
+            and tuple(
+                "".join(text.text or "" for text in row.xpath("./w:tc[1]//w:t")).strip()
+                for row in table.xpath("./w:tr")
+            )
+            == identity_labels
+        ),
+        None,
+    )
+    if identity_table is None:
+        raise ValueError("The supplied mentoring template has no student identity table.")
+
+    identity_values = (hall_ticket, student_name, "B.Tech", branch)
+    for row, value in zip(identity_table.xpath("./w:tr"), identity_values):
+        cells = row.xpath("./w:tc")
+        if len(cells) != 2:
+            raise ValueError("The mentoring template identity table has an unexpected layout.")
+        _set_xml_cell_text(cells[1], value, document._body)
+
+    identity_cell = info.rows[3].cells[0]
     status_paragraph = identity_cell.add_paragraph(
         f"Re-admitted Student: {_text(mentoring.readmitted_student)}    "
         f"Lateral Entry Student: {_text(mentoring.lateral_entry_student)}"
