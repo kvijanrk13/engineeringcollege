@@ -3378,6 +3378,8 @@ def _ensure_aeclibrary_student(user, display_name=''):
 def google_login(request):
     if not google_signin_enabled():
         messages.error(request, 'Google sign-in is not configured.')
+        if request.GET.get('target') == 'mentoring':
+            return redirect('dashboard:mentoring_login')
         return redirect('dashboard:admin_login')
 
     role = request.GET.get('role', 'admin')
@@ -3385,10 +3387,13 @@ def google_login(request):
         role = 'admin'
 
     target = request.GET.get('target', '')
-    if target not in {'aeclibrary', 'etors', 'moocs'}:
+    if target not in {'aeclibrary', 'etors', 'moocs', 'mentoring'}:
         target = ''
+    if target == 'mentoring':
+        request.session.pop('mentoring_google_verified', None)
+        request.session.pop('mentoring_student_id', None)
 
-    if target in {'aeclibrary', 'etors', 'moocs'}:
+    if target in {'aeclibrary', 'etors', 'moocs', 'mentoring'}:
         role = 'student'
 
     state_payload = {
@@ -3421,6 +3426,8 @@ def google_callback(request):
     state_payload = {}
     if not state or not code:
         messages.error(request, 'Google sign-in was cancelled or incomplete.')
+        if request.session.get('google_oauth_target') == 'mentoring':
+            return redirect('dashboard:mentoring_login')
         if request.session.get('google_oauth_target') == 'moocs':
             return redirect('/MOOCS')
         return redirect('dashboard:admin_login')
@@ -3433,9 +3440,18 @@ def google_callback(request):
         )
     except signing.BadSignature:
         messages.error(request, 'Google sign-in session expired. Please try again.')
+        if request.session.get('google_oauth_target') == 'mentoring':
+            return redirect('dashboard:mentoring_login')
         if request.session.get('google_oauth_target') == 'moocs':
             return redirect('/MOOCS')
         return redirect('dashboard:admin_login')
+
+    if (
+        state_payload.get('target') == 'mentoring'
+        and state != request.session.get('google_oauth_state')
+    ):
+        messages.error(request, 'Google sign-in session expired. Please try again.')
+        return redirect('dashboard:mentoring_login')
 
     try:
         token_response = requests.post(
@@ -3468,6 +3484,34 @@ def google_callback(request):
         email = (profile.get('email') or '').strip().lower()
         if not email or profile.get('email_verified') is False:
             raise ValueError('Google email is not verified')
+
+        if state_payload.get('target') == 'mentoring':
+            if profile.get('email_verified') is not True:
+                raise ValueError('Google email is not verified')
+            if email.rsplit('@', 1)[-1] != 'anurag.ac.in':
+                messages.error(request, 'Use your verified @anurag.ac.in Google account for mentoring.')
+                return redirect('dashboard:mentoring_login')
+
+            matching_students = Student.objects.annotate(
+                normalized_email=Lower(Trim('email')),
+            ).filter(normalized_email=email)
+            if matching_students.count() != 1:
+                messages.error(
+                    request,
+                    'This Google account must match exactly one student record. Contact the college if your email is not registered.',
+                )
+                return redirect('dashboard:mentoring_login')
+
+            student = matching_students.first()
+            request.session.cycle_key()
+            set_student_session(request, student)
+            request.session['google_oauth_email'] = email
+            request.session['google_oauth_name'] = profile.get('name', '')
+            request.session['mentoring_google_verified'] = True
+            request.session['mentoring_student_id'] = student.id
+            audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=email)
+            messages.success(request, f'Gmail sign-in successful. Welcome, {student.student_name}.')
+            return redirect('dashboard:mentoring_tab')
 
         if state_payload.get('target') == 'aeclibrary':
             allowed_domains = getattr(
@@ -3601,6 +3645,8 @@ def google_callback(request):
         logger.error(f"Google sign-in failed: {exc}", exc_info=True)
         messages.error(request, 'Google sign-in failed. Please try again.')
         target = state_payload.get('target') or request.session.get('google_oauth_target')
+        if target == 'mentoring':
+            return redirect('dashboard:mentoring_login')
         if target == 'moocs':
             return redirect('/MOOCS')
         if target == 'aeclibrary':
@@ -7551,6 +7597,32 @@ def students(request):
     return redirect('dashboard:add_student')
 
 
+def mentoring_login(request):
+    if _get_mentoring_authenticated_student(request):
+        return redirect('dashboard:mentoring_tab')
+    return render(request, 'dashboard/mentoring_login.html', {
+        'title': 'Mentoring Sign In',
+        'google_signin_enabled': google_signin_enabled(),
+    })
+
+
+def _get_mentoring_authenticated_student(request):
+    if not request.session.get('mentoring_google_verified'):
+        return None
+
+    email = (request.session.get('google_oauth_email') or '').strip().lower()
+    student_id = request.session.get('mentoring_student_id')
+    if not email.endswith('@anurag.ac.in') or not student_id:
+        return None
+
+    return Student.objects.annotate(
+        normalized_email=Lower(Trim('email')),
+    ).filter(
+        id=student_id,
+        normalized_email=email,
+    ).first()
+
+
 def students_data(request):
     if not request.session.get('student_logged_in') and not request.user.is_authenticated:
         return redirect('dashboard:student_login')
@@ -7580,9 +7652,15 @@ def students_data(request):
 
 
 def mentoring_tab(request):
+    mentoring_student = _get_mentoring_authenticated_student(request)
+    if not mentoring_student:
+        return redirect('dashboard:mentoring_login')
+
     mentoring = None
     try:
-        mentoring = StudentMentoring.objects.filter(student__isnull=True).order_by('-created_at').first()
+        mentoring = StudentMentoring.objects.filter(
+            student=mentoring_student,
+        ).order_by('-created_at').first()
     except Exception as e:
         logger.error(f"Error fetching mentoring record: {e}")
     if not mentoring:
@@ -7675,7 +7753,7 @@ def mentoring_tab(request):
         return {
             "title": "Mentoring Tab - Engineering College",
             "student": None,
-            "student_ht_no": get_session_student_ht_no(request),
+            "student_ht_no": mentoring_student.ht_no,
             "mentoring": mentoring,
             "semester_data": semester_data,
             "academic_year_choices": ACADEMIC_YEAR_CHOICES,
@@ -7753,6 +7831,8 @@ def mentoring_tab(request):
                     missing_fields.append(label)
             elif not (value or '').strip():
                 missing_fields.append(label)
+        if (request.POST.get('ht_no') or '').strip().upper() != mentoring_student.ht_no.upper():
+            missing_fields.append('Hall Ticket Number must match your student record')
         invalid_numeric_fields = []
         for field_name, label in numeric_field_labels.items():
             value = (request.POST.get(field_name) or '').strip()
@@ -7837,13 +7917,9 @@ def mentoring_tab(request):
                 return render_submitted_mentoring_form()
 
         try:
-            submitted_ht_no = request.POST.get('ht_no', '').strip().upper()
-            if not submitted_ht_no:
-                messages.error(request, "Hall Ticket Number is required.")
-                return redirect('dashboard:mentoring_tab')
+            submitted_ht_no = mentoring_student.ht_no.upper()
 
-            mentoring = StudentMentoring()
-            mentoring.student = None
+            mentoring = StudentMentoring(student=mentoring_student)
             mentoring.branch = request.POST.get('branch', '')
             mentoring.academic_year = request.POST.get('academic_year', '')
             mentoring.semester = request.POST.get('semester', '')
@@ -7945,7 +8021,7 @@ def mentoring_tab(request):
                     upload_type='mentorship_docx',
                     upload_result=upload_result,
                     uploaded_by=(getattr(request.user, 'username', '') or get_session_student_ht_no(request)),
-                    student=None,
+                    student=mentoring_student,
                 )
                 messages.success(
                     request,

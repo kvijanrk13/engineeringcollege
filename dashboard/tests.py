@@ -51,6 +51,185 @@ def make_test_pdf_bytes(label='Test PDF'):
 
 
 class MentoringTabTests(TestCase):
+    def sign_in_student(self, hall_ticket_no, email='student@anurag.ac.in'):
+        student = Student.objects.create(
+            ht_no=hall_ticket_no,
+            student_name='Mentoring Test Student',
+            email=email,
+        )
+        session = self.client.session
+        session['mentoring_google_verified'] = True
+        session['mentoring_student_id'] = student.id
+        session['google_oauth_email'] = email
+        session['student_logged_in'] = True
+        session['student_ht_no'] = hall_ticket_no
+        session.save()
+        return student
+
+    @override_settings(
+        ROOT_URLCONF='engineeringcollege.urls',
+        SECURE_SSL_REDIRECT=False,
+        GOOGLE_OAUTH_CLIENT_ID='test-google-client-id',
+        GOOGLE_OAUTH_CLIENT_SECRET='test-google-client-secret',
+    )
+    def test_mentoring_requires_google_sign_in_on_separate_page(self):
+        response = self.client.get(reverse('dashboard:mentoring_tab'))
+
+        self.assertRedirects(
+            response,
+            reverse('dashboard:mentoring_login'),
+            fetch_redirect_response=False,
+        )
+        login_page = self.client.get(reverse('dashboard:mentoring_login'))
+        self.assertEqual(login_page.status_code, 200)
+        self.assertContains(login_page, 'Mentoring Sign In')
+        self.assertContains(login_page, 'Sign in with Gmail')
+        self.assertContains(login_page, '?target=mentoring')
+
+    @override_settings(
+        ROOT_URLCONF='engineeringcollege.urls',
+        SECURE_SSL_REDIRECT=False,
+        GOOGLE_OAUTH_CLIENT_ID='test-google-client-id',
+        GOOGLE_OAUTH_CLIENT_SECRET='test-google-client-secret',
+    )
+    @patch('dashboard.views.requests.get')
+    @patch('dashboard.views.requests.post')
+    def test_google_sign_in_matches_verified_college_email_to_student(
+        self,
+        mock_token_request,
+        mock_profile_request,
+    ):
+        student = Student.objects.create(
+            ht_no='22C11A1218',
+            student_name='Mentoring Test Student',
+            email='student@anurag.ac.in',
+        )
+        mock_token_request.return_value = Mock(status_code=200)
+        mock_token_request.return_value.json.return_value = {
+            'access_token': 'test-access-token',
+        }
+        mock_profile_request.return_value = Mock(status_code=200)
+        mock_profile_request.return_value.json.return_value = {
+            'email': 'STUDENT@ANURAG.AC.IN',
+            'email_verified': True,
+            'name': student.student_name,
+        }
+
+        login_response = self.client.get(
+            reverse('dashboard:google_login'),
+            {'target': 'mentoring'},
+        )
+        oauth_state = parse_qs(urlparse(login_response['Location']).query)['state'][0]
+        callback_response = self.client.get(
+            reverse('dashboard:google_callback'),
+            {'state': oauth_state, 'code': 'test-code'},
+        )
+
+        self.assertRedirects(
+            callback_response,
+            reverse('dashboard:mentoring_tab'),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(self.client.session['mentoring_student_id'], student.id)
+        self.assertTrue(self.client.session['mentoring_google_verified'])
+        self.assertEqual(self.client.session['student_ht_no'], student.ht_no)
+        mock_profile_request.assert_called_once()
+
+    @override_settings(
+        ROOT_URLCONF='engineeringcollege.urls',
+        SECURE_SSL_REDIRECT=False,
+        GOOGLE_OAUTH_CLIENT_ID='test-google-client-id',
+        GOOGLE_OAUTH_CLIENT_SECRET='test-google-client-secret',
+    )
+    @patch('dashboard.views.requests.get')
+    @patch('dashboard.views.requests.post')
+    def test_google_sign_in_rejects_non_college_email(
+        self,
+        mock_token_request,
+        mock_profile_request,
+    ):
+        mock_token_request.return_value = Mock(status_code=200)
+        mock_token_request.return_value.json.return_value = {
+            'access_token': 'test-access-token',
+        }
+        mock_profile_request.return_value = Mock(status_code=200)
+        mock_profile_request.return_value.json.return_value = {
+            'email': 'student@gmail.com',
+            'email_verified': True,
+            'name': 'Non College Student',
+        }
+        login_response = self.client.get(
+            reverse('dashboard:google_login'),
+            {'target': 'mentoring'},
+        )
+        oauth_state = parse_qs(urlparse(login_response['Location']).query)['state'][0]
+
+        callback_response = self.client.get(
+            reverse('dashboard:google_callback'),
+            {'state': oauth_state, 'code': 'test-code'},
+        )
+
+        self.assertRedirects(
+            callback_response,
+            reverse('dashboard:mentoring_login'),
+            fetch_redirect_response=False,
+        )
+        self.assertFalse(self.client.session.get('mentoring_google_verified', False))
+
+    @override_settings(
+        ROOT_URLCONF='engineeringcollege.urls',
+        SECURE_SSL_REDIRECT=False,
+        GOOGLE_OAUTH_CLIENT_ID='test-google-client-id',
+        GOOGLE_OAUTH_CLIENT_SECRET='test-google-client-secret',
+    )
+    @patch('dashboard.views.requests.get')
+    @patch('dashboard.views.requests.post')
+    def test_google_sign_in_rejects_unverified_or_unmatched_student_email(
+        self,
+        mock_token_request,
+        mock_profile_request,
+    ):
+        mock_token_request.return_value = Mock(status_code=200)
+        mock_token_request.return_value.json.return_value = {
+            'access_token': 'test-access-token',
+        }
+        mock_profile_request.return_value = Mock(status_code=200)
+        cases = (
+            ('unverified@anurag.ac.in', False, True),
+            ('not-registered@anurag.ac.in', True, False),
+        )
+
+        for email, email_verified, create_student in cases:
+            if create_student:
+                Student.objects.create(
+                    ht_no='22C11A1218',
+                    student_name='Mentoring Test Student',
+                    email=email,
+                )
+            mock_profile_request.return_value.json.return_value = {
+                'email': email,
+                'email_verified': email_verified,
+                'name': 'Mentoring Test Student',
+            }
+            login_response = self.client.get(
+                reverse('dashboard:google_login'),
+                {'target': 'mentoring'},
+            )
+            oauth_state = parse_qs(urlparse(login_response['Location']).query)['state'][0]
+
+            callback_response = self.client.get(
+                reverse('dashboard:google_callback'),
+                {'state': oauth_state, 'code': 'test-code'},
+            )
+
+            self.assertRedirects(
+                callback_response,
+                reverse('dashboard:mentoring_login'),
+                fetch_redirect_response=False,
+            )
+            self.assertFalse(self.client.session.get('mentoring_google_verified', False))
+            Student.objects.all().delete()
+
     @override_settings(
         ROOT_URLCONF='engineeringcollege.urls',
         SECURE_SSL_REDIRECT=False,
@@ -110,6 +289,7 @@ class MentoringTabTests(TestCase):
             post_data[f'cgpa_sem{semester_number}'] = '8'
             post_data[f'sem{semester_number}_attendance'] = '85.5'
 
+        self.sign_in_student('24C11A1201')
         form_response = self.client.get(reverse('dashboard:mentoring_tab'))
         self.assertEqual(form_response.status_code, 200)
         self.assertEqual(form_response.content.count(b'data-numeric-only="true"'), 24)
@@ -388,10 +568,12 @@ class MentoringTabTests(TestCase):
                 '2029-2030',
             )[semester_number - 1]
 
+        self.sign_in_student('22C11A1218')
         response = self.client.post(reverse('dashboard:mentoring_tab'), post_data)
 
         self.assertEqual(response.status_code, 302)
         saved_mentoring = StudentMentoring.objects.order_by('-created_at').first()
+        self.assertEqual(saved_mentoring.student_id, self.client.session['mentoring_student_id'])
         self.assertEqual(
             [
                 saved_mentoring.semester_data[str(number)]['academic_year']
