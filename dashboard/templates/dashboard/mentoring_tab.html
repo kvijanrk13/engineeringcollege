@@ -388,25 +388,25 @@
                 </tr>
                 <tr>
                     <td><strong>SGPA</strong></td>
-                    <td><input type="text" name="sgpa_sem1" class="form-control" value="{{ mentoring.sgpa_sem1|default:'' }}"></td>
-                    <td><input type="text" name="sgpa_sem2" class="form-control" value="{{ mentoring.sgpa_sem2|default:'' }}"></td>
-                    <td><input type="text" name="sgpa_sem3" class="form-control" value="{{ mentoring.sgpa_sem3|default:'' }}"></td>
-                    <td><input type="text" name="sgpa_sem4" class="form-control" value="{{ mentoring.sgpa_sem4|default:'' }}"></td>
-                    <td><input type="text" name="sgpa_sem5" class="form-control" value="{{ mentoring.sgpa_sem5|default:'' }}"></td>
-                    <td><input type="text" name="sgpa_sem6" class="form-control" value="{{ mentoring.sgpa_sem6|default:'' }}"></td>
-                    <td><input type="text" name="sgpa_sem7" class="form-control" value="{{ mentoring.sgpa_sem7|default:'' }}"></td>
-                    <td><input type="text" name="sgpa_sem8" class="form-control" value="{{ mentoring.sgpa_sem8|default:'' }}"></td>
+                    <td><input type="number" min="0" step="any" inputmode="decimal" data-numeric-only="true" name="sgpa_sem1" class="form-control" value="{{ mentoring.sgpa_sem1|default:'' }}"></td>
+                    <td><input type="number" min="0" step="any" inputmode="decimal" data-numeric-only="true" name="sgpa_sem2" class="form-control" value="{{ mentoring.sgpa_sem2|default:'' }}"></td>
+                    <td><input type="number" min="0" step="any" inputmode="decimal" data-numeric-only="true" name="sgpa_sem3" class="form-control" value="{{ mentoring.sgpa_sem3|default:'' }}"></td>
+                    <td><input type="number" min="0" step="any" inputmode="decimal" data-numeric-only="true" name="sgpa_sem4" class="form-control" value="{{ mentoring.sgpa_sem4|default:'' }}"></td>
+                    <td><input type="number" min="0" step="any" inputmode="decimal" data-numeric-only="true" name="sgpa_sem5" class="form-control" value="{{ mentoring.sgpa_sem5|default:'' }}"></td>
+                    <td><input type="number" min="0" step="any" inputmode="decimal" data-numeric-only="true" name="sgpa_sem6" class="form-control" value="{{ mentoring.sgpa_sem6|default:'' }}"></td>
+                    <td><input type="number" min="0" step="any" inputmode="decimal" data-numeric-only="true" name="sgpa_sem7" class="form-control" value="{{ mentoring.sgpa_sem7|default:'' }}"></td>
+                    <td><input type="number" min="0" step="any" inputmode="decimal" data-numeric-only="true" name="sgpa_sem8" class="form-control" value="{{ mentoring.sgpa_sem8|default:'' }}"></td>
                 </tr>
                 <tr>
                     <td><strong>CGPA</strong></td>
-                    <td><input type="text" name="cgpa_sem1" class="form-control" value="{{ mentoring.cgpa_sem1|default:'' }}"></td>
-                    <td><input type="text" name="cgpa_sem2" class="form-control" value="{{ mentoring.cgpa_sem2|default:'' }}"></td>
-                    <td><input type="text" name="cgpa_sem3" class="form-control" value="{{ mentoring.cgpa_sem3|default:'' }}"></td>
-                    <td><input type="text" name="cgpa_sem4" class="form-control" value="{{ mentoring.cgpa_sem4|default:'' }}"></td>
-                    <td><input type="text" name="cgpa_sem5" class="form-control" value="{{ mentoring.cgpa_sem5|default:'' }}"></td>
-                    <td><input type="text" name="cgpa_sem6" class="form-control" value="{{ mentoring.cgpa_sem6|default:'' }}"></td>
-                    <td><input type="text" name="cgpa_sem7" class="form-control" value="{{ mentoring.cgpa_sem7|default:'' }}"></td>
-                    <td><input type="text" name="cgpa_sem8" class="form-control" value="{{ mentoring.cgpa_sem8|default:'' }}"></td>
+                    <td><input type="number" min="0" step="any" inputmode="decimal" data-numeric-only="true" name="cgpa_sem1" class="form-control" value="{{ mentoring.cgpa_sem1|default:'' }}"></td>
+                    <td><input type="number" min="0" step="any" inputmode="decimal" data-numeric-only="true" name="cgpa_sem2" class="form-control" value="{{ mentoring.cgpa_sem2|default:'' }}"></td>
+                    <td><input type="number" min="0" step="any" inputmode="decimal" data-numeric-only="true" name="cgpa_sem3" class="form-control" value="{{ mentoring.cgpa_sem3|default:'' }}"></td>
+                    <td><input type="number" min="0" step="any" inputmode="decimal" data-numeric-only="true" name="cgpa_sem4" class="form-control" value="{{ mentoring.cgpa_sem4|default:'' }}"></td>
+                    <td><input type="number" min="0" step="any" inputmode="decimal" data-numeric-only="true" name="cgpa_sem5" class="form-control" value="{{ mentoring.cgpa_sem5|default:'' }}"></td>
+                    <td><input type="number" min="0" step="any" inputmode="decimal" data-numeric-only="true" name="cgpa_sem6" class="form-control" value="{{ mentoring.cgpa_sem6|default:'' }}"></td>
+                    <td><input type="number" min="0" step="any" inputmode="decimal" data-numeric-only="true" name="cgpa_sem7" class="form-control" value="{{ mentoring.cgpa_sem7|default:'' }}"></td>
+                    <td><input type="number" min="0" step="any" inputmode="decimal" data-numeric-only="true" name="cgpa_sem8" class="form-control" value="{{ mentoring.cgpa_sem8|default:'' }}"></td>
                 </tr>
             </table>
         </div>
@@ -434,9 +434,15 @@
                 </tr>
                 <tr>
                     <th>Semester Starting Date</th>
-                    <td><input type="date" name="sem{{ sem.num }}_start_date" class="form-control" value="{{ sem.start_date }}"></td>
+                    <td colspan="3"><input type="date" name="sem{{ sem.num }}_start_date" class="form-control" value="{{ sem.start_date }}"></td>
+                </tr>
+                <tr>
+                    <th>SEMESTER ATTENDANCE</th>
+                    <td colspan="3"><input type="number" min="0" step="any" inputmode="decimal" data-numeric-only="true" name="sem{{ sem.num }}_attendance" class="form-control" value="{{ sem.attendance }}"></td>
+                </tr>
+                <tr>
                     <th>Semester Ending Date</th>
-                    <td><input type="date" name="sem{{ sem.num }}_end_date" class="form-control" value="{{ sem.end_date }}"></td>
+                    <td colspan="3"><input type="date" name="sem{{ sem.num }}_end_date" class="form-control" value="{{ sem.end_date }}"></td>
                 </tr>
                 <tr>
                     <td colspan="2">
@@ -600,6 +606,7 @@
             'input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="file"]), select, textarea'
         ));
         const validatedControls = controls.filter((control) => !/^sem[1-8]_/.test(control.name));
+        const numericControls = controls.filter((control) => control.dataset.numericOnly === 'true');
         validatedControls.forEach((control) => {
             control.required = true;
             control.setAttribute('aria-required', 'true');
@@ -652,9 +659,11 @@
 
         mentoringForm.addEventListener('submit', (event) => {
             validatedControls.forEach((control) => control.classList.remove('is-invalid'));
+            numericControls.forEach((control) => control.classList.remove('is-invalid'));
             if (photoInput) photoInput.classList.remove('is-invalid');
             const missing = [];
             const checkedRadioNames = new Set();
+            const invalidNumeric = [];
 
             validatedControls.forEach((control) => {
                 if (control.type === 'radio') {
@@ -676,6 +685,15 @@
                 }
             });
 
+            numericControls.forEach((control) => {
+                const value = (control.value || '').trim();
+                if (value && !/^[0-9]+(?:\.[0-9]+)?$/.test(value)) {
+                    control.classList.add('is-invalid');
+                    invalidNumeric.push(control);
+                    missing.push({ control, label: `${getFieldLabel(control)} (numbers only)` });
+                }
+            });
+
             if (photoInput && (!photoInput.files || photoInput.files.length === 0)) {
                 photoInput.classList.add('is-invalid');
                 missing.push({ control: photoInput, label: 'Student Photo' });
@@ -686,7 +704,8 @@
                 if (validationAlert) {
                     const labels = missing.slice(0, 8).map((item) => item.label);
                     const remaining = missing.length - labels.length;
-                    validationAlert.textContent = `Complete the required student details, choose Yes or No for both student-status questions. Semester mentoring sections may be left blank. ${missing.length} item(s) need attention: ${labels.join(', ')}${remaining > 0 ? `, and ${remaining} more` : ''}.`;
+                    const numericMessage = invalidNumeric.length ? ' Numeric fields must contain numbers only.' : '';
+                    validationAlert.textContent = `Complete the required student details, choose Yes or No for both student-status questions. Semester mentoring sections may be left blank.${numericMessage} ${missing.length} item(s) need attention: ${labels.join(', ')}${remaining > 0 ? `, and ${remaining} more` : ''}.`;
                     validationAlert.hidden = false;
                     validationAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }

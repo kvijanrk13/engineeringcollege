@@ -7619,6 +7619,7 @@ def mentoring_tab(request):
                     'mentor_name': sd.get('mentor_name', ''),
                     'designation': sd.get('designation', ''),
                     'start_date': sd.get('start_date', ''),
+                    'attendance': sd.get('attendance', ''),
                     'end_date': sd.get('end_date', ''),
                     'is_hosteller': sd.get('is_hosteller', ''),
                     'college_bus': sd.get('college_bus', ''),
@@ -7652,6 +7653,7 @@ def mentoring_tab(request):
             'academic_year': f'{SEMESTER_LABELS[i - 1][0]} {SEMESTER_LABELS[i - 1][1]}',
             'semester': SEMESTER_LABELS[i - 1][1],
             'mentor_name': '', 'designation': '', 'start_date': '', 'end_date': '',
+            'attendance': '',
             'is_hosteller': '', 'college_bus': '', 'backlogs': '', 'backlog_courses': '',
             'support_required': '', 'slot1_observations': '', 'slot1_suggestions': '',
             'slot1_progress': '', 'slot2_observations': '', 'slot2_suggestions': '',
@@ -7715,6 +7717,19 @@ def mentoring_tab(request):
             required_field_labels[f'sgpa_sem{semester_number}'] = f'Semester {semester_number} SGPA'
             required_field_labels[f'cgpa_sem{semester_number}'] = f'Semester {semester_number} CGPA'
 
+        numeric_field_labels = {
+            **{
+                f'{grade_type}_sem{semester_number}':
+                    f'Semester {semester_number} {grade_type.upper()}'
+                for grade_type in ('sgpa', 'cgpa')
+                for semester_number in range(1, 9)
+            },
+            **{
+                f'sem{semester_number}_attendance':
+                    f'Semester {semester_number} Attendance'
+                for semester_number in range(1, 9)
+            },
+        }
         radio_field_names = {
             'readmitted_student', 'lateral_entry_student',
         }
@@ -7727,6 +7742,14 @@ def mentoring_tab(request):
                     missing_fields.append(label)
             elif not (value or '').strip():
                 missing_fields.append(label)
+        invalid_numeric_fields = []
+        for field_name, label in numeric_field_labels.items():
+            value = (request.POST.get(field_name) or '').strip()
+            if value and not re.fullmatch(r'[0-9]+(?:\.[0-9]+)?', value):
+                invalid_numeric_fields.append(label)
+        missing_fields.extend(
+            f'{label} (numbers only)' for label in invalid_numeric_fields
+        )
         student_photo = request.FILES.get('student_photo')
         if not student_photo:
             missing_fields.append('Student Photo')
@@ -7746,7 +7769,11 @@ def mentoring_tab(request):
             messages.error(
                 request,
                 f'Complete the required student details, choose Yes or No for both student-status questions before saving. '
-                f'{len(missing_fields)} required item(s) need attention: {preview}.'
+                f'{len(missing_fields)} item(s) need attention: {preview}.'
+                + (
+                    ' SGPA, CGPA, and semester attendance fields must contain numbers only.'
+                    if invalid_numeric_fields else ''
+                )
             )
             return render_submitted_mentoring_form()
 
@@ -7847,6 +7874,7 @@ def mentoring_tab(request):
                     'mentor_name': request.POST.get(f'sem{n}_mentor_name', ''),
                     'designation': request.POST.get(f'sem{n}_designation', ''),
                     'start_date': request.POST.get(f'sem{n}_start_date') or None,
+                    'attendance': request.POST.get(f'sem{n}_attendance', '').strip(),
                     'end_date': request.POST.get(f'sem{n}_end_date') or None,
                     'is_hosteller': request.POST.get(f'sem{n}_is_hosteller', ''),
                     'college_bus': request.POST.get(f'sem{n}_college_bus', ''),

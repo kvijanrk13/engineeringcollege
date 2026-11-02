@@ -108,6 +108,32 @@ class MentoringTabTests(TestCase):
         for semester_number in range(1, 9):
             post_data[f'sgpa_sem{semester_number}'] = '8'
             post_data[f'cgpa_sem{semester_number}'] = '8'
+            post_data[f'sem{semester_number}_attendance'] = '85.5'
+
+        form_response = self.client.get(reverse('dashboard:mentoring_tab'))
+        self.assertEqual(form_response.status_code, 200)
+        self.assertEqual(form_response.content.count(b'data-numeric-only="true"'), 24)
+        for semester_number in range(1, 9):
+            self.assertContains(
+                form_response,
+                f'name="sem{semester_number}_attendance"',
+            )
+
+        for field_name in ('sgpa_sem1', 'cgpa_sem1', 'sem1_attendance'):
+            invalid_data = post_data.copy()
+            invalid_data[field_name] = '8A'
+            invalid_data['student_photo'] = SimpleUploadedFile(
+                'student-photo.jpg',
+                make_test_image_bytes(),
+                content_type='image/jpeg',
+            )
+            invalid_response = self.client.post(
+                reverse('dashboard:mentoring_tab'),
+                invalid_data,
+            )
+            self.assertEqual(invalid_response.status_code, 200)
+            self.assertContains(invalid_response, 'numbers only')
+        self.assertFalse(mock_upload.called)
 
         response = self.client.post(reverse('dashboard:mentoring_tab'), post_data)
 
@@ -116,6 +142,9 @@ class MentoringTabTests(TestCase):
             f"status={response.status_code}, location={response.get('Location')}",
         )
         self.assertEqual(response.status_code, 302)
+        saved_mentoring = StudentMentoring.objects.order_by('-created_at').first()
+        self.assertEqual(saved_mentoring.semester_data['1']['attendance'], '85.5')
+        self.assertEqual(saved_mentoring.semester_data['8']['attendance'], '85.5')
         self.assertTrue(_mock_create_document.call_args.kwargs['photo_bytes'])
         uploaded_file = mock_upload.call_args.args[0]
         self.assertEqual(uploaded_file.name, '24C11A1201.docx')
@@ -131,6 +160,10 @@ class MentoringTabTests(TestCase):
             admission_year='2024',
             readmitted_student='No',
             lateral_entry_student='Yes',
+            semester_data={
+                '1': {'attendance': '84.5'},
+                '3': {'attendance': '87'},
+            },
         )
 
         document = Document(io.BytesIO(create_mentoring_document(
@@ -171,6 +204,12 @@ class MentoringTabTests(TestCase):
         self.assertFalse(document.tables[1].rows[3].cells[0].tables)
         self.assertIn('Re-admitted Student: No', document.tables[1].rows[3].cells[0].text)
         self.assertIn('Lateral Entry Student: Yes', document.tables[1].rows[3].cells[0].text)
+        document_text = ''.join(
+            element.text or ''
+            for element in document._element.xpath('.//w:t')
+        )
+        self.assertIn('SEMESTER ATTENDANCE: 84.5', document_text)
+        self.assertIn('SEMESTER ATTENDANCE87', document_text)
 
     @override_settings(
         ROOT_URLCONF='engineeringcollege.urls',

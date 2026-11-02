@@ -134,6 +134,7 @@ def _add_continuation_semester(document, semester_number, semester_data):
         ("Name of the Mentor", semester_data.get("mentor_name")),
         ("Designation", semester_data.get("designation")),
         ("Semester Starting Date", semester_data.get("start_date")),
+        ("SEMESTER ATTENDANCE", semester_data.get("attendance")),
         ("Semester Ending Date", semester_data.get("end_date")),
         ("Hosteller / Day Scholar", semester_data.get("is_hosteller")),
         ("Travelling in College Bus", semester_data.get("college_bus")),
@@ -268,7 +269,8 @@ def create_mentoring_document(student, mentoring, photo_bytes=None, student_name
     _set_cell_text(sem1_table.rows[1].cells[8], sem1.get("designation"))
     _set_cell_text(
         sem1_table.rows[3].cells[0],
-        f"From: {_text(sem1.get('start_date'))}    To: {_text(sem1.get('end_date'))}",
+        f"From: {_text(sem1.get('start_date'))}    To: {_text(sem1.get('end_date'))}\n"
+        f"SEMESTER ATTENDANCE: {_text(sem1.get('attendance'))}",
     )
     _set_semester_radio(sem1_table.rows[4], 2, 6, sem1.get("is_hosteller"))
     _set_semester_radio(sem1_table.rows[5], 2, 6, sem1.get("college_bus"))
@@ -289,7 +291,11 @@ def create_mentoring_document(student, mentoring, photo_bytes=None, student_name
     sem2 = semester_data.get("2", {})
     _set_cell_text(sem1_signoff.rows[6].cells[2], sem2.get("mentor_name"))
     _set_cell_text(sem1_signoff.rows[6].cells[8], sem2.get("designation"))
-    _set_cell_text(sem1_signoff.rows[8].cells[0], sem2.get("start_date"))
+    _set_cell_text(
+        sem1_signoff.rows[8].cells[0],
+        f"{_text(sem2.get('start_date'))}\n"
+        f"SEMESTER ATTENDANCE: {_text(sem2.get('attendance'))}",
+    )
     _set_cell_text(sem1_signoff.rows[8].cells[4], sem2.get("end_date"))
     _set_semester_radio(sem1_signoff.rows[9], 3, 7, sem2.get("is_hosteller"))
     _set_semester_radio(sem1_signoff.rows[10], 3, 7, sem2.get("college_bus"))
