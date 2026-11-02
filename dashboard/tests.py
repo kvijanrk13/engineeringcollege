@@ -204,12 +204,80 @@ class MentoringTabTests(TestCase):
         self.assertFalse(document.tables[1].rows[3].cells[0].tables)
         self.assertIn('Re-admitted Student: No', document.tables[1].rows[3].cells[0].text)
         self.assertIn('Lateral Entry Student: Yes', document.tables[1].rows[3].cells[0].text)
+        document_text = ' '.join(
+            ''.join(
+                element.text or ''
+                for element in document._element.xpath('.//w:t')
+            ).split()
+        )
+        self.assertIn('SEMESTER ATTENDANCE: 84.5', document_text)
+        self.assertIn('SEMESTER ATTENDANCE: 87', document_text)
+
+    def test_generated_document_repeats_full_mentoring_form_for_all_semesters(self):
+        semester_data = {
+            str(number): {
+                'mentor_name': f'Mentor {number}',
+                'designation': f'Designation {number}',
+                'start_date': f'2026-0{number}-01',
+                'end_date': f'2026-0{number}-28',
+                'attendance': str(80 + number),
+                'is_hosteller': 'Yes',
+                'college_bus': 'No',
+                'backlogs': 'No',
+                'backlog_courses': f'Courses {number}',
+                'support_required': f'Support {number}',
+                'slot1_observations': f'Observation 1-{number}',
+                'slot1_suggestions': f'Suggestion 1-{number}',
+                'slot1_progress': f'Progress 1-{number}',
+                'slot2_observations': f'Observation 2-{number}',
+                'slot2_suggestions': f'Suggestion 2-{number}',
+                'slot2_progress': f'Progress 2-{number}',
+                'date_of_mentoring': f'2026-0{number}-15',
+                'mentee_sign': f'Mentee {number}',
+                'mentor_sign': f'Mentor sign {number}',
+                'signature_ac': f'AC {number}',
+                'signature_hod': f'HOD {number}',
+            }
+            for number in range(1, 9)
+        }
+        mentoring = StudentMentoring(
+            batch='R22',
+            admission_year='2022',
+            semester_data=semester_data,
+        )
+
+        document = Document(io.BytesIO(create_mentoring_document(None, mentoring)))
         document_text = ''.join(
             element.text or ''
             for element in document._element.xpath('.//w:t')
         )
-        self.assertIn('SEMESTER ATTENDANCE: 84.5', document_text)
-        self.assertIn('SEMESTER ATTENDANCE87', document_text)
+        table_texts = [
+            ' '.join(cell.text.split())
+            for table in document.tables
+            for row in table.rows
+            for cell in row.cells
+        ]
+
+        for year_label, semester_label in (
+            ('I B.Tech', 'FIRST SEMESTER'),
+            ('I B.Tech', 'SECOND SEMESTER'),
+            ('II B.Tech', 'FIRST SEMESTER'),
+            ('II B.Tech', 'SECOND SEMESTER'),
+            ('III B.Tech', 'FIRST SEMESTER'),
+            ('III B.Tech', 'SECOND SEMESTER'),
+            ('IV B.Tech', 'FIRST SEMESTER'),
+            ('IV B.Tech', 'SECOND SEMESTER'),
+        ):
+            expected_heading = f'ACADEMIC YEAR: {year_label}. {semester_label}'
+            self.assertTrue(
+                any(expected_heading in text for text in table_texts),
+                expected_heading,
+            )
+        self.assertEqual(document_text.count('SEMESTER ATTENDANCE'), 8)
+        for number in range(1, 9):
+            self.assertIn(f'SEMESTER ATTENDANCE: {80 + number}', document_text)
+            self.assertIn(f'Observation 1-{number}', document_text)
+            self.assertIn(f'HOD {number}', document_text)
 
     @override_settings(
         ROOT_URLCONF='engineeringcollege.urls',
@@ -277,6 +345,24 @@ class MentoringTabTests(TestCase):
             element.text or ''
             for element in document._element.xpath('.//w:t')
         )
+        table_texts = [
+            ' '.join(cell.text.split())
+            for table in document.tables
+            for row in table.rows
+            for cell in row.cells
+        ]
+        for year_label, semester_label in (
+            ('I B.Tech', 'FIRST SEMESTER'),
+            ('I B.Tech', 'SECOND SEMESTER'),
+            ('II B.Tech', 'FIRST SEMESTER'),
+            ('II B.Tech', 'SECOND SEMESTER'),
+            ('III B.Tech', 'FIRST SEMESTER'),
+            ('III B.Tech', 'SECOND SEMESTER'),
+            ('IV B.Tech', 'FIRST SEMESTER'),
+            ('IV B.Tech', 'SECOND SEMESTER'),
+        ):
+            expected_heading = f'ACADEMIC YEAR: {year_label}. {semester_label}'
+            self.assertTrue(any(expected_heading in text for text in table_texts))
         self.assertEqual(document_text.count('85.5'), 8)
         self.assertIn('SEMESTER ATTENDANCE', document_text)
         self.assertEqual(

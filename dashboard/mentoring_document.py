@@ -1,14 +1,16 @@
 """Build a filled Word mentoring record from the college's supplied template."""
 
+from copy import deepcopy
 from datetime import date, datetime
 from io import BytesIO
 from pathlib import Path
 
 from docx import Document
-from docx.enum.table import WD_TABLE_ALIGNMENT, WD_CELL_VERTICAL_ALIGNMENT
+from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
+from docx.table import Table
 from docx.text.paragraph import Paragraph
 
 
@@ -117,58 +119,62 @@ def _fill_photograph_placeholder(document, photo_bytes):
     picture._inline.docPr.set("descr", "Student photograph")
 
 
-def _add_continuation_semester(document, semester_number, semester_data):
+def _add_continuation_semester(
+    document,
+    semester_number,
+    semester_data,
+    template_semester_table,
+    template_slots_table,
+    template_signoff_table,
+):
     year_label, semester_label = SEMESTER_LABELS[semester_number - 1]
-    heading = document.add_paragraph()
-    heading.paragraph_format.keep_with_next = True
-    heading.paragraph_format.space_before = Pt(12)
-    heading.paragraph_format.space_after = Pt(4)
-    heading_run = heading.add_run(f"{year_label} - {semester_label}")
-    heading_run.bold = True
-    heading_run.font.name = "Arial"
-    heading_run.font.size = Pt(11)
+    document.add_page_break()
 
-    field_rows = [
-        ("Academic Year", semester_data.get("academic_year")),
-        ("Semester", semester_data.get("semester")),
-        ("Name of the Mentor", semester_data.get("mentor_name")),
-        ("Designation", semester_data.get("designation")),
-        ("Semester Starting Date", semester_data.get("start_date")),
-        ("SEMESTER ATTENDANCE", semester_data.get("attendance")),
-        ("Semester Ending Date", semester_data.get("end_date")),
-        ("Hosteller / Day Scholar", semester_data.get("is_hosteller")),
-        ("Travelling in College Bus", semester_data.get("college_bus")),
-        ("Backlogs in previous Semester", semester_data.get("backlogs")),
-        ("Backlog Courses", semester_data.get("backlog_courses")),
-        ("Areas where support is required", semester_data.get("support_required")),
-        ("Slot 1 - Observations by mentor", semester_data.get("slot1_observations")),
-        ("Slot 1 - Suggestions given by mentor", semester_data.get("slot1_suggestions")),
-        ("Slot 1 - Progress observed", semester_data.get("slot1_progress")),
-        ("Slot 2 - Observations by mentor", semester_data.get("slot2_observations")),
-        ("Slot 2 - Suggestions given by mentor", semester_data.get("slot2_suggestions")),
-        ("Slot 2 - Progress observed", semester_data.get("slot2_progress")),
-        ("Date of Mentoring", semester_data.get("date_of_mentoring")),
-        ("Mentee Sign", semester_data.get("mentee_sign")),
-        ("Mentor Sign", semester_data.get("mentor_sign")),
-        ("Signature of AC", semester_data.get("signature_ac")),
-        ("Signature of HOD", semester_data.get("signature_hod")),
-    ]
-    table = document.add_table(rows=len(field_rows), cols=2)
-    table.style = "Table Grid"
-    table.alignment = WD_TABLE_ALIGNMENT.CENTER
-    table.autofit = False
-    for row, (label, value) in zip(table.rows, field_rows):
-        row.cells[0].width = Inches(2.15)
-        row.cells[1].width = Inches(4.0)
-        row.cells[0].vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
-        row.cells[1].vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
-        _set_cell_text(row.cells[0], label)
-        _set_cell_text(row.cells[1], value)
-        for cell in row.cells:
-            for paragraph in cell.paragraphs:
-                for run in paragraph.runs:
-                    run.font.name = "Arial"
-                    run.font.size = Pt(9)
+    semester_element = deepcopy(template_semester_table._tbl)
+    semester_rows = semester_element.xpath("./w:tr")
+    for row in semester_rows[:5]:
+        semester_element.remove(row)
+    document._element.body.append(semester_element)
+    semester_table = Table(semester_element, document._body)
+    _set_cell_text(
+        semester_table.rows[0].cells[0],
+        f"ACADEMIC YEAR: {year_label}. {semester_label.upper()}",
+    )
+    _set_cell_text(semester_table.rows[1].cells[2], semester_data.get("mentor_name"))
+    _set_cell_text(semester_table.rows[1].cells[8], semester_data.get("designation"))
+    _set_cell_text(
+        semester_table.rows[3].cells[0],
+        f"{_text(semester_data.get('start_date'))}\n"
+        f"SEMESTER ATTENDANCE: {_text(semester_data.get('attendance'))}",
+    )
+    _set_cell_text(semester_table.rows[3].cells[4], semester_data.get("end_date"))
+    _set_semester_radio(semester_table.rows[4], 3, 7, semester_data.get("is_hosteller"))
+    _set_semester_radio(semester_table.rows[5], 3, 7, semester_data.get("college_bus"))
+    _set_semester_radio(semester_table.rows[6], 3, 7, semester_data.get("backlogs"))
+    _set_cell_text(semester_table.rows[7].cells[3], semester_data.get("backlog_courses"))
+    _set_cell_text(semester_table.rows[8].cells[3], semester_data.get("support_required"))
+
+    slots_element = deepcopy(template_slots_table._tbl)
+    document._element.body.append(slots_element)
+    slots_table = Table(slots_element, document._body)
+    for slot_number, row_index in ((1, 1), (2, 2)):
+        slot = f"slot{slot_number}"
+        for column_index, suffix in ((1, "observations"), (2, "suggestions"), (3, "progress")):
+            _set_cell_text(
+                slots_table.rows[row_index].cells[column_index],
+                semester_data.get(f"{slot}_{suffix}"),
+            )
+
+    signoff_element = deepcopy(template_signoff_table._tbl)
+    document._element.body.append(signoff_element)
+    signoff_table = Table(signoff_element, document._body)
+    for row_index, field_name in ((0, "date_of_mentoring"), (1, "mentee_sign"), (2, "mentor_sign")):
+        _set_cell_text(signoff_table.rows[row_index].cells[1], semester_data.get(field_name))
+    _set_cell_text(
+        signoff_table.rows[4].cells[0],
+        f"Signature of AC: {_text(semester_data.get('signature_ac'))}    "
+        f"Signature of HOD: {_text(semester_data.get('signature_hod'))}",
+    )
 
 
 def create_mentoring_document(student, mentoring, photo_bytes=None, student_name="", hall_ticket_no=""):
@@ -292,6 +298,10 @@ def create_mentoring_document(student, mentoring, photo_bytes=None, student_name
     _set_cell_text(sem1_signoff.rows[6].cells[2], sem2.get("mentor_name"))
     _set_cell_text(sem1_signoff.rows[6].cells[8], sem2.get("designation"))
     _set_cell_text(
+        sem1_signoff.rows[5].cells[0],
+        "ACADEMIC YEAR: I B.Tech. SECOND SEMESTER",
+    )
+    _set_cell_text(
         sem1_signoff.rows[8].cells[0],
         f"{_text(sem2.get('start_date'))}\n"
         f"SEMESTER ATTENDANCE: {_text(sem2.get('attendance'))}",
@@ -333,20 +343,15 @@ def create_mentoring_document(student, mentoring, photo_bytes=None, student_name
         _set_cell_text(row.cells[0], label)
         _set_cell_text(row.cells[1], value)
 
-    # The provided template contains only I B.Tech. semesters, so add the
-    # remaining six records using matching, compact continuation tables.
-    document.add_page_break()
-    continuation_title = document.add_paragraph()
-    continuation_title.paragraph_format.space_after = Pt(8)
-    continuation_run = continuation_title.add_run("Remaining Semester Mentoring Records")
-    continuation_run.bold = True
-    continuation_run.font.name = "Arial"
-    continuation_run.font.size = Pt(14)
+    # Repeat the complete mentoring form layout for the remaining semesters.
     for semester_number in range(3, 9):
         _add_continuation_semester(
             document,
             semester_number,
             semester_data.get(str(semester_number), {}),
+            sem1_signoff,
+            tables[9],
+            tables[10],
         )
 
     output = BytesIO()
