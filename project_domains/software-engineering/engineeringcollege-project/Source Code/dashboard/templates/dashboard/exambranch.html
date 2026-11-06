@@ -299,6 +299,26 @@ Exam Branch
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
     }
 
+    .exam-branch-page .mid1-desc,
+    .exam-branch-page .mid2-desc,
+    .exam-branch-page .assignment,
+    .exam-branch-page .viva {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+
+    .exam-branch-page .mid1-desc::-webkit-inner-spin-button,
+    .exam-branch-page .mid1-desc::-webkit-outer-spin-button,
+    .exam-branch-page .mid2-desc::-webkit-inner-spin-button,
+    .exam-branch-page .mid2-desc::-webkit-outer-spin-button,
+    .exam-branch-page .assignment::-webkit-inner-spin-button,
+    .exam-branch-page .assignment::-webkit-outer-spin-button,
+    .exam-branch-page .viva::-webkit-inner-spin-button,
+    .exam-branch-page .viva::-webkit-outer-spin-button {
+        margin: 0;
+        -webkit-appearance: none;
+    }
+
     .exam-table {
         margin-bottom: 0;
     }
@@ -2262,6 +2282,11 @@ Exam Branch
                     + '<td class="total">-</td>'
                     + '<td class="grade" data-grade="-">-</td>';
                 marksBody.appendChild(row);
+                row.querySelectorAll('.mid1-desc, .mid2-desc, .assignment, .viva').forEach(function (input) {
+                    input.type = 'text';
+                    input.setAttribute('inputmode', 'numeric');
+                    input.setAttribute('pattern', '[0-9]*');
+                });
                 recalculateEvaluationRow(row);
             });
 
