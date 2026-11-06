@@ -299,6 +299,39 @@ Exam Branch
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
     }
 
+    .evaluation-horizontal-scroll {
+        height: 22px;
+        margin: 0 0 0.35rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-gutter: stable;
+        border: 1px solid #d8e4ef;
+        border-radius: 999px;
+        background: #f2f7fc;
+        scrollbar-color: #52799a #e5eef7;
+        scrollbar-width: auto;
+    }
+
+    .evaluation-horizontal-scroll::-webkit-scrollbar {
+        height: 14px;
+    }
+
+    .evaluation-horizontal-scroll::-webkit-scrollbar-track {
+        border-radius: 999px;
+        background: #e5eef7;
+    }
+
+    .evaluation-horizontal-scroll::-webkit-scrollbar-thumb {
+        border: 2px solid #e5eef7;
+        border-radius: 999px;
+        background: #52799a;
+    }
+
+    .evaluation-marks-scroll {
+        scrollbar-gutter: stable;
+        overscroll-behavior: contain;
+    }
+
     .exam-table {
         margin-bottom: 0;
     }
@@ -1321,7 +1354,7 @@ Exam Branch
                                 <input type="text" id="evaluationSubjectName1" class="form-control evaluation-subject-name" value="Data Mining" placeholder="Enter Subject Name or Lab Name">
                             </div>
                             <p class="small text-muted mb-2">Attendance is each student's percentage of the 66 Data Mining classes conducted, from the October 2026-27 monthly report. Attendance-based grades compare each student with the highest attendance percentage in this sheet. MID-1 and MID-2 descriptive marks (Desc) are predicted from attendance percentage, combined with the 0-10 objective and 0-5 assignment marks, to achieve a class average of at least 75% (32/40 target per student for Evaluation 1; 5 students with AB/blank marks are excluded). The percentage column shows each student's score out of 40. Download the table as Excel.</p>
-                            <div class="table-responsive" style="max-height: 520px; overflow: auto;">
+                            <div class="table-responsive evaluation-marks-scroll" style="max-height: 520px; overflow: auto;">
                                 <table class="table exam-table table-striped" id="internalMarksTable1" style="min-width: 2100px;">
                                     <thead>
                                         <tr>
@@ -1405,7 +1438,7 @@ Exam Branch
                                 <input type="text" id="evaluationSubjectName2" class="form-control evaluation-subject-name" value="Computer Organization and Architecture" placeholder="Enter Subject Name or Lab Name">
                             </div>
                             <p class="small text-muted mb-2">MID-1 descriptive marks are predicted from each student's attendance percentage, independently of the 0–10 objective mark. The 36-student aggregate remains below 75%: Σ(MID-1 totals) ÷ (36 × 30) × 100.</p>
-                            <div class="table-responsive" style="max-height: 520px; overflow: auto;">
+                            <div class="table-responsive evaluation-marks-scroll" style="max-height: 520px; overflow: auto;">
                                 <table class="table exam-table table-striped" id="internalMarksTable2" style="min-width: 2100px;">
                                     <thead>
                                         <tr>
@@ -1489,7 +1522,7 @@ Exam Branch
                                 <input type="text" id="evaluationSubjectName3" class="form-control evaluation-subject-name" value="Data Mining Lab" placeholder="Enter Subject Name or Lab Name">
                             </div>
                             <p class="small text-muted mb-2">Evaluation 3 captures CIA (10), VIVA (10) and EXAM (10) for each of MID-1 and MID-2, summed to a 30-mark MID total. The PROJECT (10) column contributes to the 40-mark total. For 56 students, the aggregate is Σ(40-mark totals) ÷ (56 × 40) × 100.</p>
-                            <div class="table-responsive" style="max-height: 520px; overflow: auto;">
+                            <div class="table-responsive evaluation-marks-scroll" style="max-height: 520px; overflow: auto;">
                                 <table class="table exam-table table-striped" id="internalMarksTable3" style="min-width: 2400px;">
                                     <thead>
                                         <tr>
@@ -1577,7 +1610,7 @@ Exam Branch
                                 <input type="text" id="evaluationSubjectName4" class="form-control evaluation-subject-name" value="Software Engineering Lab" placeholder="Enter Subject Name or Lab Name">
                             </div>
                             <p class="small text-muted mb-2">Evaluation 4 captures CIA (10), VIVA (10) and EXAM (10) for each of MID-1 and MID-2, summed to a 30-mark MID total. The PROJECT (10) column contributes to the 40-mark total. For 36 students, the aggregate is Σ(40-mark totals) ÷ (36 × 40) × 100.</p>
-                            <div class="table-responsive" style="max-height: 520px; overflow: auto;">
+                            <div class="table-responsive evaluation-marks-scroll" style="max-height: 520px; overflow: auto;">
                                 <table class="table exam-table table-striped" id="internalMarksTable4" style="min-width: 2400px;">
                                     <thead>
                                         <tr>
@@ -5149,6 +5182,55 @@ Exam Branch
             }
         }
 
+        function setupEvaluationHorizontalScrollbar(section) {
+            if (!section) return;
+            const scrollContainer = section.querySelector('.evaluation-marks-scroll');
+            const table = scrollContainer ? scrollContainer.querySelector('table[id^="internalMarksTable"]') : null;
+            if (!scrollContainer || !table) return;
+            scrollContainer.setAttribute('tabindex', '0');
+            scrollContainer.setAttribute('role', 'region');
+            scrollContainer.setAttribute('aria-label', 'Student marks; scroll vertically and horizontally');
+
+            let horizontalScrollbar = section.querySelector('.evaluation-horizontal-scroll');
+            if (!horizontalScrollbar) {
+                horizontalScrollbar = document.createElement('div');
+                horizontalScrollbar.className = 'evaluation-horizontal-scroll';
+                horizontalScrollbar.setAttribute('role', 'region');
+                horizontalScrollbar.setAttribute('aria-label', 'Scroll marks table horizontally');
+                horizontalScrollbar.setAttribute('tabindex', '0');
+                const scrollbarContent = document.createElement('div');
+                scrollbarContent.className = 'evaluation-horizontal-scroll-content';
+                scrollbarContent.setAttribute('aria-hidden', 'true');
+                horizontalScrollbar.appendChild(scrollbarContent);
+                scrollContainer.parentNode.insertBefore(horizontalScrollbar, scrollContainer);
+
+                horizontalScrollbar.addEventListener('scroll', function () {
+                    if (scrollContainer.scrollLeft !== horizontalScrollbar.scrollLeft) {
+                        scrollContainer.scrollLeft = horizontalScrollbar.scrollLeft;
+                    }
+                });
+                scrollContainer.addEventListener('scroll', function () {
+                    if (horizontalScrollbar.scrollLeft !== scrollContainer.scrollLeft) {
+                        horizontalScrollbar.scrollLeft = scrollContainer.scrollLeft;
+                    }
+                });
+            }
+
+            const scrollbarContent = horizontalScrollbar.firstElementChild;
+            const updateScrollbar = function () {
+                scrollbarContent.style.width = table.scrollWidth + 'px';
+                horizontalScrollbar.hidden = table.scrollWidth <= scrollContainer.clientWidth;
+                horizontalScrollbar.scrollLeft = scrollContainer.scrollLeft;
+            };
+            updateScrollbar();
+            if (typeof ResizeObserver !== 'undefined' && !horizontalScrollbar.dataset.resizeObserved) {
+                const resizeObserver = new ResizeObserver(updateScrollbar);
+                resizeObserver.observe(scrollContainer);
+                resizeObserver.observe(table);
+                horizontalScrollbar.dataset.resizeObserved = 'true';
+            }
+        }
+
         function renderStudents(students) {
             const currentMarksBody = marksBodyMap[activeEvaluationSheet] || marksBodyMap['1'];
             if (activeEvaluationSheet === '2') {
@@ -5213,6 +5295,7 @@ Exam Branch
             updateGradeSummary();
             updateEvaluationMetrics();
             updateAllEvaluationAverages();
+            setupEvaluationHorizontalScrollbar(currentMarksBody.closest('.evaluation-section'));
         }
 
         function getEvaluationRows() {
@@ -6045,6 +6128,9 @@ Exam Branch
 
             const sourceSection = evaluationSectionsMap['3'];
             const section = sourceSection.cloneNode(true);
+            section.querySelectorAll('.evaluation-horizontal-scroll').forEach(function (scrollbar) {
+                scrollbar.remove();
+            });
             section.dataset.sheet = sheetNumber;
             section.style.display = 'block';
             section.classList.add('mt-5');
