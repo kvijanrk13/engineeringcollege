@@ -4866,23 +4866,12 @@ Exam Branch
             7, 5, 6, 2, 5, 8, 9, 10, 9, 4,
             4, 8, 5, 8, 10, 7
         ];
-        const thirdEvaluationRollNumbers = [
-            '24C11A1222',
-            '25C11A1202', '25C11A1203', '25C11A1204', '25C11A1205',
-            '25C11A1206', '25C11A1207', '25C11A1208', '25C11A1209',
-            '25C11A1210', '25C11A1211', '25C11A1212', '25C11A1213',
-            '25C11A1214', '25C11A1215', '25C11A1216', '25C11A1217',
-            '25C11A1218', '25C11A1219', '25C11A1220', '25C11A1221',
-            '25C11A1222', '25C11A1223', '25C11A1224', '25C11A1225',
-            '25C11A1226', '25C11A1227', '25C11A1228', '25C11A1229',
-            '25C11A1230', '25C11A1231', '25C11A1232', '25C11A1233',
-            '25C11A1234', '25C11A1235', '26C15A1201'
-        ];
+        const thirdEvaluationRollNumbers = defaultEvaluationRollNumbers.slice();
         const thirdEvaluationAttendance = [
-            33.33, 66.67, 77.78, 0, 88.89, 100, 55.56, 88.89, 88.89, 77.78, 11.11, 66.67, 77.78, 88.89,
-            0, 77.78, 66.67, 88.89, 11.11, 77.78, 11.11, 66.67, 66.67, 66.67, 77.78, 22.22, 88.89, 88.89,
-            88.89, 77.78, 66.67, 66.67, 88.89, 66.67, 66.67, 55.56, 88.89, 11.11, 88.89, 55.56, 77.78, 77.78,
-            66.67, 66.67, 11.11, 88.89, 88.89, 88.89, 77.78, 100, 22.22, 88.89, 77.78, 33.33, 55.56, 88.89
+            17.65, 70.59, 70.59, 0, 88.24, 94.12, 64.71, 88.24, 88.24, 82.35, 47.06, 64.71, 82.35, 82.35,
+            0, 76.47, 82.35, 88.24, 23.53, 82.35, 23.53, 64.71, 76.47, 76.47, 76.47, 23.53, 82.35, 82.35,
+            88.24, 82.35, 47.06, 82.35, 82.35, 76.47, 70.59, 70.59, 82.35, 35.29, 94.12, 47.06, 82.35, 76.47,
+            76.47, 82.35, 47.06, 82.35, 82.35, 94.12, 64.71, 94.12, 52.94, 82.35, 82.35, 29.41, 64.71, 82.35
         ];
         const fourthEvaluationRollNumbers = [
             '24C11A1222',
@@ -4925,7 +4914,7 @@ Exam Branch
             if (activeEvaluationSheet === '2') {
                 return secondEvaluationRollNumbers;
             } else if (activeEvaluationSheet === '3') {
-                return defaultEvaluationRollNumbers;
+                return thirdEvaluationRollNumbers;
             } else if (activeEvaluationSheet === '4') {
                 return fourthEvaluationRollNumbers;
             }
@@ -6117,14 +6106,20 @@ Exam Branch
                     });
                 }
                 if (activeEvaluationSheet === '3') {
+                    const savedRowsByRollNumber = {};
+                    savedRows.forEach(function (student) {
+                        const rollNo = String(student.rollNo || '').trim().toUpperCase();
+                        if (rollNo) savedRowsByRollNumber[rollNo] = student;
+                    });
                     savedRows = activeRollNumbers.map(function (rollNo, index) {
-                        const existing = savedRows[index] || {};
+                        const existing = savedRowsByRollNumber[String(rollNo).trim().toUpperCase()] || {};
                         return Object.assign({
                             attendance: activeAttendance[index] === undefined ? '' : String(activeAttendance[index]),
                             mid1Cia: '', mid1Viva: '', mid1Exam: '',
                             mid2Cia: '', mid2Viva: '', mid2Exam: '', project: ''
                         }, existing, {
-                            rollNo: rollNo
+                            rollNo: rollNo,
+                            attendance: activeAttendance[index] === undefined ? '' : String(activeAttendance[index])
                         });
                     });
                 }
@@ -6148,7 +6143,8 @@ Exam Branch
                     return;
                 }
 
-                document.getElementById('studentCount').value = payload.studentCount || String(defaultCount);
+                document.getElementById('studentCount').value = activeEvaluationSheet === '3'
+                    ? String(defaultCount) : (payload.studentCount || String(defaultCount));
                 renderStudents(savedRows.length ? savedRows : generateStudents(defaultCount));
                 setStatus(evaluationSaveStatus, 'Evaluation loaded from ' + formatSavedTime(payload.savedAt), 'success');
             } catch (error) {
