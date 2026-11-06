@@ -1320,7 +1320,7 @@ Exam Branch
                                 <label for="evaluationSubjectName1" class="form-label fw-bold">Subject Name / Lab Name</label>
                                 <input type="text" id="evaluationSubjectName1" class="form-control evaluation-subject-name" value="Data Mining" placeholder="Enter Subject Name or Lab Name">
                             </div>
-                            <p class="small text-muted mb-2">Attendance shows the number of Data Mining classes attended out of 66, from the October 2026-27 monthly report. Attendance-based grades compare each student with the highest attendance count in this sheet. MID-1 and MID-2 descriptive marks (Desc) are predicted from attendance percentage, combined with the 0-10 objective and 0-5 assignment marks, to achieve a class average of at least 75% (32/40 target per student for Evaluation 1; 5 students with AB/blank marks are excluded). The percentage column shows each student's score out of 40. Download the table as Excel.</p>
+                            <p class="small text-muted mb-2">Attendance is each student's percentage of the 66 Data Mining classes conducted, from the October 2026-27 monthly report. Attendance-based grades compare each student with the highest attendance percentage in this sheet. MID-1 and MID-2 descriptive marks (Desc) are predicted from attendance percentage, combined with the 0-10 objective and 0-5 assignment marks, to achieve a class average of at least 75% (32/40 target per student for Evaluation 1; 5 students with AB/blank marks are excluded). The percentage column shows each student's score out of 40. Download the table as Excel.</p>
                             <div class="table-responsive" style="max-height: 520px; overflow: auto;">
                                 <table class="table exam-table table-striped" id="internalMarksTable1" style="min-width: 2100px;">
                                     <thead>
@@ -4733,12 +4733,11 @@ Exam Branch
         ];
 
         const defaultEvaluationAttendance = [
-            10, 31, 37, 0, 48, 50, 44, 47, 53, 43, 28, 32, 48, 56,
-            0, 50, 43, 40, 14, 50, 13, 45, 57, 55, 56, 10, 55, 58,
-            41, 49, 32, 46, 44, 39, 25, 48, 38, 25, 46, 41, 56, 50,
-            27, 57, 22, 55, 31, 48, 46, 50, 25, 51, 36, 18, 39, 55
+            15.15, 46.97, 56.06, 0.00, 72.73, 75.76, 66.67, 71.21, 80.30, 65.15, 42.42, 48.48, 72.73, 84.85,
+            0.00, 75.76, 65.15, 60.61, 21.21, 75.76, 19.70, 68.18, 86.36, 83.33, 84.85, 15.15, 83.33, 87.88,
+            62.12, 74.24, 48.48, 69.70, 66.67, 59.09, 37.88, 72.73, 57.58, 37.88, 69.70, 62.12, 84.85, 75.76,
+            40.91, 86.36, 33.33, 83.33, 46.97, 72.73, 69.70, 75.76, 37.88, 77.27, 54.55, 27.27, 59.09, 83.33
         ];
-        const defaultEvaluationClassesConducted = 66;
         const secondEvaluationRollNumbers = [
             '24C11A1222',
             '25C11A1202', '25C11A1203', '25C11A1204', '25C11A1205',
@@ -4831,7 +4830,7 @@ Exam Branch
             65, 79, 86, 55, 98, 48, 82, 74, 88, 62,
             94, 42, 78, 71, 89, 52
         ];
-        const evaluationAttendanceVersion = 8;
+        const evaluationAttendanceVersion = 9;
         const secondEvaluationObjectiveMarksVersion = 1;
 
         function getActiveEvaluationStorageKey() {
@@ -5033,9 +5032,7 @@ Exam Branch
 
             if (hasAllPredictionInputs) {
                 const prediction = predictMidDescriptiveMarks(
-                    activeEvaluationSheet === '1'
-                        ? (parseAttendance(row.querySelector('.attendance').value) / defaultEvaluationClassesConducted) * 100
-                        : row.querySelector('.attendance').value,
+                    row.querySelector('.attendance').value,
                     parseScore(mid1ObjRaw),
                     parseScore(mid2ObjRaw),
                     parseScore(assignmentRaw),
