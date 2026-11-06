@@ -6,168 +6,489 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/students-experience.css' %}">
 <style>
-    .mentoring-page .card-body {
-        padding: 1.5rem;
+    .mentoring-page {
+        --mentoring-ink: #14283f;
+        --mentoring-muted: #60738a;
+        --mentoring-blue: #175a88;
+        --mentoring-blue-dark: #103c60;
+        --mentoring-teal: #148f83;
+        --mentoring-border: #dce5ee;
+        --mentoring-surface: #fff;
+        color: var(--mentoring-ink);
     }
+
+    .mentoring-page > .students-shell {
+        width: min(100%, 1480px);
+        margin: 0 auto;
+        padding: clamp(0.25rem, 1.5vw, 1.25rem);
+    }
+
     .mentoring-page .page-header {
-        background: linear-gradient(135deg, #0f4c81 0%, #17324d 100%);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        overflow: hidden;
+        min-height: 190px;
+        background:
+            radial-gradient(circle at 82% 18%, rgba(255,255,255,0.2), transparent 25%),
+            linear-gradient(120deg, #103653 0%, #175a88 58%, #148f83 120%);
         color: #fff;
-        border-radius: 20px;
-        padding: 2rem;
-        margin-bottom: 1.5rem;
+        border: 1px solid rgba(255,255,255,0.32);
+        border-radius: 24px;
+        padding: clamp(1.5rem, 4vw, 3rem);
+        margin-bottom: 1.75rem;
+        box-shadow: 0 18px 42px rgba(16, 60, 96, 0.18);
     }
+
     .mentoring-page .page-header h1 {
         margin: 0;
-        font-weight: 800;
-        letter-spacing: 0.5px;
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+        font-size: clamp(2rem, 4vw, 3.15rem);
+        font-weight: 700;
+        letter-spacing: -0.035em;
+        line-height: 1.12;
     }
+
+    .mentoring-page .hero-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        margin-bottom: 0.85rem;
+        padding: 0.45rem 0.8rem;
+        border: 1px solid rgba(255,255,255,0.25);
+        border-radius: 999px;
+        background: rgba(255,255,255,0.12);
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+
+    .mentoring-page .hero-description {
+        max-width: 650px;
+        margin: 0.75rem 0 0;
+        color: rgba(255,255,255,0.84);
+        font-size: 1rem;
+        line-height: 1.65;
+    }
+
+    .mentoring-page .hero-mark {
+        display: grid;
+        flex: 0 0 116px;
+        width: 116px;
+        height: 116px;
+        place-items: center;
+        border: 1px solid rgba(255,255,255,0.24);
+        border-radius: 30px;
+        background: rgba(255,255,255,0.12);
+        color: rgba(255,255,255,0.95);
+        font-size: 3.4rem;
+        transform: rotate(4deg);
+    }
+
     .mentoring-page .mentoring-section {
-        margin-bottom: 1.75rem;
+        margin-bottom: 1.25rem;
+        padding: clamp(1rem, 2vw, 1.5rem);
+        border: 1px solid var(--mentoring-border);
+        border-radius: 18px;
+        background: var(--mentoring-surface);
+        box-shadow: 0 8px 24px rgba(20, 40, 63, 0.045);
         overflow-x: auto;
+        scrollbar-color: #b7c8d8 #f1f5f8;
     }
+
     .mentoring-page .section-title {
-        background: #eef5ff;
-        color: #0f4c81;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0 0 0.9rem;
+        border-bottom: 1px solid #e8eef3;
+        margin: 0 0 1rem;
+        color: var(--mentoring-blue-dark);
+        font-size: 1.06rem;
         font-weight: 800;
-        padding: 0.75rem 1rem;
-        border-radius: 10px;
-        border-left: 6px solid #0f4c81;
-        margin-bottom: 1rem;
-        font-size: 1.1rem;
+        letter-spacing: -0.01em;
     }
+
+    .mentoring-page .section-title::before {
+        content: "";
+        flex: 0 0 5px;
+        align-self: stretch;
+        min-height: 1.35rem;
+        border-radius: 99px;
+        background: linear-gradient(180deg, var(--mentoring-blue), var(--mentoring-teal));
+    }
+
     .mentoring-page table {
-        min-width: 700px;
+        min-width: 760px;
         width: 100%;
-        border-collapse: collapse;
+        border-collapse: separate;
+        border-spacing: 0;
         background: #fff;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(15, 76, 129, 0.08);
-        margin-bottom: 1rem;
+        border: 1px solid var(--mentoring-border);
+        border-radius: 12px;
+        margin: 0 0 0.25rem;
     }
+
     .mentoring-page th,
     .mentoring-page td {
-        border: 1px solid rgba(15, 76, 129, 0.14);
-        padding: 0.6rem 0.8rem;
+        border-bottom: 1px solid #e8eef3;
+        padding: 0.75rem 0.85rem;
         text-align: left;
         vertical-align: middle;
-        font-size: 0.92rem;
+        font-size: 0.88rem;
     }
+
     .mentoring-page th {
-        background: linear-gradient(180deg, #f4f8fb 0%, #eaf2f9 100%);
-        color: #0f4c81;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        font-size: 0.85rem;
+        width: 19%;
+        background: #f7f9fc;
+        color: #425a70;
+        font-weight: 750;
+        letter-spacing: 0.005em;
     }
+
     .mentoring-page td {
-        color: #163149;
+        color: var(--mentoring-ink);
+        background: #fff;
     }
+
+    .mentoring-page tr:last-child > th,
+    .mentoring-page tr:last-child > td {
+        border-bottom: 0;
+    }
+
     .mentoring-page .sub-label {
         font-weight: 700;
-        color: #5e7488;
+        color: var(--mentoring-muted);
         font-size: 0.86rem;
         text-transform: uppercase;
         letter-spacing: 0.04em;
     }
+
     .mentoring-page .empty-cell {
         min-height: 34px;
     }
+
     .mentoring-page .actions-bar {
+        position: sticky;
+        bottom: 0.75rem;
         display: flex;
-        gap: 0.75rem;
-        justify-content: flex-end;
+        gap: 1rem;
+        align-items: center;
+        justify-content: space-between;
         flex-wrap: wrap;
-        margin-bottom: 1rem;
+        z-index: 5;
+        padding: 1rem 1.15rem;
+        border: 1px solid rgba(211, 224, 235, 0.9);
+        border-radius: 16px;
+        margin: 1.5rem 0 0.5rem;
+        background: rgba(255,255,255,0.94);
+        box-shadow: 0 12px 32px rgba(20, 40, 63, 0.13);
+        backdrop-filter: blur(12px);
     }
-    .mentoring-page .btn {
-        border-radius: 10px;
+
+    .mentoring-page .actions-bar::before {
+        content: "Review your required fields before submitting";
+        color: var(--mentoring-muted);
+        font-size: 0.84rem;
         font-weight: 600;
-        padding: 0.5rem 1.25rem;
     }
+
+    .mentoring-page .btn {
+        min-height: 46px;
+        border-radius: 11px;
+        font-weight: 750;
+        padding: 0.65rem 1.25rem;
+        transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+    }
+
+    .mentoring-page .actions-bar .btn-primary {
+        border-color: var(--mentoring-blue);
+        background: linear-gradient(135deg, var(--mentoring-blue), var(--mentoring-blue-dark));
+        box-shadow: 0 7px 16px rgba(23, 90, 136, 0.2);
+    }
+
+    .mentoring-page .actions-bar .btn-primary:hover {
+        border-color: #0d3554;
+        background: linear-gradient(135deg, #12486f, #0d3554);
+        box-shadow: 0 10px 20px rgba(23, 90, 136, 0.27);
+        transform: translateY(-1px);
+    }
+
     .mentoring-page .badge {
         font-size: 0.85rem;
     }
+
     .mentoring-page .form-control {
-        border-radius: 8px;
-        border: 1px solid rgba(15, 76, 129, 0.18);
-        padding: 0.5rem 0.75rem;
+        min-height: 42px;
+        border-radius: 9px;
+        border: 1px solid #cedae5;
+        background-color: #fff;
+        color: var(--mentoring-ink);
+        padding: 0.55rem 0.75rem;
         font-size: 0.9rem;
         width: 100%;
         box-sizing: border-box;
+        transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
     }
+
     .mentoring-page .form-control:focus {
-        border-color: #0f4c81;
-        box-shadow: 0 0 0 0.2rem rgba(15, 76, 129, 0.15);
+        border-color: #4387b4;
+        background-color: #fcfeff;
+        box-shadow: 0 0 0 3px rgba(23, 90, 136, 0.13);
         outline: none;
     }
+
+    .mentoring-page .form-control::placeholder {
+        color: #98a7b5;
+    }
+
     .mentoring-page select.form-control {
         appearance: none;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 6l3 3 3-3'/%3e%3c/svg%3e");
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23425a70' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 6l3 3 3-3'/%3e%3c/svg%3e");
         background-repeat: no-repeat;
         background-position: right 0.75rem center;
         background-size: 16px 16px;
+        padding-right: 2.4rem;
     }
+
+    .mentoring-page .form-select {
+        min-height: 42px;
+        border-color: #cedae5;
+        border-radius: 9px;
+        color: var(--mentoring-ink);
+        font-size: 0.9rem;
+    }
+
+    .mentoring-page .form-select:focus {
+        border-color: #4387b4;
+        box-shadow: 0 0 0 3px rgba(23, 90, 136, 0.13);
+    }
+
     .mentoring-page textarea.form-control {
-        min-height: 70px;
+        min-height: 86px;
         resize: vertical;
     }
+
     .mentoring-page .yesno {
         display: inline-flex;
-        gap: 1rem;
+        gap: 0.5rem;
         align-items: center;
+        flex-wrap: wrap;
     }
+
     .mentoring-page .yesno label {
         display: inline-flex;
         align-items: center;
-        gap: 0.4rem;
+        gap: 0.45rem;
+        min-height: 36px;
+        padding: 0.35rem 0.7rem;
+        border: 1px solid #dce5ee;
+        border-radius: 999px;
+        background: #f8fafc;
         font-weight: 600;
-        color: #163149;
+        color: #425a70;
         font-size: 0.9rem;
         cursor: pointer;
     }
+
+    .mentoring-page .yesno input[type="radio"],
+    .mentoring-page .form-check-input {
+        accent-color: var(--mentoring-blue);
+    }
+
+    .mentoring-page .form-check-inline {
+        min-height: 38px;
+        padding: 0.35rem 0.7rem 0.35rem 2rem;
+        border: 1px solid #dce5ee;
+        border-radius: 999px;
+        background: #f8fafc;
+    }
+
+    .mentoring-page .form-check-input:checked {
+        background-color: var(--mentoring-blue);
+        border-color: var(--mentoring-blue);
+    }
+
     .mentoring-page .save-notice {
-        background: #e7f4ff;
-        border: 1px solid #0f4c81;
-        border-radius: 10px;
-        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.8rem;
+        background: #eef7fc;
+        border: 1px solid #cfe2ef;
+        border-left: 4px solid var(--mentoring-blue);
+        border-radius: 12px;
+        padding: 1rem 1.1rem;
         margin-bottom: 1rem;
-        font-size: 0.9rem;
-        color: #0f4c81;
+        font-size: 0.91rem;
+        color: #31536e;
+        line-height: 1.65;
+        box-shadow: 0 4px 14px rgba(20, 40, 63, 0.035);
     }
+
     .mentoring-page .save-notice i {
-        margin-right: 0.5rem;
+        flex: 0 0 auto;
+        margin-top: 0.25rem;
+        color: var(--mentoring-blue);
+        font-size: 1.05rem;
     }
+
+    .mentoring-page .photo-preview-panel {
+        padding: clamp(1rem, 2vw, 1.5rem) !important;
+        border: 1px dashed #9dbbd0 !important;
+        border-radius: 16px !important;
+        margin-bottom: 1.25rem !important;
+        background:
+            radial-gradient(circle at 100% 0, rgba(20,143,131,0.07), transparent 32%),
+            #f7fafc;
+    }
+
+    .mentoring-page .photo-preview-panel .form-label {
+        margin-bottom: 0.55rem;
+        color: var(--mentoring-ink);
+        font-size: 0.95rem;
+        font-weight: 800;
+    }
+
+    .mentoring-page input[type="file"].form-control {
+        min-height: 48px;
+        padding: 0.4rem;
+        background: #fff;
+    }
+
+    .mentoring-page input[type="file"]::file-selector-button {
+        min-height: 36px;
+        margin: 0 0.75rem 0 0;
+        padding: 0.45rem 0.8rem;
+        border: 0;
+        border-radius: 7px;
+        background: #e8f1f7;
+        color: var(--mentoring-blue-dark);
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .mentoring-page .form-text {
+        display: block;
+        margin-top: 0.55rem;
+        color: var(--mentoring-muted) !important;
+        line-height: 1.55;
+    }
+
     .mentoring-page .student-photo-preview {
         display: flex;
         align-items: center;
         gap: 1rem;
+        padding: 0.85rem;
+        border: 1px solid var(--mentoring-border);
+        border-radius: 12px;
+        background: #fff;
     }
+
     .mentoring-page .field-validation-alert[hidden] {
         display: none;
     }
+
+    .mentoring-page .field-validation-alert {
+        border: 1px solid #f1b9bd;
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(145, 30, 43, 0.08);
+    }
+
     .mentoring-page .student-photo-preview.hidden {
         display: none;
     }
+
     .mentoring-page .student-photo-preview img {
         width: 150px;
         height: 180px;
         object-fit: cover;
-        border: 1px solid rgba(15, 76, 129, 0.25);
-        border-radius: 8px;
+        border: 1px solid var(--mentoring-border);
+        border-radius: 10px;
         background: #f4f8fb;
+        box-shadow: 0 4px 12px rgba(20, 40, 63, 0.1);
     }
+
     .mentoring-page .student-photo-preview p {
         margin: 0.25rem 0 0;
-        color: #5e7488;
+        color: var(--mentoring-muted);
     }
+
     .mentoring-page .is-invalid {
         border-color: #dc3545 !important;
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
     }
+
     .mentoring-page input[type="radio"].is-invalid {
         outline: 2px solid #dc3545;
         outline-offset: 2px;
+    }
+
+    @media (max-width: 767.98px) {
+        .mentoring-page .page-header {
+            min-height: 0;
+            border-radius: 18px;
+            padding: 1.5rem;
+        }
+
+        .mentoring-page .hero-mark {
+            flex-basis: 68px;
+            width: 68px;
+            height: 68px;
+            border-radius: 20px;
+            font-size: 2rem;
+        }
+
+        .mentoring-page .hero-description {
+            font-size: 0.92rem;
+        }
+
+        .mentoring-page .mentoring-section {
+            padding: 0.85rem;
+            border-radius: 14px;
+        }
+
+        .mentoring-page .section-title {
+            font-size: 0.98rem;
+        }
+
+        .mentoring-page th,
+        .mentoring-page td {
+            padding: 0.6rem;
+            font-size: 0.83rem;
+        }
+
+        .mentoring-page .actions-bar {
+            bottom: 0.35rem;
+            gap: 0.75rem;
+            padding: 0.75rem;
+        }
+
+        .mentoring-page .actions-bar::before {
+            flex: 1 1 100%;
+            font-size: 0.78rem;
+        }
+
+        .mentoring-page .actions-bar .btn {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .mentoring-page .hero-mark {
+            display: none;
+        }
+
+        .mentoring-page .student-photo-preview {
+            align-items: flex-start;
+        }
+
+        .mentoring-page .student-photo-preview img {
+            width: 92px;
+            height: 112px;
+        }
     }
 </style>
 {% endblock %}
@@ -176,12 +497,14 @@
 <div class="container-fluid py-4 mentoring-page">
     <div class="students-shell">
     <section class="page-header">
-        <div>
-            <span class="d-block mb-1" style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.95;">
+        <div class="hero-copy">
+            <span class="hero-eyebrow">
                 <i class="fas fa-user-tag me-1"></i> Mentoring Diary
             </span>
             <h1>B.Tech Mentoring Tab</h1>
+            <p class="hero-description">Student profile, academic progress, and semester mentoring details in one place.</p>
         </div>
+        <div class="hero-mark" aria-hidden="true"><i class="fas fa-graduation-cap"></i></div>
     </section>
 
     {% if messages %}
@@ -198,7 +521,7 @@
 
     <div class="save-notice">
         <i class="fas fa-info-circle me-1"></i>
-        Complete the required student details and choose Yes or No for both student-status questions. Semester mentoring sections may be left blank. Click <strong>Save Mentoring Details</strong> to save your record and Word document.
+        Upload a student photo and enter a valid <strong>@anurag.ac.in</strong> student email address. Complete the other required student details and choose Yes or No for both student-status questions. Semester mentoring sections may be left blank. Click <strong>Save Mentoring Details</strong> to save your record and Word document.
     </div>
 
     <form id="mentoring-details-form" method="POST" action="{% url 'dashboard:mentoring_tab' %}" enctype="multipart/form-data" novalidate>
@@ -338,7 +661,7 @@
                     <th>Parent Mobile No.</th>
                     <td><input type="text" name="parent_mobile" class="form-control" value="{{ mentoring.parent_mobile|default:'' }}"></td>
                     <th>Student Email ID</th>
-                    <td><input type="email" name="student_email" class="form-control" value="{{ mentoring.student_email|default:'' }}" pattern="[^@\s]+@anurag\.ac\.in" title="Use your @anurag.ac.in email address." autocomplete="email"></td>
+                    <td><input type="email" name="student_email" class="form-control" value="{{ mentoring.student_email|default:'' }}" pattern="[^@\s]+@anurag\.ac\.in" title="Use your @anurag.ac.in email address." autocomplete="email" required></td>
                 </tr>
                 <tr>
                     <th>Parent Email ID</th>
@@ -712,7 +1035,13 @@
                     const labels = missing.slice(0, 8).map((item) => item.label);
                     const remaining = missing.length - labels.length;
                     const numericMessage = invalidNumeric.length ? ' Numeric fields must contain numbers only.' : '';
-                    validationAlert.textContent = `Complete the required student details, choose Yes or No for both student-status questions. Semester mentoring sections may be left blank.${numericMessage} ${missing.length} item(s) need attention: ${labels.join(', ')}${remaining > 0 ? `, and ${remaining} more` : ''}.`;
+                    const missingPhoto = missing.some((item) => item.control === photoInput);
+                    const missingStudentEmail = missing.some((item) => item.control.name === 'student_email');
+                    const requiredContactMessage = [
+                        missingPhoto ? 'Upload a student photo.' : '',
+                        missingStudentEmail ? 'Enter a valid student email address ending in @anurag.ac.in.' : '',
+                    ].filter(Boolean).join(' ');
+                    validationAlert.textContent = `${requiredContactMessage} Complete the required student details, choose Yes or No for both student-status questions. Semester mentoring sections may be left blank.${numericMessage} ${missing.length} item(s) need attention: ${labels.join(', ')}${remaining > 0 ? `, and ${remaining} more` : ''}.`;
                     validationAlert.hidden = false;
                     validationAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }

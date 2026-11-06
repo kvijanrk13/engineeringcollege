@@ -365,6 +365,9 @@ class MentoringTabTests(TestCase):
         form_response = self.client.get(reverse('dashboard:mentoring_tab'))
         self.assertEqual(form_response.status_code, 200)
         self.assertEqual(form_response.content.count(b'data-numeric-only="true"'), 24)
+        self.assertContains(form_response, 'autocomplete="email" required')
+        self.assertContains(form_response, 'Upload a student photo.')
+        self.assertContains(form_response, 'Enter a valid student email address ending in @anurag.ac.in.')
         for semester_number in range(1, 9):
             self.assertContains(
                 form_response,
@@ -417,6 +420,47 @@ class MentoringTabTests(TestCase):
         self.assertEqual(invalid_year_response.status_code, 200)
         self.assertContains(invalid_year_response, 'Select an academic year from the provided list')
         self.assertFalse(mock_upload.called)
+
+        missing_photo_data = post_data.copy()
+        missing_photo_data.pop('student_photo')
+        missing_photo_response = self.client.post(
+            reverse('dashboard:mentoring_tab'),
+            missing_photo_data,
+        )
+        self.assertEqual(missing_photo_response.status_code, 200)
+        self.assertContains(missing_photo_response, 'upload a student photo')
+        self.assertContains(missing_photo_response, 'Student Photo')
+
+        missing_email_data = post_data.copy()
+        missing_email_data['student_email'] = ''
+        missing_email_data['student_photo'] = SimpleUploadedFile(
+            'student-photo.jpg',
+            make_test_image_bytes(),
+            content_type='image/jpeg',
+        )
+        missing_email_response = self.client.post(
+            reverse('dashboard:mentoring_tab'),
+            missing_email_data,
+        )
+        self.assertEqual(missing_email_response.status_code, 200)
+        self.assertContains(missing_email_response, 'valid student email address ending in @anurag.ac.in')
+        self.assertContains(missing_email_response, 'Student Email ID')
+
+        invalid_email_data = post_data.copy()
+        invalid_email_data['student_email'] = 'student@example.com'
+        invalid_email_data['student_photo'] = SimpleUploadedFile(
+            'student-photo.jpg',
+            make_test_image_bytes(),
+            content_type='image/jpeg',
+        )
+        invalid_email_response = self.client.post(
+            reverse('dashboard:mentoring_tab'),
+            invalid_email_data,
+        )
+        self.assertEqual(invalid_email_response.status_code, 200)
+        self.assertContains(invalid_email_response, 'valid student email address ending in @anurag.ac.in')
+        self.assertFalse(mock_upload.called)
+        self.assertFalse(StudentMentoring.objects.exists())
 
         response = self.client.post(reverse('dashboard:mentoring_tab'), post_data)
 

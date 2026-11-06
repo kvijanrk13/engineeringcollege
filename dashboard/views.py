@@ -7885,7 +7885,10 @@ def mentoring_tab(request):
             if 'Gender' not in missing_fields:
                 missing_fields.append('Gender (choose Male or Female)')
         student_email = (request.POST.get('student_email') or '').strip()
-        if student_email and not re.fullmatch(r'[^@\s]+@anurag\.ac\.in', student_email, re.IGNORECASE):
+        student_email_is_valid = bool(
+            re.fullmatch(r'[^@\s]+@anurag\.ac\.in', student_email, re.IGNORECASE)
+        )
+        if student_email and not student_email_is_valid:
             missing_fields.append('Student Email ID must use the @anurag.ac.in domain')
 
         if missing_fields:
@@ -7893,8 +7896,20 @@ def mentoring_tab(request):
             remaining_count = len(missing_fields) - 6
             if remaining_count > 0:
                 preview += f', and {remaining_count} more'
+            required_photo_email_message = []
+            if not student_photo:
+                required_photo_email_message.append('upload a student photo')
+            if not student_email_is_valid:
+                required_photo_email_message.append(
+                    'enter a valid student email address ending in @anurag.ac.in'
+                )
+            required_photo_email_message = (
+                f"Please {' and '.join(required_photo_email_message)} before saving. "
+                if required_photo_email_message else ''
+            )
             messages.error(
                 request,
+                f'{required_photo_email_message}'
                 f'Complete the required student details, choose Yes or No for both student-status questions before saving. '
                 f'{len(missing_fields)} item(s) need attention: {preview}.'
                 + (
