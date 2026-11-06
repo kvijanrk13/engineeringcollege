@@ -5183,10 +5183,10 @@ Exam Branch
                         + '<td><input type="text" class="form-control form-control-sm attendance" value="' + (student.attendance ?? '') + '" pattern="[0-9]*"></td>'
                         + '<td class="attendance-grade" data-grade="-">-</td>'
                         + '<td><input type="text" class="form-control form-control-sm mid1-obj" value="' + (student.mid1Obj || '') + '"></td>'
-                        + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid1-desc" value="' + (student.mid1Desc || '') + '"' + (activeEvaluationSheet === '1' ? '' : ' readonly title="Automatically predicted from attendance when Obj, Assignment and Viva marks are entered"') + '></td>'
+                        + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid1-desc" value="' + (student.mid1Desc || '') + '"></td>'
                         + '<td class="mid1-total">-</td>'
                         + '<td><input type="text" class="form-control form-control-sm mid2-obj" value="' + (student.mid2Obj || '') + '"></td>'
-                        + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid2-desc" value="' + (student.mid2Desc || '') + '"' + (activeEvaluationSheet === '1' ? '' : ' readonly title="Automatically predicted from attendance when Obj, Assignment and Viva marks are entered"') + '></td>'
+                        + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid2-desc" value="' + (student.mid2Desc || '') + '"></td>'
                         + '<td class="mid2-total">-</td>'
                         + '<td class="mid-avg">-</td>'
                         + '<td><input type="number" min="0" max="5" step="1" class="form-control form-control-sm assignment" value="' + (student.assignment || '') + '"></td>'
@@ -5196,6 +5196,16 @@ Exam Branch
                         + '<td class="grade" data-grade="-">-</td>';
                 }
                 currentMarksBody.appendChild(row);
+                row.querySelectorAll('.mid1-desc, .mid2-desc').forEach(function (input) {
+                    input.readOnly = activeEvaluationSheet !== '1';
+                    input.disabled = false;
+                    if (activeEvaluationSheet === '1') {
+                        input.removeAttribute('readonly');
+                        input.removeAttribute('disabled');
+                    } else {
+                        input.title = 'Automatically predicted from attendance when Obj, Assignment and Viva marks are entered';
+                    }
+                });
                 recalculateEvaluationRow(row);
             });
 
