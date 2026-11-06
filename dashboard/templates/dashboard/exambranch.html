@@ -4774,7 +4774,6 @@ Exam Branch
         const firstEvaluationAssignmentMarksVersion = 2;
         const firstEvaluationMid2ObjectiveMarks = new Array(56).fill(0);
         const firstEvaluationMid2ObjectiveMarksVersion = 2;
-        const evaluationMid2ZeroVersion = 1;
         const firstEvaluationVivaMarks = [
             '', 5, 5, '', 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
             '', 5, 5, 5, 5, 5, '', 5, 5, 5, 5, 5, 5, 5,
@@ -4916,6 +4915,16 @@ Exam Branch
             const label = grade || '-';
             cell.textContent = label;
             cell.dataset.grade = label;
+        }
+
+        function resetEvaluationMidTwoMarks(students) {
+            return students.map(function (student) {
+                return Object.assign({}, student, {
+                    mid2Obj: '0',
+                    mid2Desc: '0',
+                    mid2Total: '0'
+                });
+            });
         }
 
         function parseScore(value) {
@@ -5136,6 +5145,9 @@ Exam Branch
 
         function renderStudents(students) {
             const currentMarksBody = marksBodyMap[activeEvaluationSheet] || marksBodyMap['1'];
+            if (['1', '2'].includes(activeEvaluationSheet)) {
+                students = resetEvaluationMidTwoMarks(students);
+            }
             currentMarksBody.innerHTML = '';
 
             students.forEach(function (student) {
@@ -5855,7 +5867,6 @@ Exam Branch
                 assignmentMarksVersion: activeEvaluationSheet === '1' ? firstEvaluationAssignmentMarksVersion : 0,
                 mid2ObjMarksVersion: activeEvaluationSheet === '1' ? firstEvaluationMid2ObjectiveMarksVersion : 0,
                 vivaMarksVersion: activeEvaluationSheet === '1' ? firstEvaluationVivaMarksVersion : 0,
-                mid2ZeroVersion: ['1', '2'].includes(activeEvaluationSheet) ? evaluationMid2ZeroVersion : 0,
                 rows: getEvaluationRows(),
                 savedAt: new Date().toISOString()
             };
@@ -5954,18 +5965,6 @@ Exam Branch
                         const seed = firstEvaluationVivaMarks[index];
                         return Object.assign({}, student, {
                             viva: seed === undefined || seed === '' ? '' : String(seed)
-                        });
-                    });
-                }
-                if (
-                    ['1', '2'].includes(activeEvaluationSheet)
-                    && payload.mid2ZeroVersion !== evaluationMid2ZeroVersion
-                ) {
-                    savedRows = savedRows.map(function (student) {
-                        return Object.assign({}, student, {
-                            mid2Obj: '0',
-                            mid2Desc: '0',
-                            mid2Total: '0'
                         });
                     });
                 }
