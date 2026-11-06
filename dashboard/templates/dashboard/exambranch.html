@@ -4903,7 +4903,7 @@ Exam Branch
                     mid1Obj: seedMid1Obj,
                     mid1Desc: '',
                     mid2Obj: seedMid2Obj,
-                    mid2Desc: '',
+                    mid2Desc: activeEvaluationSheet === '1' ? '0' : '',
                     assignment: seedAssignment,
                     viva: seedViva
                 });
@@ -5006,15 +5006,20 @@ Exam Branch
             const mid1DescInput = row.querySelector('.mid1-desc');
             const mid2ObjInput = row.querySelector('.mid2-obj');
             const mid2DescInput = row.querySelector('.mid2-desc');
+            const isEditableEvaluationOne = activeEvaluationSheet === '1';
             const assignmentInput = row.querySelector('.assignment');
             const vivaInput = row.querySelector('.viva');
             let mid1ObjRaw = mid1ObjInput.value.trim();
             let mid2ObjRaw = mid2ObjInput.value.trim();
+            let mid1DescRaw = mid1DescInput.value.trim();
+            let mid2DescRaw = mid2DescInput.value.trim();
             let assignmentRaw = assignmentInput.value.trim();
             let vivaRaw = vivaInput.value.trim();
 
             if (mid1ObjRaw !== '' && mid1ObjRaw !== 'AB') mid1ObjInput.value = String(Math.max(0, Math.min(10, parseScore(mid1ObjRaw))));
             if (mid2ObjRaw !== '' && mid2ObjRaw !== 'AB') mid2ObjInput.value = String(Math.max(0, Math.min(10, parseScore(mid2ObjRaw))));
+            if (isEditableEvaluationOne && mid1DescRaw !== '') mid1DescInput.value = String(Math.max(0, Math.min(20, parseScore(mid1DescRaw))));
+            if (isEditableEvaluationOne && mid2DescRaw !== '') mid2DescInput.value = String(Math.max(0, Math.min(20, parseScore(mid2DescRaw))));
             if (assignmentRaw !== '') assignmentInput.value = String(Math.max(0, Math.min(5, parseScore(assignmentRaw))));
             if (vivaRaw !== '') vivaInput.value = String(Math.max(0, Math.min(5, parseScore(vivaRaw))));
 
@@ -5024,7 +5029,7 @@ Exam Branch
             vivaRaw = vivaInput.value.trim();
             const hasAllPredictionInputs = [mid1ObjRaw, mid2ObjRaw, assignmentRaw, vivaRaw].every(Boolean);
 
-            if (hasAllPredictionInputs) {
+            if (!isEditableEvaluationOne && hasAllPredictionInputs) {
                 const prediction = predictMidDescriptiveMarks(
                     row.querySelector('.attendance').value,
                     parseScore(mid1ObjRaw),
@@ -5034,14 +5039,14 @@ Exam Branch
                 mid1DescInput.value = String(prediction.mid1Desc);
                 mid2DescInput.value = '0';
                 row.dataset.targetReached = prediction.targetReached ? 'true' : 'false';
-            } else {
+            } else if (!isEditableEvaluationOne) {
                 mid1DescInput.value = '';
                 mid2DescInput.value = '0';
                 delete row.dataset.targetReached;
             }
 
-            const mid1DescRaw = mid1DescInput.value.trim();
-            const mid2DescRaw = mid2DescInput.value.trim();
+            mid1DescRaw = mid1DescInput.value.trim();
+            mid2DescRaw = mid2DescInput.value.trim();
 
             const hasAnyMarks = [mid1ObjRaw, mid1DescRaw, mid2ObjRaw, mid2DescRaw, assignmentRaw, vivaRaw].some(Boolean);
 
@@ -5062,7 +5067,8 @@ Exam Branch
             const viva = parseScore(vivaRaw);
 
             const mid1Total = mid1Obj + mid1Desc;
-            const mid2Total = 0;
+            const mid2Total = isEditableEvaluationOne
+                ? parseScore(mid2ObjRaw) + parseScore(mid2DescRaw) : 0;
             const midAvg = Math.round((mid1Total + mid2Total) / 2);
             const total = Math.min(midAvg + assignment + viva, 40);
 
@@ -5071,7 +5077,7 @@ Exam Branch
             row.querySelector('.mid-avg').textContent = String(midAvg);
             const totalCell = row.querySelector('.total');
             totalCell.textContent = String(total);
-            if (hasAllPredictionInputs) {
+            if (!isEditableEvaluationOne && hasAllPredictionInputs) {
                 const targetReached = row.dataset.targetReached === 'true';
                 totalCell.title = targetReached
                     ? 'Automatically calculated total; the 75% target is satisfied.'
@@ -5145,7 +5151,7 @@ Exam Branch
 
         function renderStudents(students) {
             const currentMarksBody = marksBodyMap[activeEvaluationSheet] || marksBodyMap['1'];
-            if (['1', '2'].includes(activeEvaluationSheet)) {
+            if (activeEvaluationSheet === '2') {
                 students = resetEvaluationMidTwoMarks(students);
             }
             currentMarksBody.innerHTML = '';
@@ -5177,10 +5183,10 @@ Exam Branch
                         + '<td><input type="text" class="form-control form-control-sm attendance" value="' + (student.attendance ?? '') + '" pattern="[0-9]*"></td>'
                         + '<td class="attendance-grade" data-grade="-">-</td>'
                         + '<td><input type="text" class="form-control form-control-sm mid1-obj" value="' + (student.mid1Obj || '') + '"></td>'
-                        + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid1-desc" value="' + (student.mid1Desc || '') + '" readonly title="Automatically predicted from attendance when Obj, Assignment and Viva marks are entered"></td>'
+                        + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid1-desc" value="' + (student.mid1Desc || '') + '"' + (activeEvaluationSheet === '1' ? '' : ' readonly title="Automatically predicted from attendance when Obj, Assignment and Viva marks are entered"') + '></td>'
                         + '<td class="mid1-total">-</td>'
                         + '<td><input type="text" class="form-control form-control-sm mid2-obj" value="' + (student.mid2Obj || '') + '"></td>'
-                        + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid2-desc" value="' + (student.mid2Desc || '') + '" readonly title="Automatically predicted from attendance when Obj, Assignment and Viva marks are entered"></td>'
+                        + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid2-desc" value="' + (student.mid2Desc || '') + '"' + (activeEvaluationSheet === '1' ? '' : ' readonly title="Automatically predicted from attendance when Obj, Assignment and Viva marks are entered"') + '></td>'
                         + '<td class="mid2-total">-</td>'
                         + '<td class="mid-avg">-</td>'
                         + '<td><input type="number" min="0" max="5" step="1" class="form-control form-control-sm assignment" value="' + (student.assignment || '') + '"></td>'
