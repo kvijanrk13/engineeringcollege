@@ -300,36 +300,62 @@ Exam Branch
     }
 
     .evaluation-horizontal-scroll {
-        height: 22px;
-        margin: 0 0 0.35rem;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        height: 32px;
+        margin: 0 0 0.5rem;
+        padding: 2px 0;
         overflow-x: auto;
         overflow-y: hidden;
         scrollbar-gutter: stable;
-        border: 1px solid #d8e4ef;
-        border-radius: 999px;
-        background: #f2f7fc;
-        scrollbar-color: #52799a #e5eef7;
+        border: 1px solid #b9cddd;
+        border-radius: 12px;
+        background: #eaf3fa;
+        box-shadow: 0 3px 10px rgba(23, 50, 77, 0.16);
+        scrollbar-color: #315f82 #d4e4f0;
         scrollbar-width: auto;
     }
 
     .evaluation-horizontal-scroll::-webkit-scrollbar {
-        height: 14px;
+        height: 20px;
     }
 
     .evaluation-horizontal-scroll::-webkit-scrollbar-track {
-        border-radius: 999px;
-        background: #e5eef7;
+        border-radius: 10px;
+        background: #d4e4f0;
     }
 
     .evaluation-horizontal-scroll::-webkit-scrollbar-thumb {
-        border: 2px solid #e5eef7;
-        border-radius: 999px;
-        background: #52799a;
+        border: 3px solid #d4e4f0;
+        border-radius: 10px;
+        background: #315f82;
     }
 
     .evaluation-marks-scroll {
         scrollbar-gutter: stable;
         overscroll-behavior: contain;
+        scrollbar-color: #315f82 #d4e4f0;
+        scrollbar-width: auto;
+    }
+
+    .evaluation-marks-scroll::-webkit-scrollbar {
+        width: 16px;
+        height: 16px;
+    }
+
+    .evaluation-marks-scroll::-webkit-scrollbar-track {
+        background: #d4e4f0;
+    }
+
+    .evaluation-marks-scroll::-webkit-scrollbar-thumb {
+        border: 3px solid #d4e4f0;
+        border-radius: 10px;
+        background: #315f82;
+    }
+
+    .evaluation-horizontal-scroll-content {
+        height: 1px;
     }
 
     .exam-table {
