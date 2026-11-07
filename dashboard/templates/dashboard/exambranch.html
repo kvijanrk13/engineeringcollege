@@ -1654,6 +1654,32 @@ Exam Branch
                                 </div>
                             </div>
                         </div>
+
+                        <div class="row mt-4 attendance-grade-summary">
+                            <div class="col-xl-8">
+                                <div class="exam-card">
+                                    <h3 class="card-title">Attendance Grade Distribution Summary - Evaluation 3</h3>
+                                    <p class="card-copy mb-3">
+                                        Students are ranked by the attendance percentage derived above. Each student
+                                        is selected once within the prescribed grade-distribution limits.
+                                    </p>
+                                    <div class="table-responsive">
+                                        <table class="table exam-table table-striped mb-0" id="attendanceGradeSummaryTable3">
+                                            <thead>
+                                                <tr>
+                                                    <th>Grade</th>
+                                                    <th>Students Count out of Total Given %</th>
+                                                    <th>Can't Go Beyond</th>
+                                                    <th>Allocated % by Faculty</th>
+                                                    <th>Student Count</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="attendanceGradeSummaryBody3"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Internal Evaluation 4 Section -->
@@ -6008,52 +6034,11 @@ Exam Branch
             updateEvaluationFourTotalAverage();
         }
 
-        function updateGradeSummary() {
-            const students = getEvaluationRows();
-            if (activeEvaluationSheet === '3') {
-                const grades = calculateGradeDistribution(students);
-                const gradeOrder = [
-                    { grade: 'O', range: '37-40' },
-                    { grade: 'A+', range: '32-36' },
-                    { grade: 'A', range: '28-31' },
-                    { grade: 'B+', range: '24-27' },
-                    { grade: 'B', range: '20-23' },
-                    { grade: 'P', range: '14-19' },
-                    { grade: 'F', range: '0-13' }
-                ];
-                const tbody = document.getElementById('gradeSummaryBody3');
-                const totalGraded = gradeOrder.reduce(function (total, item) {
-                    return total + grades[item.grade].count;
-                }, 0);
-
-                tbody.innerHTML = '';
-                gradeOrder.forEach(function (item) {
-                    const grade = grades[item.grade];
-                    const percentage = totalGraded ? (grade.count / totalGraded * 100).toFixed(1) : '0.0';
-                    const rollNumbers = grade.rolls.map(escapeHtml).join(', ');
-                    const row = document.createElement('tr');
-                    row.innerHTML = '<td><strong>' + item.grade + '</strong></td>'
-                        + '<td>' + item.range + '</td>'
-                        + '<td><strong>' + grade.count + '</strong></td>'
-                        + '<td>' + percentage + '%</td>'
-                        + '<td>' + (rollNumbers || '—') + '</td>';
-                    tbody.appendChild(row);
-                });
-
-                const totalRow = document.createElement('tr');
-                totalRow.innerHTML = '<td><strong>Total graded</strong></td><td>—</td>'
-                    + '<td><strong>' + totalGraded + '</strong></td>'
-                    + '<td>' + (totalGraded ? '100.0%' : '0.0%') + '</td><td>—</td>';
-                tbody.appendChild(totalRow);
-                return;
-            }
-
+        function renderAttendanceGradeSummary(students, tbody) {
             const grades = calculateDistributedAttendanceGrades(students);
             const totalGraded = Object.keys(grades).reduce(function (total, grade) {
                 return total + grades[grade].students.length;
             }, 0);
-            const currentGradeSummaryBody = document.getElementById('gradeSummaryBody' + activeEvaluationSheet);
-            const tbody = currentGradeSummaryBody;
             const gradeRows = [
                 { grade: 'O', label: 'O (>=90%)', expected: '10 - 15%', limit: '17%' },
                 { grade: 'A+', label: 'A+ (80-89%)', expected: '20 - 25%', limit: '28%' },
@@ -6100,6 +6085,56 @@ Exam Branch
                 + '<td><strong>---</strong></td>'
                 + '<td><strong>' + totalGraded + '</strong></td>';
             tbody.appendChild(totalRow);
+        }
+
+        function updateGradeSummary() {
+            const students = getEvaluationRows();
+            if (activeEvaluationSheet === '3') {
+                const grades = calculateGradeDistribution(students);
+                const gradeOrder = [
+                    { grade: 'O', range: '37-40' },
+                    { grade: 'A+', range: '32-36' },
+                    { grade: 'A', range: '28-31' },
+                    { grade: 'B+', range: '24-27' },
+                    { grade: 'B', range: '20-23' },
+                    { grade: 'P', range: '14-19' },
+                    { grade: 'F', range: '0-13' }
+                ];
+                const tbody = document.getElementById('gradeSummaryBody3');
+                const totalGraded = gradeOrder.reduce(function (total, item) {
+                    return total + grades[item.grade].count;
+                }, 0);
+
+                tbody.innerHTML = '';
+                gradeOrder.forEach(function (item) {
+                    const grade = grades[item.grade];
+                    const percentage = totalGraded ? (grade.count / totalGraded * 100).toFixed(1) : '0.0';
+                    const rollNumbers = grade.rolls.map(escapeHtml).join(', ');
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td><strong>' + item.grade + '</strong></td>'
+                        + '<td>' + item.range + '</td>'
+                        + '<td><strong>' + grade.count + '</strong></td>'
+                        + '<td>' + percentage + '%</td>'
+                        + '<td>' + (rollNumbers || '—') + '</td>';
+                    tbody.appendChild(row);
+                });
+
+                const totalRow = document.createElement('tr');
+                totalRow.innerHTML = '<td><strong>Total graded</strong></td><td>—</td>'
+                    + '<td><strong>' + totalGraded + '</strong></td>'
+                    + '<td>' + (totalGraded ? '100.0%' : '0.0%') + '</td><td>—</td>';
+                tbody.appendChild(totalRow);
+                renderAttendanceGradeSummary(
+                    students,
+                    document.getElementById('attendanceGradeSummaryBody3')
+                );
+                return;
+            }
+
+            renderAttendanceGradeSummary(
+                students,
+                document.getElementById('gradeSummaryBody' + activeEvaluationSheet)
+            );
         }
 
         function saveEvaluationData() {
@@ -6299,6 +6334,8 @@ Exam Branch
 
             const sourceSection = evaluationSectionsMap['3'];
             const section = sourceSection.cloneNode(true);
+            const attendanceGradeSummary = section.querySelector('.attendance-grade-summary');
+            if (attendanceGradeSummary) attendanceGradeSummary.remove();
             section.querySelectorAll('.evaluation-horizontal-scroll').forEach(function (scrollbar) {
                 scrollbar.remove();
             });
