@@ -1488,7 +1488,7 @@ Exam Branch
                                 <label for="evaluationSubjectName3" class="form-label fw-bold">Subject Name / Lab Name</label>
                                 <input type="text" id="evaluationSubjectName3" class="form-control evaluation-subject-name" value="Data Mining Lab" placeholder="Enter Subject Name or Lab Name">
                             </div>
-                            <p class="small text-muted mb-2">Evaluation 3 captures CIA (10), VIVA (10) and EXAM (10) for each of MID-1 and MID-2, summed to a 30-mark MID total. The PROJECT (10) column contributes to the 40-mark total. For 56 students, the aggregate is Σ(40-mark totals) ÷ (56 × 40) × 100.</p>
+                            <p class="small text-muted mb-2">Evaluation 3 captures CIA (10), VIVA (10) and EXAM (10) for each of MID-1 and MID-2, summed to a 30-mark MID total. The PROJECT (10) column contributes to the 40-mark total. For 49 students, the class average is calculated from students with entered marks.</p>
                             <div class="table-responsive" style="max-height: 520px; overflow: auto;">
                                 <table class="table exam-table table-striped" id="internalMarksTable3" style="min-width: 2400px;">
                                     <thead>
@@ -1544,18 +1544,18 @@ Exam Branch
                                 <div class="exam-card">
                                     <h3 class="card-title">Grade Distribution Summary - Evaluation 3</h3>
                                     <p class="card-copy mb-3">
-                                        Students are ranked by the attendance percentage derived above. Each student
-                                        is selected once within the prescribed grade-distribution limits.
+                                        Counts are calculated from each student's Total (40) grade. Students without
+                                        entered marks are excluded until marks are provided.
                                     </p>
                                     <div class="table-responsive">
                                         <table class="table exam-table table-striped mb-0" id="gradeSummaryTable3">
                                             <thead>
                                                 <tr>
                                                     <th>Grade</th>
-                                                    <th>Students Count out of Total Given %</th>
-                                                    <th>Can't Go Beyond</th>
-                                                    <th>Allocated % by Faculty</th>
+                                                    <th>Total (out of 40)</th>
                                                     <th>Student Count</th>
+                                                    <th>Percent of Graded Students</th>
+                                                    <th>Roll Numbers</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="gradeSummaryBody3"></tbody>
@@ -4738,6 +4738,25 @@ Exam Branch
             61.54, 74.36, 53.85, 66.67, 74.36, 53.85, 33.33, 64.10, 48.72, 28.21, 69.23, 61.54, 84.62, 69.23,
             35.90, 92.31, 2.56, 79.49, 41.03, 71.79, 69.23, 76.92, 15.38, 74.36, 48.72, 28.21, 48.72, 87.18
         ];
+        const excludedEvaluationThreeRollNumbers = new Set([
+            '23C11A1208', '24C11A1202', '24C11A1213', '24C11A1218',
+            '24C11A1221', '24C11A1228', '24C11A1259'
+        ]);
+        const thirdEvaluationRollNumbers = defaultEvaluationRollNumbers.filter(function (rollNo) {
+            return !excludedEvaluationThreeRollNumbers.has(rollNo);
+        });
+        const allThirdEvaluationAttendance = [
+            33.33, 66.67, 77.78, 0, 88.89, 100, 55.56, 88.89, 88.89, 77.78, 11.11, 66.67, 77.78, 88.89,
+            0, 77.78, 66.67, 88.89, 11.11, 77.78, 11.11, 66.67, 66.67, 66.67, 77.78, 22.22, 88.89, 88.89,
+            88.89, 77.78, 66.67, 66.67, 88.89, 66.67, 66.67, 55.56, 88.89, 11.11, 88.89, 55.56, 77.78, 77.78,
+            66.67, 66.67, 11.11, 88.89, 88.89, 88.89, 77.78, 100, 22.22, 88.89, 77.78, 33.33, 55.56, 88.89
+        ];
+        const thirdEvaluationAttendance = defaultEvaluationRollNumbers.reduce(function (attendance, rollNo, index) {
+            if (!excludedEvaluationThreeRollNumbers.has(rollNo)) {
+                attendance.push(allThirdEvaluationAttendance[index]);
+            }
+            return attendance;
+        }, []);
         const secondEvaluationRollNumbers = [
             '24C11A1222',
             '25C11A1202', '25C11A1203', '25C11A1204', '25C11A1205',
@@ -4794,24 +4813,6 @@ Exam Branch
             7, 5, 6, 2, 5, 8, 9, 10, 9, 4,
             4, 8, 5, 8, 10, 7
         ];
-        const thirdEvaluationRollNumbers = [
-            '24C11A1222',
-            '25C11A1202', '25C11A1203', '25C11A1204', '25C11A1205',
-            '25C11A1206', '25C11A1207', '25C11A1208', '25C11A1209',
-            '25C11A1210', '25C11A1211', '25C11A1212', '25C11A1213',
-            '25C11A1214', '25C11A1215', '25C11A1216', '25C11A1217',
-            '25C11A1218', '25C11A1219', '25C11A1220', '25C11A1221',
-            '25C11A1222', '25C11A1223', '25C11A1224', '25C11A1225',
-            '25C11A1226', '25C11A1227', '25C11A1228', '25C11A1229',
-            '25C11A1230', '25C11A1231', '25C11A1232', '25C11A1233',
-            '25C11A1234', '25C11A1235', '26C15A1201'
-        ];
-        const thirdEvaluationAttendance = [
-            33.33, 66.67, 77.78, 0, 88.89, 100, 55.56, 88.89, 88.89, 77.78, 11.11, 66.67, 77.78, 88.89,
-            0, 77.78, 66.67, 88.89, 11.11, 77.78, 11.11, 66.67, 66.67, 66.67, 77.78, 22.22, 88.89, 88.89,
-            88.89, 77.78, 66.67, 66.67, 88.89, 66.67, 66.67, 55.56, 88.89, 11.11, 88.89, 55.56, 77.78, 77.78,
-            66.67, 66.67, 11.11, 88.89, 88.89, 88.89, 77.78, 100, 22.22, 88.89, 77.78, 33.33, 55.56, 88.89
-        ];
         const fourthEvaluationRollNumbers = [
             '24C11A1222',
             '25C11A1202', '25C11A1203', '25C11A1204', '25C11A1205',
@@ -4853,7 +4854,7 @@ Exam Branch
             if (activeEvaluationSheet === '2') {
                 return secondEvaluationRollNumbers;
             } else if (activeEvaluationSheet === '3') {
-                return defaultEvaluationRollNumbers;
+                return thirdEvaluationRollNumbers;
             } else if (activeEvaluationSheet === '4') {
                 return fourthEvaluationRollNumbers;
             }
@@ -5129,6 +5130,10 @@ Exam Branch
             const mid2Total = Math.min(30, mid2Cia + mid2Viva + mid2Exam);
             const midAvg = Math.round((mid1Total + mid2Total) / 2);
             const total = Math.min(40, midAvg + project);
+            const hasMarks = [mid1CiaInput, mid1VivaInput, mid1ExamInput, mid2CiaInput,
+                mid2VivaInput, mid2ExamInput, projectInput].some(function (input) {
+                    return input && input.value.trim() !== '';
+                });
 
             row.querySelector('.mid1-total').textContent = String(mid1Total);
             row.querySelector('.mid2-total').textContent = String(mid2Total);
@@ -5139,7 +5144,8 @@ Exam Branch
             if (total < 14) {
                 totalCell.classList.add('text-danger', 'fw-bold');
             }
-            setGradeCell(row.querySelector('.grade'), getGrade(total));
+            setGradeCell(row.querySelector('.grade'),
+                activeEvaluationSheet === '3' && !hasMarks ? '-' : getGrade(total));
 
             if (activeEvaluationSheet === '3') {
                 updateEvaluationThreeMid1Average();
@@ -5418,6 +5424,7 @@ Exam Branch
             });
             const distribution = calculateGradeDistribution(students);
             const gradeOrder = ['O', 'A+', 'A', 'B+', 'B', 'P', 'F'];
+            const classAverageStudents = activeEvaluationSheet === '3' ? gradedStudents : students;
 
             const averageTotal = gradedStudents.length
                 ? (gradedStudents.reduce(function (sum, student) {
@@ -5439,9 +5446,9 @@ Exam Branch
             document.getElementById('evaluationTopGrade').textContent = highestGrade;
 
             var classAveragePercentageEl = document.getElementById('evaluationClassAveragePercentage');
-            if (classAveragePercentageEl && students.length) {
-                var totalAll = students.reduce(function (sum, student) { return sum + parseScore(student.total); }, 0);
-                var classAvgPercentage = (totalAll / (students.length * 40) * 100).toFixed(1);
+            if (classAveragePercentageEl && classAverageStudents.length) {
+                var totalAll = classAverageStudents.reduce(function (sum, student) { return sum + parseScore(student.total); }, 0);
+                var classAvgPercentage = (totalAll / (classAverageStudents.length * 40) * 100).toFixed(1);
                 classAveragePercentageEl.textContent = classAvgPercentage + '%';
                 classAveragePercentageEl.parentElement.classList.toggle('insight-card-success', parseFloat(classAvgPercentage) >= 75);
                 classAveragePercentageEl.parentElement.classList.toggle('insight-card-warning', parseFloat(classAvgPercentage) < 75);
@@ -5635,6 +5642,10 @@ Exam Branch
             if (!averageInput || !averageNote || !evaluationThreeMarksBody) return;
 
             const completedMidOneTotals = Array.from(evaluationThreeMarksBody.querySelectorAll('tr'))
+                .filter(function (row) {
+                    return Array.from(row.querySelectorAll('.mid1-cia, .mid1-viva, .mid1-exam'))
+                        .some(function (input) { return input.value.trim() !== ''; });
+                })
                 .map(function (row) { return row.querySelector('.mid1-total').textContent.trim(); })
                 .filter(function (total) { return total !== '-' && total !== ''; })
                 .map(parseScore);
@@ -5664,6 +5675,10 @@ Exam Branch
             if (!averageInput || !averageNote || !evaluationThreeMarksBody) return;
 
             const completedMidTwoTotals = Array.from(evaluationThreeMarksBody.querySelectorAll('tr'))
+                .filter(function (row) {
+                    return Array.from(row.querySelectorAll('.mid2-cia, .mid2-viva, .mid2-exam'))
+                        .some(function (input) { return input.value.trim() !== ''; });
+                })
                 .map(function (row) { return row.querySelector('.mid2-total').textContent.trim(); })
                 .filter(function (total) { return total !== '-' && total !== ''; })
                 .map(parseScore);
@@ -5693,6 +5708,9 @@ Exam Branch
             if (!averageInput || !averageNote || !evaluationThreeMarksBody) return;
 
             const completedTotals = Array.from(evaluationThreeMarksBody.querySelectorAll('tr'))
+                .filter(function (row) {
+                    return row.querySelector('.grade').textContent.trim() !== '-';
+                })
                 .map(function (row) { return row.querySelector('.total').textContent.trim(); })
                 .filter(function (total) { return total !== '-' && total !== ''; })
                 .map(parseScore);
@@ -5819,6 +5837,44 @@ Exam Branch
 
         function updateGradeSummary() {
             const students = getEvaluationRows();
+            if (activeEvaluationSheet === '3') {
+                const grades = calculateGradeDistribution(students);
+                const gradeOrder = [
+                    { grade: 'O', range: '37-40' },
+                    { grade: 'A+', range: '32-36' },
+                    { grade: 'A', range: '28-31' },
+                    { grade: 'B+', range: '24-27' },
+                    { grade: 'B', range: '20-23' },
+                    { grade: 'P', range: '14-19' },
+                    { grade: 'F', range: '0-13' }
+                ];
+                const tbody = document.getElementById('gradeSummaryBody3');
+                const totalGraded = gradeOrder.reduce(function (total, item) {
+                    return total + grades[item.grade].count;
+                }, 0);
+
+                tbody.innerHTML = '';
+                gradeOrder.forEach(function (item) {
+                    const grade = grades[item.grade];
+                    const percentage = totalGraded ? (grade.count / totalGraded * 100).toFixed(1) : '0.0';
+                    const rollNumbers = grade.rolls.map(escapeHtml).join(', ');
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td><strong>' + item.grade + '</strong></td>'
+                        + '<td>' + item.range + '</td>'
+                        + '<td><strong>' + grade.count + '</strong></td>'
+                        + '<td>' + percentage + '%</td>'
+                        + '<td>' + (rollNumbers || '—') + '</td>';
+                    tbody.appendChild(row);
+                });
+
+                const totalRow = document.createElement('tr');
+                totalRow.innerHTML = '<td><strong>Total graded</strong></td><td>—</td>'
+                    + '<td><strong>' + totalGraded + '</strong></td>'
+                    + '<td>' + (totalGraded ? '100.0%' : '0.0%') + '</td><td>—</td>';
+                tbody.appendChild(totalRow);
+                return;
+            }
+
             const grades = calculateDistributedAttendanceGrades(students);
             const totalGraded = Object.keys(grades).reduce(function (total, grade) {
                 return total + grades[grade].students.length;
@@ -5986,8 +6042,13 @@ Exam Branch
                     });
                 }
                 if (activeEvaluationSheet === '3') {
+                    const savedRowsByRollNumber = {};
+                    savedRows.forEach(function (student) {
+                        const rollNo = String(student.rollNo || '').trim();
+                        if (rollNo) savedRowsByRollNumber[rollNo] = student;
+                    });
                     savedRows = activeRollNumbers.map(function (rollNo, index) {
-                        const existing = savedRows[index] || {};
+                        const existing = savedRowsByRollNumber[rollNo] || {};
                         return Object.assign({
                             attendance: activeAttendance[index] === undefined ? '' : String(activeAttendance[index]),
                             mid1Cia: '', mid1Viva: '', mid1Exam: '',
@@ -6017,7 +6078,8 @@ Exam Branch
                     return;
                 }
 
-                document.getElementById('studentCount').value = payload.studentCount || String(defaultCount);
+                document.getElementById('studentCount').value = activeEvaluationSheet === '3'
+                    ? String(defaultCount) : (payload.studentCount || String(defaultCount));
                 renderStudents(savedRows.length ? savedRows : generateStudents(defaultCount));
                 setStatus(evaluationSaveStatus, 'Evaluation loaded from ' + formatSavedTime(payload.savedAt), 'success');
             } catch (error) {
@@ -9999,8 +10061,12 @@ Exam Branch
                             const rowIndex = evaluationOneRows.indexOf(event.target.closest('tr'));
                             const evaluationThreeRows = marksBodyMap['3']
                                 ? Array.from(marksBodyMap['3'].querySelectorAll('tr')) : [];
-                            const evaluationThreeRollInput = evaluationThreeRows[rowIndex]
-                                ? evaluationThreeRows[rowIndex].querySelector('.roll-no') : null;
+                            const linkedRollNumber = defaultEvaluationRollNumbers[rowIndex];
+                            const evaluationThreeRollInput = evaluationThreeRows
+                                .map(function (row) { return row.querySelector('.roll-no'); })
+                                .find(function (input) {
+                                    return input && input.value.trim() === linkedRollNumber;
+                                });
                             if (evaluationThreeRollInput) evaluationThreeRollInput.value = event.target.value;
                         }
                         activeEvaluationSheet = sheetNum;
