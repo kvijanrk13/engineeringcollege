@@ -1346,7 +1346,7 @@ Exam Branch
                                     <option value="4">Internal Evaluation 4</option>
                                 </select>
                                 <label for="studentCount" class="form-label">Total Students</label>
-                                <input type="text" id="studentCount" class="form-control" placeholder="Enter number of students" pattern="[0-9]*" value="56" />
+                                <input type="text" id="studentCount" class="form-control" placeholder="Enter number of students" pattern="[0-9]*" value="49" />
 
                                 <div class="exam-action-buttons mt-3">
                                     <button id="addStudentsBtn" class="btn exam-btn exam-btn-primary">
@@ -4807,7 +4807,7 @@ Exam Branch
             setStatus(lessonPlanStatus, 'Lesson plan cleared', 'muted');
         }
 
-        const defaultEvaluationRollNumbers = [
+        const allDefaultEvaluationRollNumbers = [
             '23C11A1208', '23C11A1224',
             '24C11A1201', '24C11A1202', '24C11A1203', '24C11A1204', '24C11A1205',
             '24C11A1206', '24C11A1207', '24C11A1208', '24C11A1209', '24C11A1210',
@@ -4822,12 +4822,26 @@ Exam Branch
             '24C11A1258', '24C11A1259', '24C11A1260', '24C11A1261'
         ];
 
-        const defaultEvaluationAttendance = [
+        const excludedEvaluationOneRollNumbers = new Set([
+            '23C11A1208', '24C11A1202', '24C11A1213', '24C11A1218',
+            '24C11A1221', '24C11A1228', '24C11A1259'
+        ]);
+        const defaultEvaluationRollNumbers = allDefaultEvaluationRollNumbers.filter(function (rollNo) {
+            return !excludedEvaluationOneRollNumbers.has(rollNo);
+        });
+
+        const allDefaultEvaluationAttendance = [
             15.15, 46.97, 56.06, 0.00, 72.73, 75.76, 66.67, 71.21, 80.30, 65.15, 42.42, 48.48, 72.73, 84.85,
             0.00, 75.76, 65.15, 60.61, 21.21, 75.76, 19.70, 68.18, 86.36, 83.33, 84.85, 15.15, 83.33, 87.88,
             62.12, 74.24, 48.48, 69.70, 66.67, 59.09, 37.88, 72.73, 57.58, 37.88, 69.70, 62.12, 84.85, 75.76,
             40.91, 86.36, 33.33, 83.33, 46.97, 72.73, 69.70, 75.76, 37.88, 77.27, 54.55, 27.27, 59.09, 83.33
         ];
+        const defaultEvaluationAttendance = allDefaultEvaluationRollNumbers.reduce(function (attendance, rollNo, index) {
+            if (!excludedEvaluationOneRollNumbers.has(rollNo)) {
+                attendance.push(allDefaultEvaluationAttendance[index]);
+            }
+            return attendance;
+        }, []);
         const secondEvaluationRollNumbers = [
             '24C11A1222',
             '25C11A1202', '25C11A1203', '25C11A1204', '25C11A1205',
@@ -4881,16 +4895,14 @@ Exam Branch
             '23C11A1208', '24C11A1202', '24C11A1213', '24C11A1218',
             '24C11A1221', '24C11A1228', '24C11A1259'
         ]);
-        const thirdEvaluationRollNumbers = defaultEvaluationRollNumbers.filter(function (rollNo) {
-            return !excludedEvaluationThreeRollNumbers.has(rollNo);
-        });
+        const thirdEvaluationRollNumbers = defaultEvaluationRollNumbers.slice();
         const allThirdEvaluationAttendance = [
             17.65, 70.59, 70.59, 0, 88.24, 94.12, 64.71, 88.24, 88.24, 82.35, 47.06, 64.71, 82.35, 82.35,
             0, 76.47, 82.35, 88.24, 23.53, 82.35, 23.53, 64.71, 76.47, 76.47, 76.47, 23.53, 82.35, 82.35,
             88.24, 82.35, 47.06, 82.35, 82.35, 76.47, 70.59, 70.59, 82.35, 35.29, 94.12, 47.06, 82.35, 76.47,
             76.47, 82.35, 47.06, 82.35, 82.35, 94.12, 64.71, 94.12, 52.94, 82.35, 82.35, 29.41, 64.71, 82.35
         ];
-        const thirdEvaluationAttendance = defaultEvaluationRollNumbers.reduce(function (attendance, rollNo, index) {
+        const thirdEvaluationAttendance = allDefaultEvaluationRollNumbers.reduce(function (attendance, rollNo, index) {
             if (!excludedEvaluationThreeRollNumbers.has(rollNo)) {
                 attendance.push(allThirdEvaluationAttendance[index]);
             }
@@ -4932,6 +4944,11 @@ Exam Branch
             return defaultEvaluationRollNumbers.slice();
         }
 
+        function getEvaluationOneSeedIndex(student, index) {
+            const originalIndex = allDefaultEvaluationRollNumbers.indexOf(String(student.rollNo || '').trim());
+            return originalIndex === -1 ? index : originalIndex;
+        }
+
         function getActiveEvaluationRollNumbers() {
             console.log('Active evaluation sheet:', activeEvaluationSheet);
             if (activeEvaluationSheet === '2') {
@@ -4957,23 +4974,26 @@ Exam Branch
             const activeRollNumbers = getActiveEvaluationRollNumbers();
             const activeAttendance = getActiveEvaluationAttendance();
             for (let index = 1; index <= count; index += 1) {
+                const evaluationOneSeedIndex = activeEvaluationSheet === '1'
+                    ? allDefaultEvaluationRollNumbers.indexOf(activeRollNumbers[index - 1])
+                    : index - 1;
                 const seedMid1Obj = (activeEvaluationSheet === '1'
-                    && firstEvaluationObjectiveMarks[index - 1] !== undefined)
-                    ? String(firstEvaluationObjectiveMarks[index - 1])
+                    && firstEvaluationObjectiveMarks[evaluationOneSeedIndex] !== undefined)
+                    ? String(firstEvaluationObjectiveMarks[evaluationOneSeedIndex])
                     : (activeEvaluationSheet === '2'
                         && secondEvaluationObjectiveMarks[index - 1] !== undefined
                         ? String(secondEvaluationObjectiveMarks[index - 1]) : '');
                 const seedAssignment = (activeEvaluationSheet === '1'
-                    && firstEvaluationAssignmentMarks[index - 1] !== undefined
-                    && firstEvaluationAssignmentMarks[index - 1] !== '')
-                    ? String(firstEvaluationAssignmentMarks[index - 1]) : '';
+                    && firstEvaluationAssignmentMarks[evaluationOneSeedIndex] !== undefined
+                    && firstEvaluationAssignmentMarks[evaluationOneSeedIndex] !== '')
+                    ? String(firstEvaluationAssignmentMarks[evaluationOneSeedIndex]) : '';
                 const seedMid2Obj = activeEvaluationSheet === '1'
-                    ? String(firstEvaluationMid2ObjectiveMarks[index - 1] || 0)
+                    ? String(firstEvaluationMid2ObjectiveMarks[evaluationOneSeedIndex] || 0)
                     : (activeEvaluationSheet === '2' ? '0' : '');
                 const seedViva = (activeEvaluationSheet === '1'
-                    && firstEvaluationVivaMarks[index - 1] !== undefined
-                    && firstEvaluationVivaMarks[index - 1] !== '')
-                    ? String(firstEvaluationVivaMarks[index - 1]) : '';
+                    && firstEvaluationVivaMarks[evaluationOneSeedIndex] !== undefined
+                    && firstEvaluationVivaMarks[evaluationOneSeedIndex] !== '')
+                    ? String(firstEvaluationVivaMarks[evaluationOneSeedIndex]) : '';
                 if (activeEvaluationSheet === '3' || activeEvaluationSheet === '4') {
                     students.push({
                         rollNo: activeRollNumbers[index - 1] || '',
@@ -6132,6 +6152,23 @@ Exam Branch
                     }
                     return student;
                 }) : [];
+                if (activeEvaluationSheet === '1') {
+                    const savedRowsByRollNumber = {};
+                    savedRows.forEach(function (student) {
+                        const rollNo = String(student.rollNo || '').trim().toUpperCase();
+                        if (rollNo) savedRowsByRollNumber[rollNo] = student;
+                    });
+                    savedRows = activeRollNumbers.map(function (rollNo, index) {
+                        const existing = savedRowsByRollNumber[rollNo.trim().toUpperCase()] || {};
+                        return Object.assign({
+                            attendance: String(activeAttendance[index] ?? ''),
+                            mid1Obj: '', mid1Desc: '', mid2Obj: '', mid2Desc: '',
+                            assignment: '', viva: ''
+                        }, existing, {
+                            rollNo: rollNo
+                        });
+                    });
+                }
                 if (activeEvaluationSheet === '2') {
                     const savedRowsByRollNumber = {};
                     savedRows.forEach(function (student) {
@@ -6160,7 +6197,7 @@ Exam Branch
                 }
                 if (activeEvaluationSheet === '1' && payload.objectiveMarksVersion !== firstEvaluationObjectiveMarksVersion) {
                     savedRows = savedRows.map(function (student, index) {
-                        const seed = firstEvaluationObjectiveMarks[index];
+                        const seed = firstEvaluationObjectiveMarks[getEvaluationOneSeedIndex(student, index)];
                         if (student.mid1Obj && String(student.mid1Obj).trim()) return student;
                         return Object.assign({}, student, {
                             mid1Obj: seed === undefined || seed === '' ? '' : String(seed)
@@ -6170,7 +6207,7 @@ Exam Branch
                 if (activeEvaluationSheet === '1' && payload.assignmentMarksVersion !== firstEvaluationAssignmentMarksVersion) {
                     savedRows = savedRows.map(function (student, index) {
                         if (student.assignment && String(student.assignment).trim()) return student;
-                        const seed = firstEvaluationAssignmentMarks[index];
+                        const seed = firstEvaluationAssignmentMarks[getEvaluationOneSeedIndex(student, index)];
                         return Object.assign({}, student, {
                             assignment: seed === undefined || seed === '' ? '' : String(seed)
                         });
@@ -6179,7 +6216,7 @@ Exam Branch
                 if (activeEvaluationSheet === '1' && payload.mid2ObjMarksVersion !== firstEvaluationMid2ObjectiveMarksVersion) {
                     savedRows = savedRows.map(function (student, index) {
                         if (student.mid2Obj && String(student.mid2Obj).trim()) return student;
-                        const seed = firstEvaluationMid2ObjectiveMarks[index];
+                        const seed = firstEvaluationMid2ObjectiveMarks[getEvaluationOneSeedIndex(student, index)];
                         return Object.assign({}, student, {
                             mid2Obj: seed === undefined || seed === '' ? '' : String(seed)
                         });
@@ -6188,7 +6225,7 @@ Exam Branch
                 if (activeEvaluationSheet === '1' && payload.vivaMarksVersion !== firstEvaluationVivaMarksVersion) {
                     savedRows = savedRows.map(function (student, index) {
                         if (student.viva && String(student.viva).trim()) return student;
-                        const seed = firstEvaluationVivaMarks[index];
+                        const seed = firstEvaluationVivaMarks[getEvaluationOneSeedIndex(student, index)];
                         return Object.assign({}, student, {
                             viva: seed === undefined || seed === '' ? '' : String(seed)
                         });
