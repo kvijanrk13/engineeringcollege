@@ -1,5 +1,6 @@
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from io import BytesIO
+import re
 import zipfile
 from xml.etree import ElementTree
 
@@ -512,6 +513,32 @@ def _formula_cache_values(sheet_number, students, columns):
     }
 
 
+def _formula_for_data_row(formula, row_number, columns, table_name, last_row):
+    attendance_column = get_column_letter(columns.index('Attendance') + 1)
+    formula = formula.replace(
+        f'INDEX({table_name}[Attendance],1):[@Attendance]',
+        f'{attendance_column}$5:{attendance_column}{row_number}',
+    )
+    table_column_pattern = re.compile(re.escape(table_name) + r'\[([^\]]+)\]')
+    formula = table_column_pattern.sub(
+        lambda match: (
+            f'{get_column_letter(columns.index(match.group(1)) + 1)}$5:'
+            f'{get_column_letter(columns.index(match.group(1)) + 1)}${last_row}'
+        ),
+        formula,
+    )
+    formula = re.sub(
+        r'\[@\[([^\]]+)\]\]',
+        lambda match: f'{get_column_letter(columns.index(match.group(1)) + 1)}{row_number}',
+        formula,
+    )
+    return re.sub(
+        r'\[@([^\]]+)\]',
+        lambda match: f'{get_column_letter(columns.index(match.group(1)) + 1)}{row_number}',
+        formula,
+    )
+
+
 def _write_formula_caches(output, values_by_sheet):
     # Keep formula results visible in viewers that do not calculate Excel formulas.
     namespace = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
@@ -752,6 +779,16 @@ def create_evaluation_workbook(sheet_number, subject_name, rows):
         showColumnStripes=False,
     )
     worksheet.add_table(table)
+    for row_number in range(5, last_row + 1):
+        for field, formula in formulae.items():
+            cell = worksheet.cell(row=row_number, column=columns.index(field) + 1)
+            cell.value = '=' + _formula_for_data_row(
+                formula,
+                row_number,
+                columns,
+                table_name,
+                last_row,
+            )
     if sheet_number in {'1', '2'}:
         input_columns = {'E': 20, 'H': 20, 'K': 5, 'L': 5}
         if sheet_number == '2':

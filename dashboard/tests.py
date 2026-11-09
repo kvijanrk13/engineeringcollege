@@ -3753,12 +3753,24 @@ class EvaluationWorkbookExportTests(TestCase):
                 ]
                 self.assertTrue(formula_cells)
                 self.assertTrue(all(calculated_sheet[cell.coordinate].value is not None for cell in formula_cells))
+                self.assertTrue(all(
+                    f'Evaluation{sheet_number}Marks[' not in cell.value
+                    for cell in formula_cells
+                ))
                 if sheet_number in {'3', '4'}:
                     self.assertEqual(calculated_sheet['G5'].value, 27)
                     self.assertEqual(calculated_sheet['K5'].value, 27)
                     self.assertEqual(calculated_sheet['L5'].value, 27)
                     self.assertEqual(calculated_sheet['N5'].value, 36)
                     self.assertEqual(calculated_sheet['O5'].value, 'A+')
+                    self.assertEqual(worksheet['G5'].value, '=SUM(D5,E5,F5)')
+                    self.assertEqual(worksheet['K5'].value, '=SUM(H5,I5,J5)')
+                    self.assertEqual(worksheet['L5'].value, '=ROUND((G5+K5)/2,0)')
+                    self.assertEqual(worksheet['N5'].value, '=MIN(L5+N(M5),40)')
+                    self.assertIn(
+                        '[@[MID-1 CIA (10)]]',
+                        calculated_columns['MID-1 Total'],
+                    )
 
     def test_download_endpoint_returns_xlsx_for_selected_evaluation(self):
         response = self.client.post(
