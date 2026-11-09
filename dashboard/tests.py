@@ -3736,19 +3736,19 @@ class EvaluationWorkbookExportTests(TestCase):
                 calculated_sheet = calculated_workbook[f'Evaluation {sheet_number}']
                 table = next(iter(worksheet.tables.values()))
                 calculated_columns = {
-                    column.name: column.calculatedColumnFormula.attr_text
+                    column.name: column.calculatedColumnFormula
                     for column in table.tableColumns
-                    if column.calculatedColumnFormula is not None
                 }
 
                 self.assertIn('Grade', calculated_columns)
                 self.assertIn('Attendance Rank', calculated_columns)
                 self.assertIn('Allocated Attendance Grade', calculated_columns)
+                self.assertTrue(all(value is None for value in calculated_columns.values()))
                 self.assertEqual(worksheet['A5'].value, '24C11A1201')
                 self.assertTrue(workbook['Summary']['C6'].value.startswith('=COUNTIF('))
                 self.assertTrue(workbook.calculation.fullCalcOnLoad)
                 formula_cells = [
-                    cell for row in worksheet.iter_rows() for cell in row
+                    cell for row in worksheet.iter_rows(min_row=5, max_row=5) for cell in row
                     if cell.data_type == 'f'
                 ]
                 self.assertTrue(formula_cells)
@@ -3763,14 +3763,24 @@ class EvaluationWorkbookExportTests(TestCase):
                     self.assertEqual(calculated_sheet['L5'].value, 27)
                     self.assertEqual(calculated_sheet['N5'].value, 36)
                     self.assertEqual(calculated_sheet['O5'].value, 'A+')
-                    self.assertEqual(worksheet['G5'].value, '=SUM(D5,E5,F5)')
-                    self.assertEqual(worksheet['K5'].value, '=SUM(H5,I5,J5)')
-                    self.assertEqual(worksheet['L5'].value, '=ROUND((G5+K5)/2,0)')
-                    self.assertEqual(worksheet['N5'].value, '=MIN(L5+N(M5),40)')
-                    self.assertIn(
-                        '[@[MID-1 CIA (10)]]',
-                        calculated_columns['MID-1 Total'],
-                    )
+                    if sheet_number == '3':
+                        self.assertEqual(worksheet['G5'].value, '=IF(COUNTA(D5,E5,F5)=0,"",SUM(D5,E5,F5))')
+                        self.assertEqual(worksheet['K5'].value, '=IF(COUNTA(H5,I5,J5)=0,"",SUM(H5,I5,J5))')
+                        self.assertEqual(
+                            worksheet['L5'].value,
+                            '=IF(COUNTA(D5,E5,F5,H5,I5,J5)=0,"",ROUND((N(G5)+N(K5))/2,0))',
+                        )
+                        self.assertEqual(
+                            worksheet['N5'].value,
+                            '=IF(COUNTA(D5,E5,F5,H5,I5,J5,M5)=0,"",MIN(N(L5)+N(M5),40))',
+                        )
+                        self.assertEqual(table.ref, 'A4:S1004')
+                        self.assertTrue(worksheet['N1004'].value.startswith('=IF('))
+                    else:
+                        self.assertEqual(worksheet['G5'].value, '=SUM(D5,E5,F5)')
+                        self.assertEqual(worksheet['K5'].value, '=SUM(H5,I5,J5)')
+                        self.assertEqual(worksheet['L5'].value, '=ROUND((G5+K5)/2,0)')
+                        self.assertEqual(worksheet['N5'].value, '=MIN(L5+N(M5),40)')
 
     def test_download_endpoint_returns_xlsx_for_selected_evaluation(self):
         response = self.client.post(

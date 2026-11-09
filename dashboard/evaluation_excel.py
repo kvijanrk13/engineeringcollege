@@ -7,7 +7,7 @@ from xml.etree import ElementTree
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.worksheet.datavalidation import DataValidation
-from openpyxl.worksheet.table import Table, TableColumn, TableFormula, TableStyleInfo
+from openpyxl.worksheet.table import Table, TableColumn, TableStyleInfo
 from openpyxl.utils import get_column_letter
 
 
@@ -246,13 +246,39 @@ def _evaluation_columns(sheet_number):
             + sheet_number + 'Marks[Attendance])>=0.4,"P","F"))))))))'
         ),
         'MID-1 Total': (
-            'SUM([@[MID-1 CIA (10)]],[@[MID-1 VIVA (10)]],[@[MID-1 EXAM (10)]])'
+            (
+                'IF(COUNTA([@[MID-1 CIA (10)]],[@[MID-1 VIVA (10)]],'
+                '[@[MID-1 EXAM (10)]])=0,"",'
+                'SUM([@[MID-1 CIA (10)]],[@[MID-1 VIVA (10)]],[@[MID-1 EXAM (10)]]))'
+                if sheet_number == '3'
+                else 'SUM([@[MID-1 CIA (10)]],[@[MID-1 VIVA (10)]],[@[MID-1 EXAM (10)]])'
+            )
         ),
         'MID-2 Total': (
-            'SUM([@[MID-2 CIA (10)]],[@[MID-2 VIVA (10)]],[@[MID-2 EXAM (10)]])'
+            (
+                'IF(COUNTA([@[MID-2 CIA (10)]],[@[MID-2 VIVA (10)]],'
+                '[@[MID-2 EXAM (10)]])=0,"",'
+                'SUM([@[MID-2 CIA (10)]],[@[MID-2 VIVA (10)]],[@[MID-2 EXAM (10)]]))'
+                if sheet_number == '3'
+                else 'SUM([@[MID-2 CIA (10)]],[@[MID-2 VIVA (10)]],[@[MID-2 EXAM (10)]])'
+            )
         ),
-        'Average MID (30)': 'ROUND(([@[MID-1 Total]]+[@[MID-2 Total]])/2,0)',
-        'Total (40)': 'MIN([@[Average MID (30)]]+N([@[PROJECT (10)]]),40)',
+        'Average MID (30)': (
+            'IF(COUNTA([@[MID-1 CIA (10)]],[@[MID-1 VIVA (10)]],'
+            '[@[MID-1 EXAM (10)]],[@[MID-2 CIA (10)]],[@[MID-2 VIVA (10)]],'
+            '[@[MID-2 EXAM (10)]])=0,"",'
+            'ROUND((N([@[MID-1 Total]])+N([@[MID-2 Total]]))/2,0))'
+            if sheet_number == '3'
+            else 'ROUND(([@[MID-1 Total]]+[@[MID-2 Total]])/2,0)'
+        ),
+        'Total (40)': (
+            'IF(COUNTA([@[MID-1 CIA (10)]],[@[MID-1 VIVA (10)]],'
+            '[@[MID-1 EXAM (10)]],[@[MID-2 CIA (10)]],[@[MID-2 VIVA (10)]],'
+            '[@[MID-2 EXAM (10)]],[@[PROJECT (10)]])=0,"",'
+            'MIN(N([@[Average MID (30)]])+N([@[PROJECT (10)]]),40))'
+            if sheet_number == '3'
+            else 'MIN([@[Average MID (30)]]+N([@[PROJECT (10)]]),40)'
+        ),
         'Grade': (
             'IF(COUNTA([@[MID-1 CIA (10)]],[@[MID-1 VIVA (10)]],'
             '[@[MID-1 EXAM (10)]],[@[MID-2 CIA (10)]],[@[MID-2 VIVA (10)]],'
@@ -422,11 +448,28 @@ def _formula_cache_values(sheet_number, students, columns):
             mid2_values = [student[field] for field in ('mid2Cia', 'mid2Viva', 'mid2Exam')]
             mid1_entered = any(value is not None for value in mid1_values)
             mid2_entered = any(value is not None for value in mid2_values)
-            mid1_total = sum(value or 0 for value in mid1_values)
-            mid2_total = sum(value or 0 for value in mid2_values)
-            mid_average = _rounded_excel((mid1_total + mid2_total) / 2)
-            total = min(mid_average + (student['project'] or 0), 40)
+            mid1_total = sum(value or 0 for value in mid1_values) if mid1_entered or sheet_number == '4' else ''
+            mid2_total = sum(value or 0 for value in mid2_values) if mid2_entered or sheet_number == '4' else ''
+            mid_average = (
+                _rounded_excel(
+                    (
+                        (mid1_total if isinstance(mid1_total, (int, float)) else 0)
+                        + (mid2_total if isinstance(mid2_total, (int, float)) else 0)
+                    ) / 2
+                )
+                if mid1_entered or mid2_entered or sheet_number == '4'
+                else ''
+            )
             any_marks = mid1_entered or mid2_entered or student['project'] is not None
+            total = (
+                min(
+                    (mid_average if isinstance(mid_average, (int, float)) else 0)
+                    + (student['project'] or 0),
+                    40,
+                )
+                if any_marks or sheet_number == '4'
+                else ''
+            )
             grade = _grade_for_total(total) if sheet_number == '4' or any_marks else ''
             result.update({
                 'MID-1 CIA (10)': student['mid1Cia'],
@@ -610,7 +653,7 @@ def _write_summary(worksheet, sheet_number, table_name):
         worksheet.cell(
             row=offset,
             column=5,
-            value=f'=IFERROR(TEXTJOIN(", ",TRUE,FILTER({table_name}[Roll No],{table_name}[Grade]=A{offset})),"")',
+            value=f'=IFERROR(TEXTJOIN(", ",TRUE,_xlfn._xlws.FILTER({table_name}[Roll No],{table_name}[Grade]=A{offset})),"")',
         )
         worksheet.cell(row=offset, column=4).number_format = '0.0%'
     worksheet['A13'] = 'Total graded'
@@ -662,7 +705,7 @@ def _write_summary(worksheet, sheet_number, table_name):
         worksheet.cell(
             row=row_number,
             column=6,
-            value=f'=IFERROR(TEXTJOIN(", ",TRUE,FILTER({table_name}[Roll No]&" ("&'
+            value=f'=IFERROR(TEXTJOIN(", ",TRUE,_xlfn._xlws.FILTER({table_name}[Roll No]&" ("&'
             f'TEXT({table_name}[Attendance]/MAX({table_name}[Attendance])*100,"0.0")&"%)",'
             f'{table_name}[Allocated Attendance Grade]=A{row_number})),"")',
         )
@@ -691,6 +734,21 @@ def create_evaluation_workbook(sheet_number, subject_name, rows):
     sheet_number = str(sheet_number)
     subject_name = _text(subject_name, 'Subject name', 150)
     students = _validated_rows(sheet_number, rows)
+    if sheet_number == '3':
+        students.extend(
+            {
+                'rollNo': '',
+                'attendance': None,
+                'mid1Cia': None,
+                'mid1Viva': None,
+                'mid1Exam': None,
+                'mid2Cia': None,
+                'mid2Viva': None,
+                'mid2Exam': None,
+                'project': None,
+            }
+            for _ in range(1000 - len(students))
+        )
 
     workbook = Workbook()
     worksheet = workbook.active
@@ -764,11 +822,7 @@ def create_evaluation_workbook(sheet_number, subject_name, rows):
     last_row = 4 + len(students)
     table = Table(displayName=table_name, ref=f'A4:{get_column_letter(len(columns))}{last_row}')
     table.tableColumns = [
-        TableColumn(
-            id=index,
-            name=column,
-            calculatedColumnFormula=TableFormula(attr_text=formulae[column]) if column in formulae else None,
-        )
+        TableColumn(id=index, name=column)
         for index, column in enumerate(columns, start=1)
     ]
     table.tableStyleInfo = TableStyleInfo(
