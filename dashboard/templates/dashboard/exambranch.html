@@ -10372,6 +10372,9 @@ Exam Branch
         document.getElementById('evalSaveBtn').addEventListener('click', saveEvaluationData);
         document.getElementById('evalClearBtn').addEventListener('click', clearEvaluationData);
         const evaluationDownloadModal = document.getElementById('evaluationDownloadModal');
+        // Keep the modal above Bootstrap's body-level backdrop and outside .exam-shell's stacking context.
+        evaluationDownloadModal.classList.add('exam-branch-page');
+        document.body.appendChild(evaluationDownloadModal);
         document.getElementById('evalDownloadBtn').addEventListener('click', function () {
             if (!window.bootstrap || !window.bootstrap.Modal) {
                 setStatus(evaluationSaveStatus, 'The evaluation download dialog is unavailable', 'warning');
