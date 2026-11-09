@@ -10994,6 +10994,33 @@ def exam_branch(request):
 
 @login_required
 @require_POST
+def exam_branch_download_evaluation(request):
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return JsonResponse({'error': 'The evaluation export request must contain valid JSON.'}, status=400)
+    if not isinstance(payload, dict):
+        return JsonResponse({'error': 'The evaluation export request must be a JSON object.'}, status=400)
+
+    try:
+        from .evaluation_excel import CONTENT_TYPE, EvaluationExportError, create_evaluation_workbook
+
+        sheet_number = str(payload.get('sheetNumber', ''))
+        workbook = create_evaluation_workbook(
+            sheet_number,
+            payload.get('subjectName', ''),
+            payload.get('students'),
+        )
+    except EvaluationExportError as error:
+        return JsonResponse({'error': str(error)}, status=400)
+
+    response = HttpResponse(workbook.getvalue(), content_type=CONTENT_TYPE)
+    response['Content-Disposition'] = f'attachment; filename="internal_evaluation_{sheet_number}.xlsx"'
+    return response
+
+
+@login_required
+@require_POST
 def exam_branch_download_lesson_plan(request):
     payload = {}
     try:

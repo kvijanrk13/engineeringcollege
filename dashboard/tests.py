@@ -18,6 +18,7 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from docx import Document
+from openpyxl import load_workbook
 
 from dashboard import views as dashboard_views
 from dashboard.models import (
@@ -25,6 +26,7 @@ from dashboard.models import (
     ResearchPublication, Student, StudentMentoring, SuspiciousActivity,
 )
 from dashboard.mentoring_document import create_mentoring_document
+from dashboard.evaluation_excel import create_evaluation_workbook
 from dashboard.pdf_generation import (
     FACULTY_PDF_TEMPLATE,
     STUDENT_PDF_TEMPLATE,
@@ -3686,3 +3688,95 @@ class PhonePeProjectDownloadTests(TestCase):
 
         self.assertContains(response, 'data:image/png;base64,')
         self.assertContains(response, 'Open PhonePe Checkout')
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class EvaluationWorkbookExportTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(username='evaluation-export-admin', password='test-password')
+        self.client.force_login(self.user)
+
+    def _row_for_sheet(self, sheet_number):
+        if sheet_number in {'1', '2'}:
+            return {
+                'rollNo': '24C11A1201',
+                'attendance': '95',
+                'mid1Obj': '8',
+                'mid1Desc': '18',
+                'mid2Obj': '7',
+                'mid2Desc': '17',
+                'assignment': '5',
+                'viva': '5',
+            }
+        return {
+            'rollNo': '24C11A1201',
+            'attendance': '95',
+            'mid1Cia': '9',
+            'mid1Viva': '9',
+            'mid1Exam': '9',
+            'mid2Cia': '9',
+            'mid2Viva': '9',
+            'mid2Exam': '9',
+            'project': '9',
+        }
+
+    def test_workbooks_include_calculated_table_columns_for_all_evaluations(self):
+        for sheet_number in '1234':
+            with self.subTest(sheet_number=sheet_number):
+                workbook_stream = create_evaluation_workbook(
+                    sheet_number,
+                    'Test Subject',
+                    [self._row_for_sheet(sheet_number)],
+                )
+                workbook = load_workbook(workbook_stream, data_only=False)
+                worksheet = workbook[f'Evaluation {sheet_number}']
+                table = next(iter(worksheet.tables.values()))
+                calculated_columns = {
+                    column.name: column.calculatedColumnFormula.attr_text
+                    for column in table.tableColumns
+                    if column.calculatedColumnFormula is not None
+                }
+
+                self.assertIn('Grade', calculated_columns)
+                self.assertIn('Attendance Rank', calculated_columns)
+                self.assertIn('Allocated Attendance Grade', calculated_columns)
+                self.assertEqual(worksheet['A5'].value, '24C11A1201')
+                self.assertTrue(workbook['Summary']['C6'].value.startswith('=COUNTIF('))
+                self.assertTrue(workbook.calculation.fullCalcOnLoad)
+
+    def test_download_endpoint_returns_xlsx_for_selected_evaluation(self):
+        response = self.client.post(
+            reverse('dashboard:exam_branch_download_evaluation'),
+            data=json.dumps({
+                'sheetNumber': '3',
+                'subjectName': 'Data Mining Lab',
+                'students': [self._row_for_sheet('3')],
+            }),
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['Content-Type'],
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        self.assertIn('internal_evaluation_3.xlsx', response['Content-Disposition'])
+        workbook = load_workbook(io.BytesIO(response.content), data_only=False)
+        self.assertEqual(workbook['Evaluation 3']['A5'].value, '24C11A1201')
+
+    def test_download_endpoint_rejects_invalid_marks(self):
+        row = self._row_for_sheet('1')
+        row['mid1Obj'] = '15'
+        response = self.client.post(
+            reverse('dashboard:exam_branch_download_evaluation'),
+            data=json.dumps({
+                'sheetNumber': '1',
+                'subjectName': 'Test Subject',
+                'students': [row],
+            }),
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('mid1Obj', response.json()['error'])

@@ -1330,6 +1330,36 @@ Exam Branch
                         </div>
                     </div>
 
+                    <div class="modal fade" id="evaluationDownloadModal" tabindex="-1" aria-labelledby="evaluationDownloadModalTitle" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <form class="modal-content" id="evaluationDownloadForm">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="evaluationDownloadModalTitle">Download Evaluation Workbook</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <label for="evaluationDownloadSheet" class="form-label">Choose an evaluation</label>
+                                    <select id="evaluationDownloadSheet" class="form-select" required>
+                                        <option value="1">Internal Evaluation 1</option>
+                                        <option value="2">Internal Evaluation 2</option>
+                                        <option value="3">Internal Evaluation 3</option>
+                                        <option value="4">Internal Evaluation 4</option>
+                                    </select>
+                                    <p class="small text-muted mt-2 mb-0">
+                                        The workbook includes the marks sheet, formulas, and grade summaries.
+                                        Add rows within the Excel table to extend its calculations.
+                                    </p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn exam-btn exam-btn-warning" id="evaluationConfirmDownloadBtn">
+                                        <i class="fas fa-file-excel me-2"></i>Download workbook
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
                     <div class="row g-4 mb-4">
                         <div class="col-xl-4">
                             <div class="exam-card h-100">
@@ -2462,6 +2492,7 @@ Exam Branch
             localStorage.setItem(labTimeTablePurgeFlag, '1');
         }
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
+        const evaluationWorkbookDownloadUrl = "{% url 'dashboard:exam_branch_download_evaluation' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
         const csrfTokenValue = '{{ csrf_token }}';
 
@@ -5496,10 +5527,11 @@ Exam Branch
             setupEvaluationHorizontalScrollbar(currentMarksBody.closest('.evaluation-section'));
         }
 
-        function getEvaluationRows() {
-            const currentMarksBody = marksBodyMap[activeEvaluationSheet] || marksBodyMap['1'];
+        function getEvaluationRows(sheetNumber) {
+            const evaluationNumber = sheetNumber || activeEvaluationSheet;
+            const currentMarksBody = marksBodyMap[evaluationNumber] || marksBodyMap['1'];
             return Array.from(currentMarksBody.querySelectorAll('tr')).map(function (row) {
-                if (activeEvaluationSheet === '3' || activeEvaluationSheet === '4') {
+                if (evaluationNumber === '3' || evaluationNumber === '4') {
                     return {
                         rollNo: row.querySelector('.roll-no') ? row.querySelector('.roll-no').value : '',
                         attendance: row.querySelector('.attendance') ? row.querySelector('.attendance').value : '',
@@ -6714,50 +6746,60 @@ Exam Branch
             return '<html><head><meta charset="utf-8"></head><body>' + html + '</body></html>';
         }
 
-        function buildEvaluationExcelHtml(table, title) {
-            const headerCells = table.querySelectorAll('thead th');
-            const colCount = headerCells.length || 15;
-            let html = '<table border="1">';
-            html += '<tr><th colspan="' + colCount + '">' + escapeExcelCell(title || 'Internal Evaluation') + '</th></tr>';
-            Array.from(table.rows).forEach(function (row) {
-                html += '<tr>';
-                Array.from(row.cells).forEach(function (cell) {
-                    if (cell.style.display === 'none') {
-                        return;
-                    }
-                    const tagName = cell.tagName && cell.tagName.toLowerCase() === 'th' ? 'th' : 'td';
-                    html += '<' + tagName + '>' + escapeExcelCell(getCellExportValue(cell).trim()) + '</' + tagName + '>';
+        async function downloadEvaluationExcel(sheetNumber) {
+            const subjectName = evaluationSubjectNameMap[sheetNumber]
+                ? evaluationSubjectNameMap[sheetNumber].value.trim() : '';
+            const payload = {
+                sheetNumber: sheetNumber,
+                subjectName: subjectName,
+                students: getEvaluationRows(sheetNumber)
+            };
+            const downloadButton = document.getElementById('evaluationConfirmDownloadBtn');
+            downloadButton.disabled = true;
+            setStatus(evaluationSaveStatus, 'Preparing Internal Evaluation ' + sheetNumber + ' workbook...', 'muted');
+            try {
+                const response = await fetch(evaluationWorkbookDownloadUrl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfTokenValue
+                    },
+                    body: JSON.stringify(payload)
                 });
-                html += '</tr>';
-            });
-            html += '</table>';
-            return '<html><head><meta charset="utf-8"></head><body>' + html + '</body></html>';
-        }
+                if (!response.ok) {
+                    const responseType = response.headers.get('Content-Type') || '';
+                    const errorBody = responseType.includes('application/json')
+                        ? await response.json() : null;
+                    throw new Error(errorBody && errorBody.error
+                        ? errorBody.error : 'Workbook generation failed (' + response.status + ').');
+                }
+                const responseType = response.headers.get('Content-Type') || '';
+                if (!responseType.includes(
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )) {
+                    throw new Error('The server returned an unexpected workbook response.');
+                }
 
-        function downloadEvaluationExcel(button) {
-            const table = button.dataset.tableSelector
-                ? document.querySelector(button.dataset.tableSelector)
-                : (marksBodyMap[activeEvaluationSheet] || marksBodyMap['1']).closest('table');
-            if (!table) {
-                setStatus(evaluationSaveStatus, 'Could not find evaluation table to download', 'warning');
-                return;
+                const blob = await response.blob();
+                const link = document.createElement('a');
+                const downloadUrl = URL.createObjectURL(blob);
+                link.href = downloadUrl;
+                link.download = 'internal-evaluation-' + sheetNumber + '.xlsx';
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 1000);
+                window.bootstrap.Modal.getOrCreateInstance(
+                    document.getElementById('evaluationDownloadModal')
+                ).hide();
+                setStatus(evaluationSaveStatus, 'Internal Evaluation ' + sheetNumber + ' workbook downloaded', 'success');
+            } catch (error) {
+                console.error('Failed to download evaluation workbook', error);
+                setStatus(evaluationSaveStatus, error.message || 'Could not download evaluation workbook', 'warning');
+            } finally {
+                downloadButton.disabled = false;
             }
-
-            const title = button.dataset.tableTitle
-                || ('Internal Evaluation ' + activeEvaluationSheet + ' - ' + (evaluationSubjectNameMap[activeEvaluationSheet]
-                    ? evaluationSubjectNameMap[activeEvaluationSheet].value.trim() : ''));
-            const blob = new Blob([buildEvaluationExcelHtml(table, title)], {
-                type: 'application/vnd.ms-excel;charset=utf-8;'
-            });
-            const link = document.createElement('a');
-            const filename = (title || 'evaluation').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'evaluation';
-            link.href = URL.createObjectURL(blob);
-            link.download = filename + '.xls';
-            document.body.appendChild(link);
-            link.click();
-            URL.revokeObjectURL(link.href);
-            link.remove();
-            setStatus(evaluationSaveStatus, title + ' Excel download started', 'success');
         }
 
         function clearAllTimeTableSlotValues() {
@@ -10329,8 +10371,18 @@ Exam Branch
         document.getElementById('addStudentsBtn').addEventListener('click', regenerateStudentSheet);
         document.getElementById('evalSaveBtn').addEventListener('click', saveEvaluationData);
         document.getElementById('evalClearBtn').addEventListener('click', clearEvaluationData);
+        const evaluationDownloadModal = document.getElementById('evaluationDownloadModal');
         document.getElementById('evalDownloadBtn').addEventListener('click', function () {
-            downloadEvaluationExcel(this);
+            if (!window.bootstrap || !window.bootstrap.Modal) {
+                setStatus(evaluationSaveStatus, 'The evaluation download dialog is unavailable', 'warning');
+                return;
+            }
+            document.getElementById('evaluationDownloadSheet').value = activeEvaluationSheet;
+            window.bootstrap.Modal.getOrCreateInstance(evaluationDownloadModal).show();
+        });
+        document.getElementById('evaluationDownloadForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            downloadEvaluationExcel(document.getElementById('evaluationDownloadSheet').value);
         });
         Object.values(evaluationSubjectNameMap).forEach(function (input) {
             if (input) input.addEventListener('input', markEvaluationDirty);
