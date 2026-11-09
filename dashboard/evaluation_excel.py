@@ -1,5 +1,7 @@
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from io import BytesIO
+import zipfile
+from xml.etree import ElementTree
 
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
@@ -285,6 +287,265 @@ def _evaluation_columns(sheet_number):
     return columns, formulae
 
 
+def _rounded_excel(value):
+    return int(Decimal(str(value)).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
+
+
+def _grade_for_total(total):
+    for grade, lower_bound in (
+        ('O', 37), ('A+', 32), ('A', 28), ('B+', 24), ('B', 20), ('P', 14),
+    ):
+        if total >= lower_bound:
+            return grade
+    return 'F'
+
+
+def _formula_cache_values(sheet_number, students, columns):
+    attendance_values = [student['attendance'] for student in students if student['attendance'] is not None]
+    attendance_count = len(attendance_values)
+    maximum_attendance = max(attendance_values, default=0)
+
+    bases = [int(attendance_count * share) for _, share, _, _ in ATTENDANCE_ALLOCATION]
+    remainders = [
+        attendance_count * share - base
+        for base, (_, share, _, _) in zip(bases, ATTENDANCE_ALLOCATION)
+    ]
+    remaining = attendance_count - sum(bases)
+    for index in sorted(range(len(remainders)), key=lambda item: (-remainders[item], item))[:remaining]:
+        bases[index] += 1
+    attendance_quotas = bases
+
+    row_results = []
+    previous_attendance = []
+    for student in students:
+        attendance = student['attendance']
+        attendance_rank = None
+        attendance_grade = ''
+        if attendance is not None:
+            attendance_rank = sum(value > attendance for value in attendance_values)
+            attendance_rank += sum(value == attendance for value in previous_attendance) + 1
+            previous_attendance.append(attendance)
+            quota_ends = []
+            for quota in attendance_quotas[:4]:
+                quota_ends.append(quota + (quota_ends[-1] if quota_ends else 0))
+            if attendance_rank <= quota_ends[0]:
+                attendance_grade = 'O'
+            elif attendance_rank <= quota_ends[1]:
+                attendance_grade = 'A+'
+            elif attendance_rank <= quota_ends[2]:
+                attendance_grade = 'A'
+            elif attendance_rank <= quota_ends[3]:
+                attendance_grade = 'B+'
+            elif maximum_attendance == 0 or attendance / maximum_attendance >= 0.5:
+                attendance_grade = 'B'
+            elif attendance / maximum_attendance >= 0.4:
+                attendance_grade = 'P'
+            else:
+                attendance_grade = 'F'
+
+        result = {
+            'Roll No': student['rollNo'],
+            'Attendance': attendance,
+            'Attendance Rank': attendance_rank if attendance_rank is not None else '',
+            'Allocated Attendance Grade': attendance_grade,
+        }
+        if attendance is None:
+            attendance_marks_grade = ''
+        elif maximum_attendance == 0:
+            attendance_marks_grade = '-'
+        else:
+            ratio = attendance / maximum_attendance
+            attendance_marks_grade = next(
+                (grade for grade, threshold in (
+                    ('O', 0.9), ('A+', 0.8), ('A', 0.7),
+                    ('B+', 0.6), ('B', 0.5), ('P', 0.4),
+                ) if ratio >= threshold),
+                'F',
+            )
+        result['Attendance Based Marks Grade'] = attendance_marks_grade
+
+        if sheet_number in {'1', '2'}:
+            fields = ('mid1Obj', 'mid1Desc', 'mid2Obj', 'mid2Desc', 'assignment', 'viva')
+            entered = any(student[field] is not None for field in fields)
+            mid1_desc = student['mid1Desc']
+            mid2_desc = student['mid2Desc']
+            if sheet_number == '2':
+                mid1_desc = None
+                if all(student[field] is not None for field in (
+                    'attendance', 'mid1Obj', 'mid2Obj', 'assignment', 'viva',
+                )):
+                    target = _rounded_excel(max(0, min(100, student['attendance'])) * 16 / 100)
+                    cap = 2 * (30 - student['assignment'] - student['viva']) - 1 - student['mid1Obj']
+                    mid1_desc = min(16, max(target, cap))
+                mid2_desc = 0
+
+            def excel_sum(*values):
+                return sum(value for value in values if isinstance(value, (int, float)))
+
+            mid1_total = excel_sum(student['mid1Obj'], mid1_desc) if entered else ''
+            mid2_total = excel_sum(student['mid2Obj'], mid2_desc) if entered else ''
+            mid_average = _rounded_excel(
+                (
+                    (mid1_total if isinstance(mid1_total, (int, float)) else 0)
+                    + (mid2_total if isinstance(mid2_total, (int, float)) else 0)
+                ) / 2
+            ) if entered else ''
+            if entered:
+                total = min(
+                    mid_average
+                    + (student['assignment'] or 0)
+                    + (student['viva'] or 0),
+                    40,
+                )
+                grade = _grade_for_total(total)
+                percentage = total / 40
+            else:
+                total = grade = percentage = ''
+            result.update({
+                'MID-1 Obj (10)': student['mid1Obj'],
+                'MID-1 Desc (20)': mid1_desc,
+                'MID-1 Total': mid1_total,
+                'MID-2 Obj (10)': student['mid2Obj'],
+                'MID-2 Desc (20)': mid2_desc,
+                'MID-2 Total': mid2_total,
+                'Average MID (30)': mid_average,
+                'Assignment (5)': student['assignment'],
+                'Viva (5)': student['viva'],
+                'Total (40)': total,
+                'Percentage': percentage,
+                'Grade': grade,
+                'Evaluation Entered': 1 if entered else '',
+            })
+        else:
+            mid1_values = [student[field] for field in ('mid1Cia', 'mid1Viva', 'mid1Exam')]
+            mid2_values = [student[field] for field in ('mid2Cia', 'mid2Viva', 'mid2Exam')]
+            mid1_entered = any(value is not None for value in mid1_values)
+            mid2_entered = any(value is not None for value in mid2_values)
+            mid1_total = sum(value or 0 for value in mid1_values)
+            mid2_total = sum(value or 0 for value in mid2_values)
+            mid_average = _rounded_excel((mid1_total + mid2_total) / 2)
+            total = min(mid_average + (student['project'] or 0), 40)
+            any_marks = mid1_entered or mid2_entered or student['project'] is not None
+            grade = _grade_for_total(total) if sheet_number == '4' or any_marks else ''
+            result.update({
+                'MID-1 CIA (10)': student['mid1Cia'],
+                'MID-1 VIVA (10)': student['mid1Viva'],
+                'MID-1 EXAM (10)': student['mid1Exam'],
+                'MID-1 Total': mid1_total,
+                'MID-2 CIA (10)': student['mid2Cia'],
+                'MID-2 VIVA (10)': student['mid2Viva'],
+                'MID-2 EXAM (10)': student['mid2Exam'],
+                'MID-2 Total': mid2_total,
+                'Average MID (30)': mid_average,
+                'PROJECT (10)': student['project'],
+                'Total (40)': total,
+                'Grade': grade,
+                'MID-1 Entered': 1 if sheet_number == '4' or mid1_entered else '',
+                'MID-2 Entered': 1 if sheet_number == '4' or mid2_entered else '',
+            })
+        row_results.append(result)
+
+    graded_rows = [row for row in row_results if row['Grade'] != '']
+    if sheet_number == '3':
+        class_average = (
+            sum(row['Total (40)'] for row in graded_rows) / len(graded_rows) / 40
+            if graded_rows else 0
+        )
+    else:
+        class_average = sum(
+            row['Total (40)'] if isinstance(row['Total (40)'], (int, float)) else 0
+            for row in row_results
+        ) / max(len(row_results), 1) / 40
+    mid1_rows = [row for row in row_results if row.get('MID-1 Entered') == 1]
+    mid2_rows = [row for row in row_results if row.get('MID-2 Entered') == 1]
+    mid1_average = (
+        sum(row['MID-1 Total'] for row in mid1_rows) / len(mid1_rows) / 30
+        if mid1_rows else 0
+    )
+    mid2_average = (
+        sum(row['MID-2 Total'] for row in mid2_rows) / len(mid2_rows) / 30
+        if mid2_rows else 0
+    )
+    summary_values = {
+        'B3': class_average,
+        'D3': mid1_average,
+        'F3': mid2_average,
+        'B4': (
+            sum(row['Total (40)'] for row in graded_rows) / len(graded_rows) / 40
+            if graded_rows else 0
+        ),
+    }
+
+    for index, (grade, _) in enumerate(GRADE_ROWS, start=6):
+        matching = [row for row in row_results if row['Grade'] == grade]
+        summary_values[f'C{index}'] = len(matching)
+        summary_values[f'D{index}'] = len(matching) / len(graded_rows) if graded_rows else 0
+        summary_values[f'E{index}'] = ', '.join(row['Roll No'] for row in matching)
+    summary_values['C13'] = len(graded_rows)
+    summary_values['D13'] = 1 if graded_rows else 0
+    summary_values['C15'] = attendance_count
+
+    for index, ((_, share, _, _), base) in enumerate(zip(ATTENDANCE_ALLOCATION, bases), start=17):
+        summary_values[f'C{index}'] = attendance_count
+        summary_values[f'D{index}'] = int(attendance_count * share)
+        summary_values[f'E{index}'] = attendance_count * share - int(attendance_count * share)
+        summary_values[f'F{index}'] = base
+    for index, (grade, _, _) in enumerate(ATTENDANCE_SUMMARY_ROWS, start=25):
+        matching = [row for row in row_results if row['Allocated Attendance Grade'] == grade]
+        summary_values[f'D{index}'] = len(matching) / attendance_count if attendance_count else 0
+        summary_values[f'E{index}'] = len(matching)
+        summary_values[f'F{index}'] = ', '.join(
+            f"{row['Roll No']} ({row['Attendance'] / maximum_attendance * 100:.1f}%)"
+            for row in matching
+        ) if maximum_attendance else ''
+    summary_values['D32'] = 1 if attendance_count else 0
+    summary_values['E32'] = attendance_count
+
+    return {
+        'xl/worksheets/sheet1.xml': {
+            f'{get_column_letter(column)}{row_number}': result.get(columns[column - 1], '')
+            for row_number, result in enumerate(row_results, start=5)
+            for column in range(1, len(columns) + 1)
+            if columns[column - 1] in result
+        },
+        'xl/worksheets/sheet2.xml': summary_values,
+    }
+
+
+def _write_formula_caches(output, values_by_sheet):
+    # Keep formula results visible in viewers that do not calculate Excel formulas.
+    namespace = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
+    ElementTree.register_namespace('', namespace)
+    rewritten = BytesIO()
+    with zipfile.ZipFile(output, 'r') as source, zipfile.ZipFile(rewritten, 'w', zipfile.ZIP_DEFLATED) as target:
+        for item in source.infolist():
+            contents = source.read(item.filename)
+            sheet_values = values_by_sheet.get(item.filename)
+            if sheet_values:
+                root = ElementTree.fromstring(contents)
+                for cell in root.findall(f'.//{{{namespace}}}c'):
+                    formula = cell.find(f'{{{namespace}}}f')
+                    if formula is None or cell.attrib.get('r') not in sheet_values:
+                        continue
+                    value = sheet_values[cell.attrib['r']]
+                    cached = cell.find(f'{{{namespace}}}v')
+                    if cached is None:
+                        cached = ElementTree.SubElement(cell, f'{{{namespace}}}v')
+                    if isinstance(value, str):
+                        cell.attrib['t'] = 'str'
+                        cached.text = value
+                    else:
+                        cell.attrib.pop('t', None)
+                        cached.text = str(value)
+                contents = ElementTree.tostring(root, encoding='utf-8', xml_declaration=True)
+            target.writestr(item, contents)
+    rewritten.seek(0)
+    output.seek(0)
+    output.truncate()
+    output.write(rewritten.getvalue())
+    output.seek(0)
+
+
 def _write_summary(worksheet, sheet_number, table_name):
     _format_sheet_title(worksheet, f'Internal Evaluation {sheet_number} Summary', 6)
     worksheet['A3'] = 'Class Average (%)'
@@ -537,5 +798,6 @@ def create_evaluation_workbook(sheet_number, subject_name, rows):
 
     output = BytesIO()
     workbook.save(output)
+    _write_formula_caches(output, _formula_cache_values(sheet_number, students, columns))
     output.seek(0)
     return output

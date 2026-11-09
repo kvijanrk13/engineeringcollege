@@ -3731,6 +3731,9 @@ class EvaluationWorkbookExportTests(TestCase):
                 )
                 workbook = load_workbook(workbook_stream, data_only=False)
                 worksheet = workbook[f'Evaluation {sheet_number}']
+                workbook_stream.seek(0)
+                calculated_workbook = load_workbook(workbook_stream, data_only=True)
+                calculated_sheet = calculated_workbook[f'Evaluation {sheet_number}']
                 table = next(iter(worksheet.tables.values()))
                 calculated_columns = {
                     column.name: column.calculatedColumnFormula.attr_text
@@ -3744,6 +3747,18 @@ class EvaluationWorkbookExportTests(TestCase):
                 self.assertEqual(worksheet['A5'].value, '24C11A1201')
                 self.assertTrue(workbook['Summary']['C6'].value.startswith('=COUNTIF('))
                 self.assertTrue(workbook.calculation.fullCalcOnLoad)
+                formula_cells = [
+                    cell for row in worksheet.iter_rows() for cell in row
+                    if cell.data_type == 'f'
+                ]
+                self.assertTrue(formula_cells)
+                self.assertTrue(all(calculated_sheet[cell.coordinate].value is not None for cell in formula_cells))
+                if sheet_number in {'3', '4'}:
+                    self.assertEqual(calculated_sheet['G5'].value, 27)
+                    self.assertEqual(calculated_sheet['K5'].value, 27)
+                    self.assertEqual(calculated_sheet['L5'].value, 27)
+                    self.assertEqual(calculated_sheet['N5'].value, 36)
+                    self.assertEqual(calculated_sheet['O5'].value, 'A+')
 
     def test_download_endpoint_returns_xlsx_for_selected_evaluation(self):
         response = self.client.post(
