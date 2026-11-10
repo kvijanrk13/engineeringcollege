@@ -559,7 +559,7 @@ def _formula_cache_values(sheet_number, students, columns):
 def _formula_for_data_row(formula, row_number, columns, table_name, last_row):
     attendance_column = get_column_letter(columns.index('Attendance') + 1)
     formula = formula.replace(
-        f'INDEX({table_name}[Attendance],1):[@Attendance]',
+        f'INDEX({table_name}[Attendance],1):[@[Attendance]]',
         f'{attendance_column}$5:{attendance_column}{row_number}',
     )
     table_column_pattern = re.compile(re.escape(table_name) + r'\[([^\]]+)\]')
@@ -616,7 +616,7 @@ def _write_formula_caches(output, values_by_sheet):
     output.seek(0)
 
 
-def _write_summary(worksheet, sheet_number, table_name):
+def _write_summary(worksheet, sheet_number, table_name, last_row):
     _format_sheet_title(worksheet, f'Internal Evaluation {sheet_number} Summary', 6)
     worksheet['A3'] = 'Class Average (%)'
     worksheet['A3'].font = Font(bold=True)
@@ -653,7 +653,7 @@ def _write_summary(worksheet, sheet_number, table_name):
         worksheet.cell(
             row=offset,
             column=5,
-            value=f'=IFERROR(TEXTJOIN(", ",TRUE,_xlfn._xlws.FILTER({table_name}[Roll No],{table_name}[Grade]=A{offset})),"")',
+            value=f'={get_column_letter(7 + offset - 6)}${last_row - 3}',
         )
         worksheet.cell(row=offset, column=4).number_format = '0.0%'
     worksheet['A13'] = 'Total graded'
@@ -705,15 +705,61 @@ def _write_summary(worksheet, sheet_number, table_name):
         worksheet.cell(
             row=row_number,
             column=6,
-            value=f'=IFERROR(TEXTJOIN(", ",TRUE,_xlfn._xlws.FILTER({table_name}[Roll No]&" ("&'
-            f'TEXT({table_name}[Attendance]/MAX({table_name}[Attendance])*100,"0.0")&"%)",'
-            f'{table_name}[Allocated Attendance Grade]=A{row_number})),"")',
+            value=f'={get_column_letter(14 + row_number - 25)}${last_row - 3}',
         )
         worksheet.cell(row=row_number, column=4).number_format = '0.0%'
     worksheet['A32'] = 'Total'
     worksheet['D32'] = '=IF(C15=0,0,1)'
     worksheet['D32'].number_format = '0.0%'
     worksheet['E32'] = '=SUM(E25:E31)'
+
+    columns, _ = _evaluation_columns(sheet_number)
+    roll_column = get_column_letter(columns.index('Roll No') + 1)
+    attendance_column = get_column_letter(columns.index('Attendance') + 1)
+    grade_column = get_column_letter(columns.index('Grade') + 1)
+    attendance_grade_column = get_column_letter(columns.index('Allocated Attendance Grade') + 1)
+    source_sheet = f"'Evaluation {sheet_number}'"
+    capacity = last_row - 4
+    grade_helper_start = 7
+    attendance_helper_start = grade_helper_start + len(GRADE_ROWS)
+    for index, (grade, _) in enumerate(GRADE_ROWS):
+        helper_column = grade_helper_start + index
+        helper_letter = get_column_letter(helper_column)
+        worksheet.cell(row=1, column=helper_column, value=f'Grade {grade} roll numbers')
+        for helper_row, source_row in enumerate(range(5, last_row + 1), start=2):
+            previous = f'{helper_letter}{helper_row - 1}'
+            worksheet.cell(
+                row=helper_row,
+                column=helper_column,
+                value=(
+                    f'=IF({source_sheet}!${grade_column}${source_row}=$A${index + 6},'
+                    f'IF({previous}="",{source_sheet}!${roll_column}${source_row},'
+                    f'{previous}&", "&{source_sheet}!${roll_column}${source_row}),{previous})'
+                ),
+            )
+    for index, (grade, _, _) in enumerate(ATTENDANCE_SUMMARY_ROWS):
+        helper_column = attendance_helper_start + index
+        helper_letter = get_column_letter(helper_column)
+        worksheet.cell(row=1, column=helper_column, value=f'Attendance {grade} students')
+        for helper_row, source_row in enumerate(range(5, last_row + 1), start=2):
+            previous = f'{helper_letter}{helper_row - 1}'
+            student = (
+                f'{source_sheet}!${roll_column}${source_row}&" ("&TEXT('
+                f'IFERROR({source_sheet}!${attendance_column}${source_row}/'
+                f'MAX({source_sheet}!${attendance_column}$5:{source_sheet}!'
+                f'${attendance_column}${last_row})*100,0),"0.0")&"%)"'
+            )
+            worksheet.cell(
+                row=helper_row,
+                column=helper_column,
+                value=(
+                    f'=IF({source_sheet}!${attendance_grade_column}${source_row}'
+                    f'=$A${index + 25},'
+                    f'IF({previous}="",{student},{previous}&", "&{student}),{previous})'
+                ),
+            )
+    for column in range(grade_helper_start, attendance_helper_start + len(ATTENDANCE_SUMMARY_ROWS)):
+        worksheet.column_dimensions[get_column_letter(column)].hidden = True
 
     for column, width in enumerate((16, 30, 20, 23, 18, 60), start=1):
         worksheet.column_dimensions[get_column_letter(column)].width = width
@@ -882,7 +928,7 @@ def create_evaluation_workbook(sheet_number, subject_name, rows):
             worksheet.column_dimensions[get_column_letter(index)].hidden = True
     worksheet.freeze_panes = 'A5'
     worksheet.sheet_view.showGridLines = False
-    _write_summary(summary, sheet_number, table_name)
+    _write_summary(summary, sheet_number, table_name, last_row)
     workbook.calculation.fullCalcOnLoad = True
     workbook.calculation.forceFullCalc = True
     workbook.calculation.calcMode = 'auto'
