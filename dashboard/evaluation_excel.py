@@ -316,6 +316,8 @@ def _evaluation_columns(sheet_number):
         'MID-2 CIA (10)', 'MID-2 VIVA (10)', 'MID-2 EXAM (10)', 'MID-2 Total',
         'Average MID (30)', 'PROJECT (10)', 'Total (40)', 'Grade',
     ]
+    if sheet_number == '3':
+        columns.append('EXTERNAL EVALUATION (60)')
     formulae = {
         'Attendance Based Marks Grade': (
             'IF([@Attendance]="","",IF(MAX(Evaluation' + sheet_number
@@ -375,6 +377,9 @@ def _evaluation_columns(sheet_number):
         ),
     }
     if sheet_number == '3':
+        formulae['EXTERNAL EVALUATION (60)'] = (
+            'IF([@[Total (40)]]="","",ROUND(N([@[Total (40)]])*60/40,0))'
+        )
         formulae['MID-1 Entered'] = (
             'IF(COUNTA([@[MID-1 CIA (10)]],[@[MID-1 VIVA (10)]],'
             '[@[MID-1 EXAM (10)]])=0,"",1)'
@@ -610,6 +615,10 @@ def _formula_cache_values(sheet_number, students, columns):
                 'MID-1 Entered': 1 if sheet_number == '4' or mid1_entered else '',
                 'MID-2 Entered': 1 if sheet_number == '4' or mid2_entered else '',
             })
+            if sheet_number == '3':
+                result['EXTERNAL EVALUATION (60)'] = (
+                    _rounded_excel(total * 60 / 40) if isinstance(total, (int, float)) else ''
+                )
         row_results.append(result)
 
     graded_rows = [row for row in row_results if row['Grade'] != '']
@@ -980,24 +989,27 @@ def create_evaluation_workbook(sheet_number, subject_name, rows):
             ])
         else:
             values.extend([
-                None,
+                None,  # Attendance Based Marks Grade
                 student['mid1Cia'],
                 student['mid1Viva'],
                 student['mid1Exam'],
-                None,
+                None,  # MID-1 Total
                 student['mid2Cia'],
                 student['mid2Viva'],
                 student['mid2Exam'],
-                None,
-                None,
+                None,  # MID-2 Total
+                None,  # Average MID (30)
                 student['project'],
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
+                None,  # Total (40)
+                None,  # Grade
+                None,  # Attendance Rank
+                None,  # Allocated Attendance Grade
+                None,  # MID-1 Entered
+                None,  # MID-2 Entered
             ])
+            if sheet_number == '3':
+                # Insert EXTERNAL EVALUATION (60) after Grade (col 15, index 14)
+                values.insert(14, None)
         for column_number, value in enumerate(values, start=1):
             cell = worksheet.cell(row=row_number, column=column_number, value=value)
             if column_number == 1:
