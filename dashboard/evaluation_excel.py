@@ -318,6 +318,7 @@ def _evaluation_columns(sheet_number):
     ]
     if sheet_number == '3':
         columns.append('EXTERNAL EVALUATION (60)')
+        columns.append('TOTAL(INT+EXT)')
     formulae = {
         'Attendance Based Marks Grade': (
             'IF([@Attendance]="","",IF(MAX(Evaluation' + sheet_number
@@ -378,7 +379,11 @@ def _evaluation_columns(sheet_number):
     }
     if sheet_number == '3':
         formulae['EXTERNAL EVALUATION (60)'] = (
-            'IF([@[Total (40)]]="","",ROUND(N([@[Total (40)]])*60/40,0))'
+            'IF([@[Total (40)]]="","",'
+            'MIN(60,MAX(ROUND(N([@[Total (40)]])*60/40,0),MAX(0,40-N([@[Total (40)]])))))'
+        )
+        formulae['TOTAL(INT+EXT)'] = (
+            'IF([@[Total (40)]]="","",N([@[Total (40)]])+N([@[EXTERNAL EVALUATION (60)]]))'
         )
         formulae['MID-1 Entered'] = (
             'IF(COUNTA([@[MID-1 CIA (10)]],[@[MID-1 VIVA (10)]],'
@@ -616,9 +621,13 @@ def _formula_cache_values(sheet_number, students, columns):
                 'MID-2 Entered': 1 if sheet_number == '4' or mid2_entered else '',
             })
             if sheet_number == '3':
-                result['EXTERNAL EVALUATION (60)'] = (
-                    _rounded_excel(total * 60 / 40) if isinstance(total, (int, float)) else ''
-                )
+                if isinstance(total, (int, float)):
+                    ext = min(60, max(_rounded_excel(total * 60 / 40), max(0, 40 - int(total))))
+                    result['EXTERNAL EVALUATION (60)'] = ext
+                    result['TOTAL(INT+EXT)'] = total + ext
+                else:
+                    result['EXTERNAL EVALUATION (60)'] = ''
+                    result['TOTAL(INT+EXT)'] = ''
         row_results.append(result)
 
     graded_rows = [row for row in row_results if row['Grade'] != '']
@@ -1010,6 +1019,8 @@ def create_evaluation_workbook(sheet_number, subject_name, rows):
             if sheet_number == '3':
                 # Insert EXTERNAL EVALUATION (60) after Grade (col 15, index 14)
                 values.insert(14, None)
+                # Insert TOTAL(INT+EXT) after EXTERNAL EVALUATION (60) (col 16, index 15)
+                values.insert(15, None)
         for column_number, value in enumerate(values, start=1):
             cell = worksheet.cell(row=row_number, column=column_number, value=value)
             if column_number == 1:

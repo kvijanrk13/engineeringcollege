@@ -1681,6 +1681,7 @@ Exam Branch
                                             <th rowspan="2">Total (40)</th>
                                             <th rowspan="2">Grade</th>
                                             <th rowspan="2">EXTERNAL EVALUATION (60)</th>
+                                            <th rowspan="2">TOTAL(INT+EXT)</th>
                                         </tr>
                                         <tr>
                                             <th>CIA (10)</th>
@@ -1711,7 +1712,7 @@ Exam Branch
                                                 <input type="text" id="evaluationThreeTotalAverage" class="form-control form-control-sm fw-bold" value="0.0%" readonly aria-label="Total average achieved" />
                                                 <div id="evaluationThreeTotalAverageNote" class="small text-muted mt-1">Must be at least 75%</div>
                                             </td>
-                                            <td></td>
+                                            <td colspan="2"></td>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -5483,7 +5484,15 @@ Exam Branch
                 activeEvaluationSheet === '3' && !hasMarks ? '-' : getGrade(total));
             if (activeEvaluationSheet === '3') {
                 const extCell = row.querySelector('.external-eval');
-                if (extCell) extCell.textContent = hasMarks ? String(Math.round(total * 60 / 40)) : '-';
+                const totalIntExtCell = row.querySelector('.total-int-ext');
+                if (hasMarks) {
+                    const ext = Math.min(60, Math.max(Math.round(total * 60 / 40), Math.max(0, 40 - total)));
+                    if (extCell) extCell.textContent = String(ext);
+                    if (totalIntExtCell) totalIntExtCell.textContent = String(total + ext);
+                } else {
+                    if (extCell) extCell.textContent = '-';
+                    if (totalIntExtCell) totalIntExtCell.textContent = '-';
+                }
             }
 
             if (activeEvaluationSheet === '3') {
@@ -5577,7 +5586,7 @@ Exam Branch
                         + '<td><input type="' + evaluationThreeMarkInputType + '"' + evaluationThreeMarkInputMode + ' min="0" max="10" step="1" class="form-control form-control-sm project" value="' + (student.project || '') + '"></td>'
                         + '<td class="total">-</td>'
                         + '<td class="grade" data-grade="-">-</td>'
-                        + (activeEvaluationSheet === '3' ? '<td class="external-eval">-</td>' : '');
+                        + (activeEvaluationSheet === '3' ? '<td class="external-eval">-</td><td class="total-int-ext">-</td>' : '');
                 } else if (activeEvaluationSheet === '1') {
                     row.innerHTML = ''
                         + '<td><input type="text" class="form-control form-control-sm roll-no" value="' + (student.rollNo || '') + '" /></td>'
