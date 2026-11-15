@@ -357,6 +357,8 @@ Exam Branch
     .exam-branch-page .mid1-desc,
     .exam-branch-page .mid2-desc,
     .exam-branch-page .assignment,
+    .exam-branch-page .assignment1,
+    .exam-branch-page .assignment2,
     .exam-branch-page .viva {
         -moz-appearance: textfield;
         appearance: textfield;
@@ -379,6 +381,10 @@ Exam Branch
     .exam-branch-page .mid2-desc::-webkit-outer-spin-button,
     .exam-branch-page .assignment::-webkit-inner-spin-button,
     .exam-branch-page .assignment::-webkit-outer-spin-button,
+    .exam-branch-page .assignment1::-webkit-inner-spin-button,
+    .exam-branch-page .assignment1::-webkit-outer-spin-button,
+    .exam-branch-page .assignment2::-webkit-inner-spin-button,
+    .exam-branch-page .assignment2::-webkit-outer-spin-button,
     .exam-branch-page .viva::-webkit-inner-spin-button,
     .exam-branch-page .viva::-webkit-outer-spin-button {
         margin: 0;
@@ -1465,12 +1471,12 @@ Exam Branch
                                     <tbody id="marksBody1"></tbody>
                                     <tfoot>
                                         <tr>
-                                            <th colspan="5" class="text-end">MID-1 Average Achieved</th>
+                                            <th colspan="6" class="text-end">MID-1 Average Achieved</th>
                                             <td>
                                                 <input type="text" id="evaluationOneMid1Average" class="form-control form-control-sm fw-bold" value="0.0%" readonly aria-label="MID-1 average achieved" />
                                                 <div id="evaluationOneMid1AverageNote" class="small text-muted mt-1">Must remain below 75%</div>
                                             </td>
-                                            <th colspan="2" class="text-end">MID-2 Average Achieved</th>
+                                            <th colspan="3" class="text-end">MID-2 Average Achieved</th>
                                             <td>
                                                 <input type="text" id="evaluationOneMid2Average" class="form-control form-control-sm fw-bold" value="0.0%" readonly aria-label="MID-2 average achieved" />
                                                 <div id="evaluationOneMid2AverageNote" class="small text-muted mt-1">Must remain below 75%</div>
@@ -5145,9 +5151,11 @@ Exam Branch
                     attendance: index <= activeAttendance.length ? String(activeAttendance[index - 1]) : '',
                     mid1Obj: seedMid1Obj,
                     mid1Desc: '',
+                    assignment1: activeEvaluationSheet === '1' ? seedAssignment : '',
                     mid2Obj: seedMid2Obj,
                     mid2Desc: activeEvaluationSheet === '1' ? '0' : '',
-                    assignment: seedAssignment,
+                    assignment2: activeEvaluationSheet === '1' ? seedAssignment : '',
+                    assignment: activeEvaluationSheet === '1' ? seedAssignment : seedAssignment,
                     viva: seedViva
                 });
             }
@@ -5245,6 +5253,10 @@ Exam Branch
                 recalculateEvaluationThreeRow(row);
                 return;
             }
+            if (activeEvaluationSheet === '1') {
+                recalculateEvaluationOneRow(row);
+                return;
+            }
             const mid1ObjInput = row.querySelector('.mid1-obj');
             const mid1DescInput = row.querySelector('.mid1-desc');
             const mid2ObjInput = row.querySelector('.mid2-obj');
@@ -5331,6 +5343,87 @@ Exam Branch
                 totalCell.removeAttribute('title');
                 totalCell.classList.remove('text-danger', 'fw-bold');
             }
+            setGradeCell(row.querySelector('.grade'), getGrade(total));
+
+            const percentageCell = row.querySelector('.percentage');
+            if (percentageCell) {
+                const percentage = (total / 40 * 100).toFixed(1);
+                percentageCell.textContent = percentage + '%';
+                percentageCell.classList.toggle('text-success', total >= 30);
+                percentageCell.classList.toggle('text-danger', total < 30 && total !== 0);
+            }
+        }
+
+        function recalculateEvaluationOneRow(row) {
+            function parseMark(value, max) {
+                if (value === '' || value === undefined || value === null) return null;
+                if (String(value).trim().toUpperCase() === 'AB') return null;
+                const parsed = parseFloat(String(value).trim());
+                if (isNaN(parsed)) return null;
+                return Math.max(0, Math.min(max, parsed));
+            }
+            function formatMark(value) {
+                if (value === null || value === undefined || value === '') return '';
+                const num = Number(value);
+                if (isNaN(num)) return String(value);
+                if (Number.isInteger(num)) return String(num);
+                return String(parseFloat(num.toFixed(2)));
+            }
+
+            const mid1ObjInput = row.querySelector('.mid1-obj');
+            const mid1DescInput = row.querySelector('.mid1-desc');
+            const assignment1Input = row.querySelector('.assignment1');
+            const mid2ObjInput = row.querySelector('.mid2-obj');
+            const mid2DescInput = row.querySelector('.mid2-desc');
+            const assignment2Input = row.querySelector('.assignment2');
+            const vivaInput = row.querySelector('.viva');
+
+            const mid1Obj = parseMark(mid1ObjInput.value, 10);
+            const mid1Desc = parseMark(mid1DescInput.value, 20);
+            const assignment1 = parseMark(assignment1Input.value, 5);
+            const mid2Obj = parseMark(mid2ObjInput.value, 10);
+            const mid2Desc = parseMark(mid2DescInput.value, 20);
+            const assignment2 = parseMark(assignment2Input.value, 5);
+            const viva = parseMark(vivaInput.value, 5);
+
+            if (mid1ObjInput.value.trim() !== '' && mid1ObjInput.value.trim().toUpperCase() !== 'AB' && mid1Obj !== null) mid1ObjInput.value = formatMark(mid1Obj);
+            if (mid1DescInput.value.trim() !== '' && mid1Desc !== null) mid1DescInput.value = formatMark(mid1Desc);
+            if (assignment1Input.value.trim() !== '' && assignment1 !== null) assignment1Input.value = formatMark(assignment1);
+            if (mid2ObjInput.value.trim() !== '' && mid2ObjInput.value.trim().toUpperCase() !== 'AB' && mid2Obj !== null) mid2ObjInput.value = formatMark(mid2Obj);
+            if (mid2DescInput.value.trim() !== '' && mid2Desc !== null) mid2DescInput.value = formatMark(mid2Desc);
+            if (assignment2Input.value.trim() !== '' && assignment2 !== null) assignment2Input.value = formatMark(assignment2);
+            if (vivaInput.value.trim() !== '' && viva !== null) vivaInput.value = formatMark(viva);
+
+            const inputs = [mid1ObjInput, mid1DescInput, assignment1Input, mid2ObjInput, mid2DescInput, assignment2Input, vivaInput];
+            const hasAnyMarks = inputs.some(function (input) { return input && input.value.trim() !== ''; });
+
+            if (!hasAnyMarks) {
+                row.querySelector('.mid1-total').textContent = '-';
+                row.querySelector('.mid2-total').textContent = '-';
+                row.querySelector('.mid-avg').textContent = '-';
+                row.querySelector('.assignment-avg').textContent = '-';
+                row.querySelector('.total').textContent = '-';
+                const pctCell = row.querySelector('.percentage');
+                if (pctCell) pctCell.textContent = '-';
+                setGradeCell(row.querySelector('.grade'), '-');
+                return;
+            }
+
+            const mid1Total = (mid1Obj || 0) + (mid1Desc || 0);
+            const mid2Total = (mid2Obj || 0) + (mid2Desc || 0);
+            const midAvg = Math.round((mid1Total + mid2Total) / 2);
+            const assignmentAvg = ((assignment1 || 0) + (assignment2 || 0)) / 2;
+            const rawTotal = midAvg + assignmentAvg + (viva || 0);
+            const total = Math.min(Math.ceil(rawTotal), 40);
+
+            row.querySelector('.mid1-total').textContent = String(mid1Total);
+            row.querySelector('.mid2-total').textContent = String(mid2Total);
+            row.querySelector('.mid-avg').textContent = String(midAvg);
+            row.querySelector('.assignment-avg').textContent = formatMark(assignmentAvg);
+            const totalCell = row.querySelector('.total');
+            totalCell.textContent = String(total);
+            totalCell.removeAttribute('title');
+            totalCell.classList.remove('text-danger', 'fw-bold');
             setGradeCell(row.querySelector('.grade'), getGrade(total));
 
             const percentageCell = row.querySelector('.percentage');
@@ -5477,6 +5570,25 @@ Exam Branch
                         + '<td><input type="' + evaluationThreeMarkInputType + '"' + evaluationThreeMarkInputMode + ' min="0" max="10" step="1" class="form-control form-control-sm project" value="' + (student.project || '') + '"></td>'
                         + '<td class="total">-</td>'
                         + '<td class="grade" data-grade="-">-</td>';
+                } else if (activeEvaluationSheet === '1') {
+                    row.innerHTML = ''
+                        + '<td><input type="text" class="form-control form-control-sm roll-no" value="' + (student.rollNo || '') + '" /></td>'
+                        + '<td><input type="text" class="form-control form-control-sm attendance" value="' + (student.attendance ?? '') + '" pattern="[0-9]*"></td>'
+                        + '<td class="attendance-grade" data-grade="-">-</td>'
+                        + '<td><input type="text" class="form-control form-control-sm mid1-obj" value="' + (student.mid1Obj || '') + '"></td>'
+                        + '<td><input type="text" inputmode="decimal" class="form-control form-control-sm mid1-desc" value="' + (student.mid1Desc || '') + '"></td>'
+                        + '<td><input type="text" inputmode="decimal" class="form-control form-control-sm assignment1" value="' + (student.assignment1 ?? '') + '"></td>'
+                        + '<td class="mid1-total">-</td>'
+                        + '<td><input type="text" class="form-control form-control-sm mid2-obj" value="' + (student.mid2Obj || '') + '"></td>'
+                        + '<td><input type="text" inputmode="decimal" class="form-control form-control-sm mid2-desc" value="' + (student.mid2Desc || '') + '"></td>'
+                        + '<td><input type="text" inputmode="decimal" class="form-control form-control-sm assignment2" value="' + (student.assignment2 ?? '') + '"></td>'
+                        + '<td class="mid2-total">-</td>'
+                        + '<td class="mid-avg">-</td>'
+                        + '<td class="assignment-avg">-</td>'
+                        + '<td><input type="text" inputmode="decimal" class="form-control form-control-sm viva" value="' + (student.viva || '') + '"></td>'
+                        + '<td class="total">-</td>'
+                        + '<td class="percentage">-</td>'
+                        + '<td class="grade" data-grade="-">-</td>';
                 } else {
                     row.innerHTML = ''
                         + '<td><input type="text" class="form-control form-control-sm roll-no" value="' + (student.rollNo || '') + '" /></td>'
@@ -5496,19 +5608,28 @@ Exam Branch
                         + '<td class="grade" data-grade="-">-</td>';
                 }
                 currentMarksBody.appendChild(row);
-                row.querySelectorAll('.mid1-desc, .mid2-desc, .assignment, .viva').forEach(function (input) {
-                    input.type = 'text';
-                    input.setAttribute('inputmode', 'numeric');
-                    input.setAttribute('pattern', '[0-9]*');
-                    input.readOnly = activeEvaluationSheet !== '1';
-                    input.disabled = false;
-                    if (activeEvaluationSheet === '1') {
+                if (activeEvaluationSheet === '1') {
+                    row.querySelectorAll('.mid1-obj, .mid1-desc, .assignment1, .mid2-obj, .mid2-desc, .assignment2, .viva').forEach(function (input) {
+                        input.readOnly = false;
+                        input.disabled = false;
                         input.removeAttribute('readonly');
                         input.removeAttribute('disabled');
-                    } else {
-                        input.title = 'Automatically predicted from attendance when Obj, Assignment and Viva marks are entered';
-                    }
-                });
+                    });
+                } else {
+                    row.querySelectorAll('.mid1-desc, .mid2-desc, .assignment, .viva').forEach(function (input) {
+                        input.type = 'text';
+                        input.setAttribute('inputmode', 'numeric');
+                        input.setAttribute('pattern', '[0-9]*');
+                        input.readOnly = activeEvaluationSheet !== '1';
+                        input.disabled = false;
+                        if (activeEvaluationSheet === '1') {
+                            input.removeAttribute('readonly');
+                            input.removeAttribute('disabled');
+                        } else {
+                            input.title = 'Automatically predicted from attendance when Obj, Assignment and Viva marks are entered';
+                        }
+                    });
+                }
                 if (activeEvaluationSheet === '3') {
                     row.querySelectorAll('.mid1-cia, .mid1-viva, .mid1-exam, .mid2-cia, .mid2-viva, .mid2-exam, .project')
                         .forEach(function (input) {
@@ -5550,6 +5671,27 @@ Exam Branch
                         grade: row.querySelector('.grade') ? row.querySelector('.grade').textContent : '-'
                     };
                 }
+                if (evaluationNumber === '1') {
+                    const assignment1Val = row.querySelector('.assignment1') ? row.querySelector('.assignment1').value : '';
+                    const assignment2Val = row.querySelector('.assignment2') ? row.querySelector('.assignment2').value : '';
+                    const assignmentAvgVal = row.querySelector('.assignment-avg') ? row.querySelector('.assignment-avg').textContent : '-';
+                    return {
+                        rollNo: row.querySelector('.roll-no') ? row.querySelector('.roll-no').value : '',
+                        attendance: row.querySelector('.attendance') ? row.querySelector('.attendance').value : '',
+                        attendanceGrade: row.querySelector('.attendance-grade') ? row.querySelector('.attendance-grade').textContent : '-',
+                        mid1Obj: row.querySelector('.mid1-obj') ? row.querySelector('.mid1-obj').value : '',
+                        mid1Desc: row.querySelector('.mid1-desc') ? row.querySelector('.mid1-desc').value : '',
+                        assignment1: assignment1Val,
+                        mid2Obj: row.querySelector('.mid2-obj') ? row.querySelector('.mid2-obj').value : '',
+                        mid2Desc: row.querySelector('.mid2-desc') ? row.querySelector('.mid2-desc').value : '',
+                        assignment2: assignment2Val,
+                        assignment: assignmentAvgVal,
+                        viva: row.querySelector('.viva') ? row.querySelector('.viva').value : '',
+                        total: row.querySelector('.total') ? row.querySelector('.total').textContent : '-',
+                        percentage: row.querySelector('.percentage') ? row.querySelector('.percentage').textContent : '-',
+                        grade: row.querySelector('.grade') ? row.querySelector('.grade').textContent : '-'
+                    };
+                }
                 return {
                     rollNo: row.querySelector('.roll-no') ? row.querySelector('.roll-no').value : '',
                     attendance: row.querySelector('.attendance') ? row.querySelector('.attendance').value : '',
@@ -5579,6 +5721,17 @@ Exam Branch
                         || student.mid2Viva.trim()
                         || student.mid2Exam.trim()
                         || student.project.trim();
+                }
+                if (evaluationNumber === '1') {
+                    return student.rollNo.trim()
+                        || student.attendance.trim()
+                        || student.mid1Obj.trim()
+                        || student.mid1Desc.trim()
+                        || (student.assignment1 && String(student.assignment1).trim())
+                        || student.mid2Obj.trim()
+                        || student.mid2Desc.trim()
+                        || (student.assignment2 && String(student.assignment2).trim())
+                        || student.viva.trim();
                 }
                 return student.rollNo.trim()
                     || student.attendance.trim()
@@ -6300,12 +6453,15 @@ Exam Branch
                     });
                     savedRows = activeRollNumbers.map(function (rollNo, index) {
                         const existing = savedRowsByRollNumber[rollNo.trim().toUpperCase()] || {};
+                        const legacyAssignment = existing.assignment !== undefined ? existing.assignment : '';
                         return Object.assign({
                             attendance: String(activeAttendance[index] ?? ''),
                             mid1Obj: '', mid1Desc: '', mid2Obj: '', mid2Desc: '',
-                            assignment: '', viva: ''
+                            assignment1: '', assignment2: '', assignment: '', viva: ''
                         }, existing, {
-                            rollNo: rollNo
+                            rollNo: rollNo,
+                            assignment1: existing.assignment1 !== undefined && existing.assignment1 !== '' ? existing.assignment1 : legacyAssignment,
+                            assignment2: existing.assignment2 !== undefined && existing.assignment2 !== '' ? existing.assignment2 : legacyAssignment
                         });
                     });
                 }
@@ -6346,10 +6502,12 @@ Exam Branch
                 }
                 if (activeEvaluationSheet === '1' && payload.assignmentMarksVersion !== firstEvaluationAssignmentMarksVersion) {
                     savedRows = savedRows.map(function (student, index) {
-                        if (student.assignment && String(student.assignment).trim()) return student;
+                        if ((student.assignment1 && String(student.assignment1).trim()) || (student.assignment2 && String(student.assignment2).trim())) return student;
                         const seed = firstEvaluationAssignmentMarks[getEvaluationOneSeedIndex(student, index)];
+                        const seedVal = seed === undefined || seed === '' ? '' : String(seed);
                         return Object.assign({}, student, {
-                            assignment: seed === undefined || seed === '' ? '' : String(seed)
+                            assignment1: seedVal,
+                            assignment2: seedVal
                         });
                     });
                 }

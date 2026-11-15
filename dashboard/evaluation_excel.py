@@ -76,15 +76,29 @@ def _validated_rows(sheet_number, rows):
     if not isinstance(rows, list) or not rows or len(rows) > 1000:
         raise EvaluationExportError('The evaluation must contain between 1 and 1000 student rows.')
 
-    fields = (
-        ('attendance', 100000, False),
-        ('mid1Obj', 10, True),
-        ('mid1Desc', 20, False),
-        ('mid2Obj', 10, True),
-        ('mid2Desc', 20, False),
-        ('assignment', 5, False),
-        ('viva', 5, False),
-    ) if sheet_number in {'1', '2'} else (
+    if sheet_number == '1':
+        fields = (
+            ('attendance', 100000, False),
+            ('mid1Obj', 10, True),
+            ('mid1Desc', 20, False),
+            ('assignment1', 5, False),
+            ('mid2Obj', 10, True),
+            ('mid2Desc', 20, False),
+            ('assignment2', 5, False),
+            ('viva', 5, False),
+        )
+    elif sheet_number == '2':
+        fields = (
+            ('attendance', 100000, False),
+            ('mid1Obj', 10, True),
+            ('mid1Desc', 20, False),
+            ('mid2Obj', 10, True),
+            ('mid2Desc', 20, False),
+            ('assignment', 5, False),
+            ('viva', 5, False),
+        )
+    else:
+        fields = (
         ('attendance', 100000, False),
         ('mid1Cia', 10, False),
         ('mid1Viva', 10, False),
@@ -99,13 +113,20 @@ def _validated_rows(sheet_number, rows):
         if not isinstance(row, dict):
             raise EvaluationExportError(f'Student row {index} must be an object.')
         student = {'rollNo': _text(row.get('rollNo'), f'Roll number in row {index}', 64)}
+        if sheet_number == '1':
+            if row.get('assignment1') is None and row.get('assignment2') is None and row.get('assignment') is not None:
+                legacy_assignment = _score(row.get('assignment'), f'assignment in row {index}', 5, allow_decimal=True)
+                row = dict(row)
+                row['assignment1'] = legacy_assignment
+                row['assignment2'] = legacy_assignment
         for field, maximum, allow_absent in fields:
+            allow_decimal = field == 'attendance' or (sheet_number == '1' and field in {'assignment1', 'assignment2'})
             student[field] = _score(
                 row.get(field),
                 f'{field} in row {index}',
                 maximum,
                 allow_absent=allow_absent,
-                allow_decimal=field == 'attendance',
+                allow_decimal=allow_decimal,
             )
         validated.append(student)
     return validated
@@ -161,7 +182,69 @@ def _attendance_formulas(table_name, attendance_column, attendance_grade_column,
 
 
 def _evaluation_columns(sheet_number):
-    if sheet_number in {'1', '2'}:
+    if sheet_number == '1':
+        columns = [
+            'Roll No', 'Attendance', 'Attendance Based Marks Grade',
+            'MID-1 Obj (10)', 'MID-1 Desc (20)', 'ASSIGNMENT - 1', 'MID-1 Total',
+            'MID-2 Obj (10)', 'MID-2 Desc (20)', 'ASSIGNMENT - 2', 'MID-2 Total',
+            'Average MID (30)', 'Assignment (5)', 'Viva (5)',
+            'Total (40)', 'Percentage', 'Grade',
+        ]
+        input_fields = (
+            '[@[MID-1 Obj (10)]],[@[MID-1 Desc (20)]],[@[ASSIGNMENT - 1]],'
+            '[@[MID-2 Obj (10)]],[@[MID-2 Desc (20)]],[@[ASSIGNMENT - 2]],[@[Viva (5)]]'
+        )
+        formulae = {
+            'Attendance Based Marks Grade': (
+                'IF([@Attendance]="","",IF(MAX(Evaluation' + sheet_number
+                + 'Marks[Attendance])=0,"-",IF([@Attendance]/MAX(Evaluation'
+                + sheet_number + 'Marks[Attendance])>=0.9,"O",IF([@Attendance]/MAX(Evaluation'
+                + sheet_number + 'Marks[Attendance])>=0.8,"A+",IF([@Attendance]/MAX(Evaluation'
+                + sheet_number + 'Marks[Attendance])>=0.7,"A",IF([@Attendance]/MAX(Evaluation'
+                + sheet_number + 'Marks[Attendance])>=0.6,"B+",IF([@Attendance]/MAX(Evaluation'
+                + sheet_number + 'Marks[Attendance])>=0.5,"B",IF([@Attendance]/MAX(Evaluation'
+                + sheet_number + 'Marks[Attendance])>=0.4,"P","F"))))))))'
+            ),
+            'MID-1 Total': (
+                'IF([@[Evaluation Entered]]="","",'
+                'SUM([@[MID-1 Obj (10)]],[@[MID-1 Desc (20)]]))'
+            ),
+            'MID-2 Total': (
+                'IF([@[Evaluation Entered]]="","",'
+                'SUM([@[MID-2 Obj (10)]],[@[MID-2 Desc (20)]]))'
+            ),
+            'Average MID (30)': (
+                'IF([@[Evaluation Entered]]="","",'
+                'ROUND((N([@[MID-1 Total]])+N([@[MID-2 Total]]))/2,0))'
+            ),
+            'Assignment (5)': (
+                'IF([@[Evaluation Entered]]="","",'
+                '(N([@[ASSIGNMENT - 1]])+N([@[ASSIGNMENT - 2]]))/2)'
+            ),
+            'Total (40)': (
+                'IF([@[Evaluation Entered]]="","",CEILING(MIN(N([@[Average MID (30)]])'
+                '+N([@[Assignment (5)]])+N([@[Viva (5)]]),40),1))'
+            ),
+            'Percentage': (
+                'IF([@[Total (40)]]="","",[@[Total (40)]]/40)'
+            ),
+            'Grade': (
+                'IF([@[Total (40)]]="","",IF([@[Total (40)]]>=37,"O",'
+                'IF([@[Total (40)]]>=32,"A+",IF([@[Total (40)]]>=28,"A",'
+                'IF([@[Total (40)]]>=24,"B+",IF([@[Total (40)]]>=20,"B",'
+                'IF([@[Total (40)]]>=14,"P","F")))))))'
+            ),
+        }
+        formulae['Evaluation Entered'] = f'IF(COUNTA({input_fields})=0,"",1)'
+        columns.extend(('Evaluation Entered', 'Attendance Rank', 'Allocated Attendance Grade'))
+        formulae.update(_attendance_formulas(
+            f'Evaluation{sheet_number}Marks',
+            'Attendance',
+            'Allocated Attendance Grade',
+            'Attendance Rank',
+        ))
+        return columns, formulae
+    if sheet_number == '2':
         columns = [
             'Roll No', 'Attendance', 'Attendance Based Marks Grade',
             'MID-1 Obj (10)', 'MID-1 Desc (20)', 'MID-1 Total',
@@ -211,14 +294,13 @@ def _evaluation_columns(sheet_number):
             ),
         }
         formulae['Evaluation Entered'] = f'IF(COUNTA({input_fields})=0,"",1)'
-        if sheet_number == '2':
-            formulae['MID-1 Desc (20)'] = (
-                'IF(OR([@Attendance]="",[@[MID-1 Obj (10)]]="",'
-                '[@[MID-2 Obj (10)]]="",[@[Assignment (5)]]="",[@[Viva (5)]]=""),"",'
-                'MIN(16,MAX(ROUND(MAX(0,MIN(100,[@Attendance]))*16/100,0),'
-                '2*(30-[@[Assignment (5)]]-[@[Viva (5)]])-1-[@[MID-1 Obj (10)]])))'
-            )
-            formulae['MID-2 Desc (20)'] = '0'
+        formulae['MID-1 Desc (20)'] = (
+            'IF(OR([@Attendance]="",[@[MID-1 Obj (10)]]="",'
+            '[@[MID-2 Obj (10)]]="",[@[Assignment (5)]]="",[@[Viva (5)]]=""),"",'
+            'MIN(16,MAX(ROUND(MAX(0,MIN(100,[@Attendance]))*16/100,0),'
+            '2*(30-[@[Assignment (5)]]-[@[Viva (5)]])-1-[@[MID-1 Obj (10)]])))'
+        )
+        formulae['MID-2 Desc (20)'] = '0'
         columns.extend(('Evaluation Entered', 'Attendance Rank', 'Allocated Attendance Grade'))
         formulae.update(_attendance_formulas(
             f'Evaluation{sheet_number}Marks',
@@ -391,20 +473,61 @@ def _formula_cache_values(sheet_number, students, columns):
             )
         result['Attendance Based Marks Grade'] = attendance_marks_grade
 
-        if sheet_number in {'1', '2'}:
+        if sheet_number == '1':
+            fields = ('mid1Obj', 'mid1Desc', 'assignment1', 'mid2Obj', 'mid2Desc', 'assignment2', 'viva')
+            entered = any(student[field] is not None for field in fields)
+            mid1_desc = student['mid1Desc']
+            mid2_desc = student['mid2Desc']
+
+            def excel_sum(*values):
+                return sum(value for value in values if isinstance(value, (int, float)))
+
+            mid1_total = excel_sum(student['mid1Obj'], mid1_desc) if entered else ''
+            mid2_total = excel_sum(student['mid2Obj'], mid2_desc) if entered else ''
+            mid_average = _rounded_excel(
+                (
+                    (mid1_total if isinstance(mid1_total, (int, float)) else 0)
+                    + (mid2_total if isinstance(mid2_total, (int, float)) else 0)
+                ) / 2
+            ) if entered else ''
+            assignment_avg = ((student['assignment1'] or 0) + (student['assignment2'] or 0)) / 2 if entered else ''
+            if entered:
+                raw_total = mid_average + assignment_avg + (student['viva'] or 0)
+                total = min(_rounded_excel(raw_total + 0.499999999) if isinstance(raw_total, (int, float)) else raw_total, 40)
+                grade = _grade_for_total(total)
+                percentage = total / 40
+            else:
+                total = grade = percentage = ''
+            result.update({
+                'MID-1 Obj (10)': student['mid1Obj'],
+                'MID-1 Desc (20)': mid1_desc,
+                'ASSIGNMENT - 1': student['assignment1'],
+                'MID-1 Total': mid1_total,
+                'MID-2 Obj (10)': student['mid2Obj'],
+                'MID-2 Desc (20)': mid2_desc,
+                'ASSIGNMENT - 2': student['assignment2'],
+                'MID-2 Total': mid2_total,
+                'Average MID (30)': mid_average,
+                'Assignment (5)': assignment_avg,
+                'Viva (5)': student['viva'],
+                'Total (40)': total,
+                'Percentage': percentage,
+                'Grade': grade,
+                'Evaluation Entered': 1 if entered else '',
+            })
+        elif sheet_number == '2':
             fields = ('mid1Obj', 'mid1Desc', 'mid2Obj', 'mid2Desc', 'assignment', 'viva')
             entered = any(student[field] is not None for field in fields)
             mid1_desc = student['mid1Desc']
             mid2_desc = student['mid2Desc']
-            if sheet_number == '2':
-                mid1_desc = None
-                if all(student[field] is not None for field in (
-                    'attendance', 'mid1Obj', 'mid2Obj', 'assignment', 'viva',
-                )):
-                    target = _rounded_excel(max(0, min(100, student['attendance'])) * 16 / 100)
-                    cap = 2 * (30 - student['assignment'] - student['viva']) - 1 - student['mid1Obj']
-                    mid1_desc = min(16, max(target, cap))
-                mid2_desc = 0
+            mid1_desc = None
+            if all(student[field] is not None for field in (
+                'attendance', 'mid1Obj', 'mid2Obj', 'assignment', 'viva',
+            )):
+                target = _rounded_excel(max(0, min(100, student['attendance'])) * 16 / 100)
+                cap = 2 * (30 - student['assignment'] - student['viva']) - 1 - student['mid1Obj']
+                mid1_desc = min(16, max(target, cap))
+            mid2_desc = 0
 
             def excel_sum(*values):
                 return sum(value for value in values if isinstance(value, (int, float)))
@@ -815,7 +938,28 @@ def create_evaluation_workbook(sheet_number, subject_name, rows):
 
     for row_number, student in enumerate(students, start=5):
         values = [student['rollNo'], student['attendance']]
-        if sheet_number in {'1', '2'}:
+        if sheet_number == '1':
+            values.extend([
+                None,  # Attendance Based Marks Grade
+                student['mid1Obj'],
+                student['mid1Desc'],
+                student['assignment1'],
+                None,  # MID-1 Total
+                student['mid2Obj'],
+                student['mid2Desc'],
+                student['assignment2'],
+                None,  # MID-2 Total
+                None,  # Average MID (30)
+                None,  # Assignment (5)
+                student['viva'],
+                None,  # Total (40)
+                None,  # Percentage
+                None,  # Grade
+                None,  # Evaluation Entered
+                None,  # Attendance Rank
+                None,  # Allocated Attendance Grade
+            ])
+        elif sheet_number == '2':
             values.extend([
                 None,
                 student['mid1Obj'],
@@ -889,10 +1033,11 @@ def create_evaluation_workbook(sheet_number, subject_name, rows):
                 table_name,
                 last_row,
             )
-    if sheet_number in {'1', '2'}:
-        input_columns = {'E': 20, 'H': 20, 'K': 5, 'L': 5}
-        if sheet_number == '2':
-            input_columns = {'K': 5, 'L': 5}
+    if sheet_number == '1':
+        input_columns = {'F': 5, 'J': 5, 'N': 5}  # ASSIGNMENT - 1, ASSIGNMENT - 2, Viva (5)
+        desc_columns = {'E': 20, 'I': 20}
+    elif sheet_number == '2':
+        input_columns = {'K': 5, 'L': 5}
     else:
         input_columns = {'D': 10, 'E': 10, 'F': 10, 'H': 10, 'I': 10, 'J': 10, 'M': 10}
     for column, maximum in input_columns.items():
@@ -903,7 +1048,27 @@ def create_evaluation_workbook(sheet_number, subject_name, rows):
         validation.showErrorMessage = True
         worksheet.add_data_validation(validation)
         validation.add(f'{column}5:{column}1004')
-    if sheet_number in {'1', '2'}:
+    if sheet_number == '1':
+        for column, maximum in desc_columns.items():
+            validation = DataValidation(type='decimal', operator='between', formula1='0', formula2=str(maximum))
+            validation.allow_blank = True
+            validation.error = f'Enter a number from 0 to {maximum}.'
+            validation.errorTitle = 'Invalid mark'
+            validation.showErrorMessage = True
+            worksheet.add_data_validation(validation)
+            validation.add(f'{column}5:{column}1004')
+        for column in ('D', 'H'):
+            validation = DataValidation(
+                type='custom',
+                formula1=f'=OR(AND(ISNUMBER({column}5),{column}5>=0,{column}5<=10),{column}5="AB",{column}5="")',
+                allow_blank=True,
+            )
+            validation.error = 'Enter a mark from 0 to 10 or AB.'
+            validation.errorTitle = 'Invalid objective mark'
+            validation.showErrorMessage = True
+            worksheet.add_data_validation(validation)
+            validation.add(f'{column}5:{column}1004')
+    elif sheet_number == '2':
         for column in ('D', 'G'):
             validation = DataValidation(
                 type='custom',
