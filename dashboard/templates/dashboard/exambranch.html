@@ -1439,8 +1439,9 @@ Exam Branch
                     <!-- Internal Evaluation 1 Section -->
                     <div class="evaluation-section" data-sheet="1" style="display: block;">
                         <div class="exam-table-wrap mb-4">
-                            <div style="background: #e3f2fd; padding: 12px; border-left: 4px solid #1976d2; margin-bottom: 16px; border-radius: 4px;">
+                            <div style="background: #e3f2fd; padding: 12px; border-left: 4px solid #1976d2; margin-bottom: 16px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
                                 <h5 style="margin: 0; color: #1976d2;"><i class="fas fa-graduation-cap me-2"></i>Internal Evaluation 1</h5>
+                                <button type="button" class="btn exam-btn exam-btn-success btn-sm eval-section-save-btn" data-sheet="1"><i class="fas fa-save me-2"></i>Save</button>
                             </div>
                             <div class="exam-card mb-3">
                                 <label for="evaluationSubjectName1" class="form-label fw-bold">Subject Name / Lab Name</label>
@@ -1550,8 +1551,9 @@ Exam Branch
                     <!-- Internal Evaluation 2 Section -->
                     <div class="evaluation-section mt-5" data-sheet="2" style="display: block;">
                         <div class="exam-table-wrap mb-4">
-                            <div style="background: #f3e5f5; padding: 12px; border-left: 4px solid #7b1fa2; margin-bottom: 16px; border-radius: 4px;">
+                            <div style="background: #f3e5f5; padding: 12px; border-left: 4px solid #7b1fa2; margin-bottom: 16px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
                                 <h5 style="margin: 0; color: #7b1fa2;"><i class="fas fa-graduation-cap me-2"></i>Internal Evaluation 2</h5>
+                                <button type="button" class="btn exam-btn exam-btn-success btn-sm eval-section-save-btn" data-sheet="2"><i class="fas fa-save me-2"></i>Save</button>
                             </div>
                             <div class="exam-card mb-3">
                                 <label for="evaluationSubjectName2" class="form-label fw-bold">Subject Name / Lab Name</label>
@@ -1659,8 +1661,9 @@ Exam Branch
                     <!-- Internal Evaluation 3 Section -->
                     <div class="evaluation-section mt-5" data-sheet="3" style="display: block;">
                         <div class="exam-table-wrap mb-4">
-                            <div style="background: #e8f5e9; padding: 12px; border-left: 4px solid #388e3c; margin-bottom: 16px; border-radius: 4px;">
+                            <div style="background: #e8f5e9; padding: 12px; border-left: 4px solid #388e3c; margin-bottom: 16px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
                                 <h5 style="margin: 0; color: #388e3c;"><i class="fas fa-graduation-cap me-2"></i>Internal Evaluation 3</h5>
+                                <button type="button" class="btn exam-btn exam-btn-success btn-sm eval-section-save-btn" data-sheet="3"><i class="fas fa-save me-2"></i>Save</button>
                             </div>
                             <div class="exam-card mb-3">
                                 <label for="evaluationSubjectName3" class="form-label fw-bold">Subject Name / Lab Name</label>
@@ -1780,8 +1783,9 @@ Exam Branch
                     <!-- Internal Evaluation 4 Section -->
                     <div class="evaluation-section mt-5" data-sheet="4" style="display: block;">
                         <div class="exam-table-wrap mb-4">
-                            <div style="background: #e8f5e9; padding: 12px; border-left: 4px solid #388e3c; margin-bottom: 16px; border-radius: 4px;">
+                            <div style="background: #e8f5e9; padding: 12px; border-left: 4px solid #388e3c; margin-bottom: 16px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
                                 <h5 style="margin: 0; color: #388e3c;"><i class="fas fa-graduation-cap me-2"></i>Internal Evaluation 4</h5>
+                                <button type="button" class="btn exam-btn exam-btn-success btn-sm eval-section-save-btn" data-sheet="4"><i class="fas fa-save me-2"></i>Save</button>
                             </div>
                             <div class="exam-card mb-3">
                                 <label for="evaluationSubjectName4" class="form-label fw-bold">Subject Name / Lab Name</label>
@@ -6447,23 +6451,34 @@ Exam Branch
             );
         }
 
+        function saveEvaluationSheetData(sheetNumber) {
+            const evaluationNumber = sheetNumber || activeEvaluationSheet;
+            const previousActiveSheet = activeEvaluationSheet;
+            activeEvaluationSheet = evaluationNumber;
+            try {
+                const subjectNameInput = evaluationSubjectNameMap[evaluationNumber];
+                const payload = {
+                    studentCount: document.getElementById('studentCount') ? document.getElementById('studentCount').value : '',
+                    subjectName: subjectNameInput ? subjectNameInput.value.trim() : '',
+                    attendanceVersion: evaluationAttendanceVersion,
+                    objectiveMarksVersion: evaluationNumber === '1' ? firstEvaluationObjectiveMarksVersion
+                        : (evaluationNumber === '2' ? secondEvaluationObjectiveMarksVersion : 0),
+                    assignmentMarksVersion: evaluationNumber === '1' ? firstEvaluationAssignmentMarksVersion : 0,
+                    mid2ObjMarksVersion: evaluationNumber === '1' ? firstEvaluationMid2ObjectiveMarksVersion : 0,
+                    vivaMarksVersion: evaluationNumber === '1' ? firstEvaluationVivaMarksVersion : 0,
+                    rows: getEvaluationRows(evaluationNumber),
+                    savedAt: new Date().toISOString()
+                };
+                localStorage.setItem(getActiveEvaluationStorageKey(), JSON.stringify(payload));
+                setStatus(evaluationSaveStatus, 'Internal Evaluation ' + evaluationNumber
+                    + ' saved at ' + formatSavedTime(payload.savedAt), 'success');
+            } finally {
+                activeEvaluationSheet = previousActiveSheet;
+            }
+        }
+
         function saveEvaluationData() {
-            const subjectNameInput = evaluationSubjectNameMap[activeEvaluationSheet];
-            const payload = {
-                studentCount: document.getElementById('studentCount').value,
-                subjectName: subjectNameInput ? subjectNameInput.value.trim() : '',
-                attendanceVersion: evaluationAttendanceVersion,
-                objectiveMarksVersion: activeEvaluationSheet === '1' ? firstEvaluationObjectiveMarksVersion
-                    : (activeEvaluationSheet === '2' ? secondEvaluationObjectiveMarksVersion : 0),
-                assignmentMarksVersion: activeEvaluationSheet === '1' ? firstEvaluationAssignmentMarksVersion : 0,
-                mid2ObjMarksVersion: activeEvaluationSheet === '1' ? firstEvaluationMid2ObjectiveMarksVersion : 0,
-                vivaMarksVersion: activeEvaluationSheet === '1' ? firstEvaluationVivaMarksVersion : 0,
-                rows: getEvaluationRows(),
-                savedAt: new Date().toISOString()
-            };
-            localStorage.setItem(getActiveEvaluationStorageKey(), JSON.stringify(payload));
-            setStatus(evaluationSaveStatus, 'Internal Evaluation ' + activeEvaluationSheet
-                + ' saved at ' + formatSavedTime(payload.savedAt), 'success');
+            saveEvaluationSheetData(activeEvaluationSheet);
         }
 
         function loadEvaluationData() {
@@ -10580,6 +10595,12 @@ Exam Branch
 
         document.getElementById('addStudentsBtn').addEventListener('click', regenerateStudentSheet);
         document.getElementById('evalSaveBtn').addEventListener('click', saveEvaluationData);
+        document.querySelectorAll('.eval-section-save-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const sheet = btn.getAttribute('data-sheet');
+                if (sheet) saveEvaluationSheetData(sheet);
+            });
+        });
         document.getElementById('evalClearBtn').addEventListener('click', clearEvaluationData);
         const evaluationDownloadModal = document.getElementById('evaluationDownloadModal');
         // Keep the modal above Bootstrap's body-level backdrop and outside .exam-shell's stacking context.
