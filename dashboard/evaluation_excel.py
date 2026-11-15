@@ -380,7 +380,7 @@ def _evaluation_columns(sheet_number):
     if sheet_number == '3':
         formulae['EXTERNAL EVALUATION (60)'] = (
             'IF([@[Total (40)]]="","",'
-            'MIN(60,MAX(ROUND(N([@[Total (40)]])*60/40,0),MAX(0,40-N([@[Total (40)]])))))'
+            'MIN(60,MAX(ROUND(N([@[Total (40)]])*60/40+3,0),MAX(0,40-N([@[Total (40)]])))))'
         )
         formulae['TOTAL(INT+EXT)'] = (
             'IF([@[Total (40)]]="","",N([@[Total (40)]])+N([@[EXTERNAL EVALUATION (60)]]))'
@@ -622,7 +622,7 @@ def _formula_cache_values(sheet_number, students, columns):
             })
             if sheet_number == '3':
                 if isinstance(total, (int, float)):
-                    ext = min(60, max(_rounded_excel(total * 60 / 40), max(0, 40 - int(total))))
+                    ext = min(60, max(_rounded_excel(total * 60 / 40 + 3), max(0, 40 - int(total))))
                     result['EXTERNAL EVALUATION (60)'] = ext
                     result['TOTAL(INT+EXT)'] = total + ext
                 else:
