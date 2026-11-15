@@ -373,11 +373,11 @@ def _evaluation_columns(sheet_number):
             'IF([@[Total (40)]]="","",'
             'MIN(60,MAX(ROUND(N([@[Total (40)]])*60/40+3,0),MAX(0,40-N([@[Total (40)]])))))'
         )
-        formulae['Write-up 10'] = 'IF([@[EXTERNAL EVALUATION (60)]]="","",MIN(10,N([@[EXTERNAL EVALUATION (60)]])))'
-        formulae['Experiment / Program 15'] = 'IF([@[EXTERNAL EVALUATION (60)]]="","",MAX(0,MIN(15,N([@[EXTERNAL EVALUATION (60)]])-10)))'
-        formulae['Evaluation of Results 15'] = 'IF([@[EXTERNAL EVALUATION (60)]]="","",MAX(0,MIN(15,N([@[EXTERNAL EVALUATION (60)]])-25)))'
-        formulae['Presentation 10'] = 'IF([@[EXTERNAL EVALUATION (60)]]="","",MAX(0,MIN(10,N([@[EXTERNAL EVALUATION (60)]])-40)))'
-        formulae['Viva-Voce 10'] = 'IF([@[EXTERNAL EVALUATION (60)]]="","",MAX(0,MIN(10,N([@[EXTERNAL EVALUATION (60)]])-50)))'
+        formulae['Write-up 10'] = 'IF([@[EXTERNAL EVALUATION (60)]]="","",MIN(10,MAX(1,N([@[EXTERNAL EVALUATION (60)]])-4)))'
+        formulae['Experiment / Program 15'] = 'IF([@[EXTERNAL EVALUATION (60)]]="","",MIN(15,MAX(1,N([@[EXTERNAL EVALUATION (60)]])-N([@[Write-up 10]])-3)))'
+        formulae['Evaluation of Results 15'] = 'IF([@[EXTERNAL EVALUATION (60)]]="","",MIN(15,MAX(1,N([@[EXTERNAL EVALUATION (60)]])-N([@[Write-up 10]])-N([@[Experiment / Program 15]])-2)))'
+        formulae['Presentation 10'] = 'IF([@[EXTERNAL EVALUATION (60)]]="","",MIN(10,MAX(1,N([@[EXTERNAL EVALUATION (60)]])-N([@[Write-up 10]])-N([@[Experiment / Program 15]])-N([@[Evaluation of Results 15]])-1)))'
+        formulae['Viva-Voce 10'] = 'IF([@[EXTERNAL EVALUATION (60)]]="","",N([@[EXTERNAL EVALUATION (60)]])-N([@[Write-up 10]])-N([@[Experiment / Program 15]])-N([@[Evaluation of Results 15]])-N([@[Presentation 10]]))'
         formulae['TOTAL(INT+EXT)'] = (
             'IF([@[Total (40)]]="","",N([@[Total (40)]])+N([@[EXTERNAL EVALUATION (60)]]))'
         )
@@ -620,11 +620,16 @@ def _formula_cache_values(sheet_number, students, columns):
                 if isinstance(total, (int, float)):
                     ext = min(60, max(_rounded_excel(total * 60 / 40 + 3), max(0, 40 - int(total))))
                     result['EXTERNAL EVALUATION (60)'] = ext
-                    result['Write-up 10'] = min(10, ext)
-                    result['Experiment / Program 15'] = max(0, min(15, ext - 10))
-                    result['Evaluation of Results 15'] = max(0, min(15, ext - 25))
-                    result['Presentation 10'] = max(0, min(10, ext - 40))
-                    result['Viva-Voce 10'] = max(0, min(10, ext - 50))
+                    w = min(10, max(1, ext - 4))
+                    eprog = min(15, max(1, ext - w - 3))
+                    eres = min(15, max(1, ext - w - eprog - 2))
+                    pres = min(10, max(1, ext - w - eprog - eres - 1))
+                    viva_e = ext - w - eprog - eres - pres
+                    result['Write-up 10'] = w
+                    result['Experiment / Program 15'] = eprog
+                    result['Evaluation of Results 15'] = eres
+                    result['Presentation 10'] = pres
+                    result['Viva-Voce 10'] = viva_e
                     result['TOTAL(INT+EXT)'] = total + ext
                 else:
                     result['EXTERNAL EVALUATION (60)'] = ''

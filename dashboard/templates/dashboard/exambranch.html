@@ -5500,11 +5500,16 @@ Exam Branch
                 if (hasMarks) {
                     const ext = Math.min(60, Math.max(Math.round(total * 60 / 40 + 3), Math.max(0, 40 - total)));
                     if (extCell) extCell.textContent = String(ext);
-                    if (writeupCell) writeupCell.textContent = String(Math.min(10, ext));
-                    if (experimentCell) experimentCell.textContent = String(Math.max(0, Math.min(15, ext - 10)));
-                    if (evalResultsCell) evalResultsCell.textContent = String(Math.max(0, Math.min(15, ext - 25)));
-                    if (presentationCell) presentationCell.textContent = String(Math.max(0, Math.min(10, ext - 40)));
-                    if (vivaCell) vivaCell.textContent = String(Math.max(0, Math.min(10, ext - 50)));
+                    const w = Math.min(10, Math.max(1, ext - 4));
+                    const eprog = Math.min(15, Math.max(1, ext - w - 3));
+                    const eres = Math.min(15, Math.max(1, ext - w - eprog - 2));
+                    const pres = Math.min(10, Math.max(1, ext - w - eprog - eres - 1));
+                    const vivaE = ext - w - eprog - eres - pres;
+                    if (writeupCell) writeupCell.textContent = String(w);
+                    if (experimentCell) experimentCell.textContent = String(eprog);
+                    if (evalResultsCell) evalResultsCell.textContent = String(eres);
+                    if (presentationCell) presentationCell.textContent = String(pres);
+                    if (vivaCell) vivaCell.textContent = String(vivaE);
                     if (totalIntExtCell) totalIntExtCell.textContent = String(total + ext);
                 } else {
                     if (extCell) extCell.textContent = '-';
