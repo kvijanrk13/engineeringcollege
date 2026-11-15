@@ -5085,6 +5085,15 @@ Exam Branch
             0, 67, 61, 78, 83, 61, 89, 94, 72, 89,
             89, 78
         ];
+        const fourthEvaluationProjectMarks = [
+            5, 4, 5, 4, 5, 4, 5, 4, 4, 0,
+            5, 4, 5, 5, 4, 5, 4, 5, 5, 4,
+            5, 4, 4, 5, 4, 5, 5, 5, 4, 4,
+            5, 4, 5, 5, 4, 0, 0, 0, 5, 4,
+            4, 0, 4, 4, 5, 5, 4, 5, 4, 4,
+            0, 4, 4, 4, 5, 4, 4, 4, 5, 4,
+            5, 4
+        ];
         const evaluationAttendanceVersion = 9;
         const secondEvaluationObjectiveMarksVersion = 1;
 
@@ -5154,6 +5163,9 @@ Exam Branch
                     && firstEvaluationVivaMarks[evaluationOneSeedIndex] !== '')
                     ? String(firstEvaluationVivaMarks[evaluationOneSeedIndex]) : '';
                 if (activeEvaluationSheet === '3' || activeEvaluationSheet === '4') {
+                    const seedProject = activeEvaluationSheet === '4'
+                        ? (fourthEvaluationProjectMarks[index - 1] !== undefined ? String(fourthEvaluationProjectMarks[index - 1]) : '')
+                        : '';
                     students.push({
                         rollNo: activeRollNumbers[index - 1] || '',
                         attendance: index <= activeAttendance.length ? String(activeAttendance[index - 1]) : '',
@@ -5163,7 +5175,7 @@ Exam Branch
                         mid2Cia: '',
                         mid2Viva: '',
                         mid2Exam: '',
-                        project: ''
+                        project: seedProject
                     });
                     continue;
                 }
