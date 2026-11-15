@@ -5094,6 +5094,7 @@ Exam Branch
             0, 4, 4, 4, 5, 4, 4, 4, 5, 4,
             5, 4
         ];
+        const fourthEvaluationProjectMarksVersion = 1;
         const evaluationAttendanceVersion = 9;
         const secondEvaluationObjectiveMarksVersion = 1;
 
@@ -6478,6 +6479,7 @@ Exam Branch
                     assignmentMarksVersion: evaluationNumber === '1' ? firstEvaluationAssignmentMarksVersion : 0,
                     mid2ObjMarksVersion: evaluationNumber === '1' ? firstEvaluationMid2ObjectiveMarksVersion : 0,
                     vivaMarksVersion: evaluationNumber === '1' ? firstEvaluationVivaMarksVersion : 0,
+                    projectMarksVersion: evaluationNumber === '4' ? fourthEvaluationProjectMarksVersion : 0,
                     rows: getEvaluationRows(evaluationNumber),
                     savedAt: new Date().toISOString()
                 };
@@ -6623,6 +6625,29 @@ Exam Branch
                         }, existing, {
                             rollNo: rollNo,
                             attendance: activeAttendance[index] === undefined ? '' : String(activeAttendance[index])
+                        });
+                    });
+                }
+                if (activeEvaluationSheet === '4') {
+                    const savedRowsByRollNumber = {};
+                    savedRows.forEach(function (student) {
+                        const rollNo = String(student.rollNo || '').trim().toUpperCase();
+                        if (rollNo) savedRowsByRollNumber[rollNo] = student;
+                    });
+                    savedRows = activeRollNumbers.map(function (rollNo, index) {
+                        const existing = savedRowsByRollNumber[String(rollNo).trim().toUpperCase()] || {};
+                        const seededProject = fourthEvaluationProjectMarks[index] !== undefined ? String(fourthEvaluationProjectMarks[index]) : '';
+                        const projectVal = payload.projectMarksVersion === fourthEvaluationProjectMarksVersion
+                            ? (existing.project !== undefined && existing.project !== '' ? existing.project : seededProject)
+                            : seededProject;
+                        return Object.assign({
+                            attendance: activeAttendance[index] === undefined ? '' : String(activeAttendance[index]),
+                            mid1Cia: '', mid1Viva: '', mid1Exam: '',
+                            mid2Cia: '', mid2Viva: '', mid2Exam: '', project: ''
+                        }, existing, {
+                            rollNo: rollNo,
+                            attendance: activeAttendance[index] === undefined ? '' : String(activeAttendance[index]),
+                            project: projectVal
                         });
                     });
                 }
