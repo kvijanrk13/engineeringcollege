@@ -1681,6 +1681,11 @@ Exam Branch
                                             <th rowspan="2">Total (40)</th>
                                             <th rowspan="2">Grade</th>
                                             <th rowspan="2">EXTERNAL EVALUATION (60)</th>
+                                            <th rowspan="2">Write-up 10</th>
+                                            <th rowspan="2">Experiment / Program 15</th>
+                                            <th rowspan="2">Evaluation of Results 15</th>
+                                            <th rowspan="2">Presentation 10</th>
+                                            <th rowspan="2">Viva-Voce 10</th>
                                             <th rowspan="2">TOTAL(INT+EXT)</th>
                                         </tr>
                                         <tr>
@@ -1712,7 +1717,7 @@ Exam Branch
                                                 <input type="text" id="evaluationThreeTotalAverage" class="form-control form-control-sm fw-bold" value="0.0%" readonly aria-label="Total average achieved" />
                                                 <div id="evaluationThreeTotalAverageNote" class="small text-muted mt-1">Must be at least 75%</div>
                                             </td>
-                                            <td colspan="2"></td>
+                                            <td colspan="7"></td>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -1828,7 +1833,7 @@ Exam Branch
                                                 <input type="text" id="evaluationFourTotalAverage" class="form-control form-control-sm fw-bold" value="0.0%" readonly aria-label="Total average achieved" />
                                                 <div id="evaluationFourTotalAverageNote" class="small text-muted mt-1">Must be at least 75%</div>
                                             </td>
-                                            <td colspan="2"></td>
+                                            <td colspan="7"></td>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -5486,13 +5491,28 @@ Exam Branch
                 (activeEvaluationSheet === '3' || activeEvaluationSheet === '4') && !hasMarks ? '-' : getGrade(total));
             if (activeEvaluationSheet === '3' || activeEvaluationSheet === '4') {
                 const extCell = row.querySelector('.external-eval');
+                const writeupCell = row.querySelector('.ext-writeup');
+                const experimentCell = row.querySelector('.ext-experiment');
+                const evalResultsCell = row.querySelector('.ext-evaluation-results');
+                const presentationCell = row.querySelector('.ext-presentation');
+                const vivaCell = row.querySelector('.ext-viva');
                 const totalIntExtCell = row.querySelector('.total-int-ext');
                 if (hasMarks) {
                     const ext = Math.min(60, Math.max(Math.round(total * 60 / 40 + 3), Math.max(0, 40 - total)));
                     if (extCell) extCell.textContent = String(ext);
+                    if (writeupCell) writeupCell.textContent = String(Math.min(10, ext));
+                    if (experimentCell) experimentCell.textContent = String(Math.max(0, Math.min(15, ext - 10)));
+                    if (evalResultsCell) evalResultsCell.textContent = String(Math.max(0, Math.min(15, ext - 25)));
+                    if (presentationCell) presentationCell.textContent = String(Math.max(0, Math.min(10, ext - 40)));
+                    if (vivaCell) vivaCell.textContent = String(Math.max(0, Math.min(10, ext - 50)));
                     if (totalIntExtCell) totalIntExtCell.textContent = String(total + ext);
                 } else {
                     if (extCell) extCell.textContent = '-';
+                    if (writeupCell) writeupCell.textContent = '-';
+                    if (experimentCell) experimentCell.textContent = '-';
+                    if (evalResultsCell) evalResultsCell.textContent = '-';
+                    if (presentationCell) presentationCell.textContent = '-';
+                    if (vivaCell) vivaCell.textContent = '-';
                     if (totalIntExtCell) totalIntExtCell.textContent = '-';
                 }
             }
@@ -5588,7 +5608,9 @@ Exam Branch
                         + '<td><input type="' + evaluationThreeMarkInputType + '"' + evaluationThreeMarkInputMode + ' min="0" max="10" step="1" class="form-control form-control-sm project" value="' + (student.project || '') + '"></td>'
                         + '<td class="total">-</td>'
                         + '<td class="grade" data-grade="-">-</td>'
-                        + ((activeEvaluationSheet === '3' || activeEvaluationSheet === '4') ? '<td class="external-eval">-</td><td class="total-int-ext">-</td>' : '');
+                        + ((activeEvaluationSheet === '3' || activeEvaluationSheet === '4')
+                            ? '<td class="external-eval">-</td><td class="ext-writeup">-</td><td class="ext-experiment">-</td><td class="ext-evaluation-results">-</td><td class="ext-presentation">-</td><td class="ext-viva">-</td><td class="total-int-ext">-</td>'
+                            : '');
                 } else if (activeEvaluationSheet === '1') {
                     row.innerHTML = ''
                         + '<td><input type="text" class="form-control form-control-sm roll-no" value="' + (student.rollNo || '') + '" /></td>'

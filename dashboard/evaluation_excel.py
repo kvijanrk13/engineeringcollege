@@ -317,8 +317,15 @@ def _evaluation_columns(sheet_number):
         'Average MID (30)', 'PROJECT (10)', 'Total (40)', 'Grade',
     ]
     if sheet_number in {'3', '4'}:
-        columns.append('EXTERNAL EVALUATION (60)')
-        columns.append('TOTAL(INT+EXT)')
+        columns.extend([
+            'EXTERNAL EVALUATION (60)',
+            'Write-up 10',
+            'Experiment / Program 15',
+            'Evaluation of Results 15',
+            'Presentation 10',
+            'Viva-Voce 10',
+            'TOTAL(INT+EXT)',
+        ])
     formulae = {
         'Attendance Based Marks Grade': (
             'IF([@Attendance]="","",IF(MAX(Evaluation' + sheet_number
@@ -366,6 +373,11 @@ def _evaluation_columns(sheet_number):
             'IF([@[Total (40)]]="","",'
             'MIN(60,MAX(ROUND(N([@[Total (40)]])*60/40+3,0),MAX(0,40-N([@[Total (40)]])))))'
         )
+        formulae['Write-up 10'] = 'IF([@[EXTERNAL EVALUATION (60)]]="","",MIN(10,N([@[EXTERNAL EVALUATION (60)]])))'
+        formulae['Experiment / Program 15'] = 'IF([@[EXTERNAL EVALUATION (60)]]="","",MAX(0,MIN(15,N([@[EXTERNAL EVALUATION (60)]])-10)))'
+        formulae['Evaluation of Results 15'] = 'IF([@[EXTERNAL EVALUATION (60)]]="","",MAX(0,MIN(15,N([@[EXTERNAL EVALUATION (60)]])-25)))'
+        formulae['Presentation 10'] = 'IF([@[EXTERNAL EVALUATION (60)]]="","",MAX(0,MIN(10,N([@[EXTERNAL EVALUATION (60)]])-40)))'
+        formulae['Viva-Voce 10'] = 'IF([@[EXTERNAL EVALUATION (60)]]="","",MAX(0,MIN(10,N([@[EXTERNAL EVALUATION (60)]])-50)))'
         formulae['TOTAL(INT+EXT)'] = (
             'IF([@[Total (40)]]="","",N([@[Total (40)]])+N([@[EXTERNAL EVALUATION (60)]]))'
         )
@@ -608,9 +620,19 @@ def _formula_cache_values(sheet_number, students, columns):
                 if isinstance(total, (int, float)):
                     ext = min(60, max(_rounded_excel(total * 60 / 40 + 3), max(0, 40 - int(total))))
                     result['EXTERNAL EVALUATION (60)'] = ext
+                    result['Write-up 10'] = min(10, ext)
+                    result['Experiment / Program 15'] = max(0, min(15, ext - 10))
+                    result['Evaluation of Results 15'] = max(0, min(15, ext - 25))
+                    result['Presentation 10'] = max(0, min(10, ext - 40))
+                    result['Viva-Voce 10'] = max(0, min(10, ext - 50))
                     result['TOTAL(INT+EXT)'] = total + ext
                 else:
                     result['EXTERNAL EVALUATION (60)'] = ''
+                    result['Write-up 10'] = ''
+                    result['Experiment / Program 15'] = ''
+                    result['Evaluation of Results 15'] = ''
+                    result['Presentation 10'] = ''
+                    result['Viva-Voce 10'] = ''
                     result['TOTAL(INT+EXT)'] = ''
         row_results.append(result)
 
@@ -995,10 +1017,15 @@ def create_evaluation_workbook(sheet_number, subject_name, rows):
                 None,  # MID-2 Entered
             ])
             if sheet_number in {'3', '4'}:
-                # Insert EXTERNAL EVALUATION (60) after Grade (col 15, index 14)
-                values.insert(14, None)
-                # Insert TOTAL(INT+EXT) after EXTERNAL EVALUATION (60) (col 16, index 15)
-                values.insert(15, None)
+                # Insert EXTERNAL EVALUATION (60) and its 5 breakdown fields after Grade (col 15, index 14)
+                values.insert(14, None)  # EXTERNAL EVALUATION (60)
+                values.insert(15, None)  # Write-up 10
+                values.insert(16, None)  # Experiment / Program 15
+                values.insert(17, None)  # Evaluation of Results 15
+                values.insert(18, None)  # Presentation 10
+                values.insert(19, None)  # Viva-Voce 10
+                # Insert TOTAL(INT+EXT) after Viva-Voce 10 (col 21, index 20)
+                values.insert(20, None)
         for column_number, value in enumerate(values, start=1):
             cell = worksheet.cell(row=row_number, column=column_number, value=value)
             if column_number == 1:
