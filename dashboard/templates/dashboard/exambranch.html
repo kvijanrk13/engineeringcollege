@@ -1796,6 +1796,8 @@ Exam Branch
                                             <th rowspan="2">PROJECT (10)</th>
                                             <th rowspan="2">Total (40)</th>
                                             <th rowspan="2">Grade</th>
+                                            <th rowspan="2">EXTERNAL EVALUATION (60)</th>
+                                            <th rowspan="2">TOTAL(INT+EXT)</th>
                                         </tr>
                                         <tr>
                                             <th>CIA (10)</th>
@@ -1821,12 +1823,12 @@ Exam Branch
                                                 <input type="text" id="evaluationFourMid2Average" class="form-control form-control-sm fw-bold" value="0.0%" readonly aria-label="MID-2 average achieved" />
                                                 <div id="evaluationFourMid2AverageNote" class="small text-muted mt-1">Must remain below 75%</div>
                                             </td>
-                                            <th colspan="2" class="text-end">Total Average Achieved</th>
+                                            <th colspan="3" class="text-end">Total Average Achieved</th>
                                             <td>
                                                 <input type="text" id="evaluationFourTotalAverage" class="form-control form-control-sm fw-bold" value="0.0%" readonly aria-label="Total average achieved" />
                                                 <div id="evaluationFourTotalAverageNote" class="small text-muted mt-1">Must be at least 75%</div>
                                             </td>
-                                            <td></td>
+                                            <td colspan="2"></td>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -5481,8 +5483,8 @@ Exam Branch
                 totalCell.classList.add('text-danger', 'fw-bold');
             }
             setGradeCell(row.querySelector('.grade'),
-                activeEvaluationSheet === '3' && !hasMarks ? '-' : getGrade(total));
-            if (activeEvaluationSheet === '3') {
+                (activeEvaluationSheet === '3' || activeEvaluationSheet === '4') && !hasMarks ? '-' : getGrade(total));
+            if (activeEvaluationSheet === '3' || activeEvaluationSheet === '4') {
                 const extCell = row.querySelector('.external-eval');
                 const totalIntExtCell = row.querySelector('.total-int-ext');
                 if (hasMarks) {
@@ -5586,7 +5588,7 @@ Exam Branch
                         + '<td><input type="' + evaluationThreeMarkInputType + '"' + evaluationThreeMarkInputMode + ' min="0" max="10" step="1" class="form-control form-control-sm project" value="' + (student.project || '') + '"></td>'
                         + '<td class="total">-</td>'
                         + '<td class="grade" data-grade="-">-</td>'
-                        + (activeEvaluationSheet === '3' ? '<td class="external-eval">-</td><td class="total-int-ext">-</td>' : '');
+                        + ((activeEvaluationSheet === '3' || activeEvaluationSheet === '4') ? '<td class="external-eval">-</td><td class="total-int-ext">-</td>' : '');
                 } else if (activeEvaluationSheet === '1') {
                     row.innerHTML = ''
                         + '<td><input type="text" class="form-control form-control-sm roll-no" value="' + (student.rollNo || '') + '" /></td>'

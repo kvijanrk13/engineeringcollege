@@ -316,7 +316,7 @@ def _evaluation_columns(sheet_number):
         'MID-2 CIA (10)', 'MID-2 VIVA (10)', 'MID-2 EXAM (10)', 'MID-2 Total',
         'Average MID (30)', 'PROJECT (10)', 'Total (40)', 'Grade',
     ]
-    if sheet_number == '3':
+    if sheet_number in {'3', '4'}:
         columns.append('EXTERNAL EVALUATION (60)')
         columns.append('TOTAL(INT+EXT)')
     formulae = {
@@ -331,38 +331,26 @@ def _evaluation_columns(sheet_number):
             + sheet_number + 'Marks[Attendance])>=0.4,"P","F"))))))))'
         ),
         'MID-1 Total': (
-            (
-                'IF(COUNTA([@[MID-1 CIA (10)]],[@[MID-1 VIVA (10)]],'
-                '[@[MID-1 EXAM (10)]])=0,"",'
-                'SUM([@[MID-1 CIA (10)]],[@[MID-1 VIVA (10)]],[@[MID-1 EXAM (10)]]))'
-                if sheet_number == '3'
-                else 'SUM([@[MID-1 CIA (10)]],[@[MID-1 VIVA (10)]],[@[MID-1 EXAM (10)]])'
-            )
+            'IF(COUNTA([@[MID-1 CIA (10)]],[@[MID-1 VIVA (10)]],'
+            '[@[MID-1 EXAM (10)]])=0,"",'
+            'SUM([@[MID-1 CIA (10)]],[@[MID-1 VIVA (10)]],[@[MID-1 EXAM (10)]]))'
         ),
         'MID-2 Total': (
-            (
-                'IF(COUNTA([@[MID-2 CIA (10)]],[@[MID-2 VIVA (10)]],'
-                '[@[MID-2 EXAM (10)]])=0,"",'
-                'SUM([@[MID-2 CIA (10)]],[@[MID-2 VIVA (10)]],[@[MID-2 EXAM (10)]]))'
-                if sheet_number == '3'
-                else 'SUM([@[MID-2 CIA (10)]],[@[MID-2 VIVA (10)]],[@[MID-2 EXAM (10)]])'
-            )
+            'IF(COUNTA([@[MID-2 CIA (10)]],[@[MID-2 VIVA (10)]],'
+            '[@[MID-2 EXAM (10)]])=0,"",'
+            'SUM([@[MID-2 CIA (10)]],[@[MID-2 VIVA (10)]],[@[MID-2 EXAM (10)]]))'
         ),
         'Average MID (30)': (
             'IF(COUNTA([@[MID-1 CIA (10)]],[@[MID-1 VIVA (10)]],'
             '[@[MID-1 EXAM (10)]],[@[MID-2 CIA (10)]],[@[MID-2 VIVA (10)]],'
             '[@[MID-2 EXAM (10)]])=0,"",'
             'ROUND((N([@[MID-1 Total]])+N([@[MID-2 Total]]))/2,0))'
-            if sheet_number == '3'
-            else 'ROUND(([@[MID-1 Total]]+[@[MID-2 Total]])/2,0)'
         ),
         'Total (40)': (
             'IF(COUNTA([@[MID-1 CIA (10)]],[@[MID-1 VIVA (10)]],'
             '[@[MID-1 EXAM (10)]],[@[MID-2 CIA (10)]],[@[MID-2 VIVA (10)]],'
             '[@[MID-2 EXAM (10)]],[@[PROJECT (10)]])=0,"",'
             'MIN(N([@[Average MID (30)]])+N([@[PROJECT (10)]]),40))'
-            if sheet_number == '3'
-            else 'MIN([@[Average MID (30)]]+N([@[PROJECT (10)]]),40)'
         ),
         'Grade': (
             'IF(COUNTA([@[MID-1 CIA (10)]],[@[MID-1 VIVA (10)]],'
@@ -371,13 +359,9 @@ def _evaluation_columns(sheet_number):
             'IF([@[Total (40)]]>=37,"O",IF([@[Total (40)]]>=32,"A+",'
             'IF([@[Total (40)]]>=28,"A",IF([@[Total (40)]]>=24,"B+",'
             'IF([@[Total (40)]]>=20,"B",IF([@[Total (40)]]>=14,"P","F")))))))'
-            if sheet_number == '3'
-            else 'IF([@[Total (40)]]>=37,"O",IF([@[Total (40)]]>=32,"A+",'
-            'IF([@[Total (40)]]>=28,"A",IF([@[Total (40)]]>=24,"B+",'
-            'IF([@[Total (40)]]>=20,"B",IF([@[Total (40)]]>=14,"P","F"))))))'
         ),
     }
-    if sheet_number == '3':
+    if sheet_number in {'3', '4'}:
         formulae['EXTERNAL EVALUATION (60)'] = (
             'IF([@[Total (40)]]="","",'
             'MIN(60,MAX(ROUND(N([@[Total (40)]])*60/40+3,0),MAX(0,40-N([@[Total (40)]])))))'
@@ -581,8 +565,8 @@ def _formula_cache_values(sheet_number, students, columns):
             mid2_values = [student[field] for field in ('mid2Cia', 'mid2Viva', 'mid2Exam')]
             mid1_entered = any(value is not None for value in mid1_values)
             mid2_entered = any(value is not None for value in mid2_values)
-            mid1_total = sum(value or 0 for value in mid1_values) if mid1_entered or sheet_number == '4' else ''
-            mid2_total = sum(value or 0 for value in mid2_values) if mid2_entered or sheet_number == '4' else ''
+            mid1_total = sum(value or 0 for value in mid1_values) if mid1_entered else ''
+            mid2_total = sum(value or 0 for value in mid2_values) if mid2_entered else ''
             mid_average = (
                 _rounded_excel(
                     (
@@ -590,7 +574,7 @@ def _formula_cache_values(sheet_number, students, columns):
                         + (mid2_total if isinstance(mid2_total, (int, float)) else 0)
                     ) / 2
                 )
-                if mid1_entered or mid2_entered or sheet_number == '4'
+                if mid1_entered or mid2_entered
                 else ''
             )
             any_marks = mid1_entered or mid2_entered or student['project'] is not None
@@ -600,10 +584,10 @@ def _formula_cache_values(sheet_number, students, columns):
                     + (student['project'] or 0),
                     40,
                 )
-                if any_marks or sheet_number == '4'
+                if any_marks
                 else ''
             )
-            grade = _grade_for_total(total) if sheet_number == '4' or any_marks else ''
+            grade = _grade_for_total(total) if any_marks else ''
             result.update({
                 'MID-1 CIA (10)': student['mid1Cia'],
                 'MID-1 VIVA (10)': student['mid1Viva'],
@@ -617,10 +601,10 @@ def _formula_cache_values(sheet_number, students, columns):
                 'PROJECT (10)': student['project'],
                 'Total (40)': total,
                 'Grade': grade,
-                'MID-1 Entered': 1 if sheet_number == '4' or mid1_entered else '',
-                'MID-2 Entered': 1 if sheet_number == '4' or mid2_entered else '',
+                'MID-1 Entered': 1 if mid1_entered else '',
+                'MID-2 Entered': 1 if mid2_entered else '',
             })
-            if sheet_number == '3':
+            if sheet_number in {'3', '4'}:
                 if isinstance(total, (int, float)):
                     ext = min(60, max(_rounded_excel(total * 60 / 40 + 3), max(0, 40 - int(total))))
                     result['EXTERNAL EVALUATION (60)'] = ext
@@ -631,16 +615,10 @@ def _formula_cache_values(sheet_number, students, columns):
         row_results.append(result)
 
     graded_rows = [row for row in row_results if row['Grade'] != '']
-    if sheet_number == '3':
-        class_average = (
-            sum(row['Total (40)'] for row in graded_rows) / len(graded_rows) / 40
-            if graded_rows else 0
-        )
-    else:
-        class_average = sum(
-            row['Total (40)'] if isinstance(row['Total (40)'], (int, float)) else 0
-            for row in row_results
-        ) / max(len(row_results), 1) / 40
+    class_average = (
+        sum(row['Total (40)'] for row in graded_rows) / len(graded_rows) / 40
+        if graded_rows else 0
+    )
     mid1_rows = [row for row in row_results if row.get('MID-1 Entered') == 1]
     mid2_rows = [row for row in row_results if row.get('MID-2 Entered') == 1]
     mid1_average = (
@@ -1016,7 +994,7 @@ def create_evaluation_workbook(sheet_number, subject_name, rows):
                 None,  # MID-1 Entered
                 None,  # MID-2 Entered
             ])
-            if sheet_number == '3':
+            if sheet_number in {'3', '4'}:
                 # Insert EXTERNAL EVALUATION (60) after Grade (col 15, index 14)
                 values.insert(14, None)
                 # Insert TOTAL(INT+EXT) after EXTERNAL EVALUATION (60) (col 16, index 15)
