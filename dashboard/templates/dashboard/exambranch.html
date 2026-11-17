@@ -10566,9 +10566,7 @@ Exam Branch
                      summary.totalHours += required.totalHours;
                      return summary;
                  }, { theoryCount: 0, labCount: 0, activityCount: 0, theoryHours: 0, labHours: 0, activityHours: 0, totalHours: 0 });
-                  const individualFilledHours = renderIndividualFacultyTimeTables(timetableSelections, classContexts);
                   normalizeAllTimeTableSlotValues();
-                  syncIndividualTimeTablesWithMainTables(selections, classContexts);
                   saveTimeTableData();
 
                   if (syllabusSubjectSelect && payload.subjectCode) {
@@ -10596,7 +10594,7 @@ Exam Branch
                              return contextSummary.label + ' (' + contextSummary.hours + ' hours)';
                          }).join(', ')
                          : '; every generated class timetable has 36 hours filled') +
-                     '; short subject names are used in main and individual timetables; individual timetables generated for ' + Math.max(buildIndividualFacultySchedules(timetableSelections).length, 1) + ' faculty (' + individualFilledHours + ' total hours)',
+                     '; short subject names are used in the main timetable',
                      incompleteContexts.length ? 'warning' : 'success'
                  );
                   setStatus(subjectSelectionStatus, 'Time Table generated from ' + selections.length + ' available faculty selection(s)', 'success');
@@ -10789,8 +10787,7 @@ Exam Branch
                     repairAllClassLabRoomConflicts(classContexts, selections);
                     repairAllFacultyConflicts(classContexts, selections);
                     fillAllClassBlankSlots(classContexts, selections);
-                    syncIndividualTimeTablesWithMainTables(selections, classContexts);
-                    normalizeAllTimeTableSlotValues();
+                      normalizeAllTimeTableSlotValues();
                 }
             });
         }
