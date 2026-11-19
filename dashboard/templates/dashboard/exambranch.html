@@ -3090,6 +3090,14 @@ Exam Branch
             });
         }
 
+        function contextHasOtherLabOnDay(context, day, ignoredSlots) {
+            const ignored = ignoredSlots || new Set();
+            return (context && context.slots ? context.slots : []).some(function (slot) {
+                return !ignored.has(slot) && isVisibleFilledClassSlot(slot) &&
+                    slot.dataset.day === day && isLaboratorySubject(slot.value);
+            });
+        }
+
         function getNextClassSlotInRow(slot, slotSelector, includeHidden) {
             const cell = getTimeTableSlotCell(slot);
             const row = cell ? cell.closest('tr') : null;
@@ -3171,6 +3179,45 @@ Exam Branch
             }
             targetSlot.value = subjectName;
             return true;
+        }
+
+        function repairDuplicateLabDays(context) {
+            const slots = context && context.slots ? context.slots : [];
+            const daysWithLabs = new Set();
+            slots.forEach(function (slot) {
+                if (!isVisibleFilledClassSlot(slot) || !isLaboratorySubject(slot.value)) {
+                    return;
+                }
+                const sourceDay = slot.dataset.day || '';
+                if (!sourceDay || !daysWithLabs.has(sourceDay)) {
+                    if (sourceDay) {
+                        daysWithLabs.add(sourceDay);
+                    }
+                    return;
+                }
+
+                const cell = getTimeTableSlotCell(slot);
+                const duration = cell && cell.colSpan > 1 ? cell.colSpan : 2;
+                const ignoredSlots = new Set([slot]);
+                if (duration > 1) {
+                    const nextSlot = getClassSlot(sourceDay, periodOrder[getSlotPeriodIndex(slot) + 1], slots);
+                    if (nextSlot) {
+                        ignoredSlots.add(nextSlot);
+                    }
+                }
+                const replacementSlot = slots.find(function (candidate) {
+                    const targetDay = candidate.dataset.day || '';
+                    const targetPeriod = getSlotPeriodIndex(candidate);
+                    return targetDay && targetDay !== sourceDay && !daysWithLabs.has(targetDay) &&
+                        normalizeClassValue(targetDay) !== 'SAT' && [0, 3].includes(targetPeriod) &&
+                        canMoveSubjectToClassSlot(slots, candidate, slot.value, duration, ignoredSlots);
+                });
+                if (replacementSlot && moveClassSlotValue(slots, slot, replacementSlot, context.slotSelector)) {
+                    daysWithLabs.add(replacementSlot.dataset.day || '');
+                } else {
+                    clearClassSlotValue(slot);
+                }
+            });
         }
 
         function repairSameDaySubjectRepeats(slots, slotSelector) {
@@ -3456,6 +3503,7 @@ Exam Branch
                 const periodIndex = getSlotPeriodIndex(candidate);
                 return [0, 3].includes(periodIndex) &&
                     normalizeClassValue(candidate.dataset.day) !== 'SAT' &&
+                    !contextHasOtherLabOnDay(movingEntry.context, candidate.dataset.day, ignoredSlots) &&
                     canMoveSubjectToClassSlot(context.slots, candidate, movingEntry.subjectName, movingEntry.duration, ignoredSlots) &&
                     !targetHasLabRoomConflict(entries, movingEntry, candidate);
             });
@@ -3480,6 +3528,8 @@ Exam Branch
                 }
                 repairedCount += 1;
             }
+
+            contexts.forEach(repairDuplicateLabDays);
 
             return repairedCount;
         }
@@ -3604,6 +3654,10 @@ Exam Branch
                     if (normalizeClassValue(targetDay) === 'SAT' && duration > 1) {
                         return false;
                     }
+                    if (isLaboratorySubject(conflictingEntry.comparableValue) &&
+                        contextHasOtherLabOnDay(context, targetDay, ignoredSlots)) {
+                        return false;
+                    }
 
                     const otherEntries = entries.filter(function (e) {
                         return e.facultyKey === conflictingEntry.facultyKey && e !== conflictingEntry;
@@ -3632,6 +3686,8 @@ Exam Branch
                 }
                 repairedCount += 1;
             }
+
+            contexts.forEach(repairDuplicateLabDays);
 
             return repairedCount;
         }
@@ -3767,6 +3823,7 @@ Exam Branch
          function fillClassBlankSlots(context, classSelections, facultyOccupancyMap, labRoomOccupancyMap) {
              const assignments = buildClassAssignments(classSelections, context);
              const subjectPeriodUsageMap = createSubjectPeriodUsageMap();
+             const labDaysUsed = new Set();
              const days = Array.from(new Set((context.slots || []).map(function (slot) {
                  return slot.dataset.day || '';
              }).filter(Boolean)));
@@ -3786,6 +3843,9 @@ Exam Branch
                      return;
                  }
                  const day = slot.dataset.day || '';
+                 if (assignment.isLab && day) {
+                     labDaysUsed.add(day);
+                 }
                  const periodIndex = periodOrder.indexOf(slot.dataset.period || '');
                   const isSlotSports = (assignment.subjectName || '').toUpperCase() === 'SPORTS';
                   const duration = getTimeTableSlotCell(slot) && slot.closest('td').colSpan > 1 ? slot.closest('td').colSpan : (assignment.isLab ? 2 : (isSlotSports && getSportsDurationForContext(context) === 2 ? 2 : 1));
@@ -3809,6 +3869,9 @@ Exam Branch
 
               function findBlankTarget(day, assignment, strictSpacing) {
                   if (!assignment) {
+                      return null;
+                  }
+                  if (assignment.isLab && labDaysUsed.has(day)) {
                       return null;
                   }
                   const duration = assignment.isLab ? 2 : ((assignment.subjectName || '').toUpperCase() === 'SPORTS' && getSportsDurationForContext(context) === 2 ? 2 : 1);
@@ -3859,6 +3922,7 @@ Exam Branch
                  if (assignment.isLab) {
                      const labRoomNumber = assignment.labRoomNumber || getStandardLabRoomNumber(assignment.displayName || assignment.subjectName);
                      reserveLabRoomPeriods(freshLabRoomMap, assignment, day, periodIndex, duration);
+                     labDaysUsed.add(day);
                  }
                  reserveFacultyPeriods(freshFacultyMap, assignment.facultyKey, day, periodIndex, duration);
                  assignment.placedHours += duration;
@@ -9249,6 +9313,8 @@ Exam Branch
                 }
             });
 
+            repairDuplicateLabDays(context);
+
             // 3. Ensure SPORTS matches the context: a single 2-hour merged block for 2-1,
             //    or a single 1-hour block for 3-1 (and other levels).
             const sportsTargetHours = getSportsDurationForContext(context);
@@ -9357,6 +9423,7 @@ Exam Branch
 
             const usedPeriods = new Map();
             const usedDays = new Map();
+            const labDaysUsed = new Set();
             const counts = {};
             let labMergedCount = 0;
             let totalHours = 0;
@@ -9473,7 +9540,7 @@ Exam Branch
                 let placed = false;
                 for (let d = 0; d < days.length && !placed; d += 1) {
                     const day = days[(idx + d) % days.length];
-                    if (subjectUsedDays(key).has(day) || normalizeClassValue(day) === 'SAT') {
+                    if (subjectUsedDays(key).has(day) || (assignment.isLab && labDaysUsed.has(day)) || normalizeClassValue(day) === 'SAT') {
                         continue;
                     }
                     for (let s = 0; s < startCandidates.length && !placed; s += 1) {
@@ -9489,6 +9556,9 @@ Exam Branch
                             continue;
                         }
                         placeMerged(assignment, day, start, duration);
+                        if (assignment.isLab) {
+                            labDaysUsed.add(day);
+                        }
                         placed = true;
                     }
                 }
@@ -9635,8 +9705,10 @@ Exam Branch
                             if (!assignment.isActivity) {
                                 dailySubjects.add(assignment.subjectName);
                             }
-                            if (duration > 1) {
+                            if (assignment.isLab) {
                                 labDaysUsed.add(day);
+                            }
+                            if (duration > 1) {
                                 labMergedCount += 1;
                             }
                             break;
@@ -9670,8 +9742,10 @@ Exam Branch
                             if (placedHours) {
                                 counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
                                 totalHours += placedHours;
-                                if (duration > 1) {
+                                if (assignment.isLab) {
                                     labDaysUsed.add(day);
+                                }
+                                if (duration > 1) {
                                     labMergedCount += 1;
                                 }
                                 placed = true;
@@ -9710,8 +9784,10 @@ Exam Branch
                             if (placedHours) {
                                 counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
                                 totalHours += placedHours;
-                                if (duration > 1) {
+                                if (assignment.isLab) {
                                     labDaysUsed.add(day);
+                                }
+                                if (duration > 1) {
                                     labMergedCount += 1;
                                 }
                                 placed = true;
@@ -9751,8 +9827,10 @@ Exam Branch
                             if (placedHours) {
                                 counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
                                 totalHours += placedHours;
-                                if (duration > 1) {
+                                if (assignment.isLab) {
                                     labDaysUsed.add(day);
+                                }
+                                if (duration > 1) {
                                     labMergedCount += 1;
                                 }
                                 placed = true;
@@ -9777,6 +9855,9 @@ Exam Branch
                         for (let periodIndex = 0; periodIndex < periodOrder.length; periodIndex += 1) {
                             const duration = assignment.isLab ? 2 : ((assignment.subjectName || '').toUpperCase() === 'SPORTS' && getSportsDurationForContext(context) === 2 ? 2 : 1);
                             if (assignment.isLab && ![0, 3].includes(periodIndex)) {
+                                continue;
+                            }
+                            if (!canPlaceLabOnDay(assignment, day, labDaysUsed)) {
                                 continue;
                             }
                             if (!canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, false, assignment, null, labRoomOccupancyMap)) {
@@ -9786,8 +9867,10 @@ Exam Branch
                             if (placedHours) {
                                 counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
                                 totalHours += placedHours;
-                                if (duration > 1) {
+                                if (assignment.isLab) {
                                     labDaysUsed.add(day);
+                                }
+                                if (duration > 1) {
                                     labMergedCount += 1;
                                 }
                                 placed = true;
