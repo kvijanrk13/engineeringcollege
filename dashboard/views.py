@@ -10903,15 +10903,15 @@ def exam_branch(request):
         ]
         add_exam_branch_extra_subjects(subjects, selected_year, selected_semester, branch, request.GET.get('section', 'A'))
         additional_empty_timetables = [
-            {'year_sem': '2-1', 'year_label': 'II-II', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)', 'section': 'A'},
-            {'year_sem': '2-1', 'year_label': 'II-II', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)', 'section': 'B'},
-            {'year_sem': '2-1', 'year_label': 'II-II', 'branch': 'IT', 'branch_label': 'IT'},
-            {'year_sem': '3-1', 'year_label': 'III-II', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)', 'section': 'A'},
-            {'year_sem': '3-1', 'year_label': 'III-II', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)', 'section': 'B'},
-            {'year_sem': '3-1', 'year_label': 'III-II', 'branch': 'IT', 'branch_label': 'IT'},
-            {'year_sem': '4-1', 'year_label': 'IV-II', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)', 'section': 'A'},
-            {'year_sem': '4-1', 'year_label': 'IV-II', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)', 'section': 'B'},
-            {'year_sem': '4-1', 'year_label': 'IV-II', 'branch': 'IT', 'branch_label': 'IT'},
+            {'year_sem': '2-2', 'year_label': 'II-II', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)', 'section': 'A'},
+            {'year_sem': '2-2', 'year_label': 'II-II', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)', 'section': 'B'},
+            {'year_sem': '2-2', 'year_label': 'II-II', 'branch': 'IT', 'branch_label': 'IT'},
+            {'year_sem': '3-2', 'year_label': 'III-II', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)', 'section': 'A'},
+            {'year_sem': '3-2', 'year_label': 'III-II', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)', 'section': 'B'},
+            {'year_sem': '3-2', 'year_label': 'III-II', 'branch': 'IT', 'branch_label': 'IT'},
+            {'year_sem': '4-2', 'year_label': 'IV-II', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)', 'section': 'A'},
+            {'year_sem': '4-2', 'year_label': 'IV-II', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)', 'section': 'B'},
+            {'year_sem': '4-2', 'year_label': 'IV-II', 'branch': 'IT', 'branch_label': 'IT'},
         ]
 
         # Attendance Dashboard Data

@@ -2070,9 +2070,9 @@ Exam Branch
                     <div class="panel-header">
                         <div>
                             <div class="section-kicker">Class Schedule</div>
-                            <h2 class="section-title">III-I IT empty timetable</h2>
+                            <h2 class="section-title">III-II IT empty timetable</h2>
                             <p class="section-copy">
-                                Blank weekly timetable layout based on III-I Tentative Time Table IT 2026-27.
+                                Blank weekly timetable layout based on III-II Tentative Time Table IT 2026-27.
                             </p>
                         </div>
                         <div class="panel-pill">
@@ -2132,7 +2132,7 @@ Exam Branch
                             <a href="{{ syllabus_url }}" class="btn exam-btn exam-btn-primary">
                                 <i class="fas fa-book me-2"></i>Open Syllabus
                             </a>
-                            <button type="button" class="btn exam-btn exam-btn-success main-timetable-download-btn" data-download-main-timetable data-table-title="III-I IT Time Table" data-table-selector="#timeTableGrid">
+                            <button type="button" class="btn exam-btn exam-btn-success main-timetable-download-btn" data-download-main-timetable data-table-title="III-II IT Time Table" data-table-selector="#timeTableGrid">
                                 <i class="fas fa-file-excel me-2"></i>Download Excel
                             </button>
                         </div>
@@ -2583,7 +2583,7 @@ Exam Branch
         const primaryFixedTimeTableSpec = {
             regulation: 'R22',
             year: '3',
-            semester: '1',
+            semester: '2',
             branch: 'IT',
             section: ''
         };
@@ -3263,8 +3263,8 @@ Exam Branch
         // Direct, selection-based cross-context faculty clash resolver.
         // Builds a subject -> faculty map straight from the user's selections (not from
         // fragile slot-label matching) and ensures no faculty member is booked in two
-        // different class contexts at the same day/period (e.g. DM in III-I and COA in
-        // II-I both on Monday 1st hour). If a clash is found, one of the entries is moved
+        // different class contexts at the same day/period (e.g. DM in III-II and COA in
+        // II-II both on Monday 1st hour). If a clash is found, one of the entries is moved
         // to a free slot in its own context, or cleared if none is available.
         function resolveCrossContextFacultyClashes(classContexts, selections) {
             const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
@@ -7855,8 +7855,8 @@ Exam Branch
         }
 
         // SPORTS block length depends on the academic level:
-        //  - 2-1 (II-I) timetables: a single 2-hour merged block;
-        //  - 3-1 (III-I) and every other level: a single 1-hour block.
+        //  - 2-2 (II-II) timetables: a single 2-hour merged block;
+        //  - 3-2 (III-II) and every other level: a single 1-hour block.
         function getSportsDurationForContext(context) {
             const year = normalizeAcademicLevelValue(
                 (context && (context.year || (context.meta && context.meta.year) || (context.context && context.context.year))) || ''
@@ -8228,12 +8228,21 @@ Exam Branch
             { regulation: 'R25', year: '2', semester: '1', branch: 'AIML', section: 'A' },
             { regulation: 'R25', year: '2', semester: '1', branch: 'AIML', section: 'B' },
             { regulation: 'R25', year: '2', semester: '1', branch: 'IT', section: '' },
+            { regulation: 'R25', year: '2', semester: '2', branch: 'AIML', section: 'A' },
+            { regulation: 'R25', year: '2', semester: '2', branch: 'AIML', section: 'B' },
+            { regulation: 'R25', year: '2', semester: '2', branch: 'IT', section: '' },
             { regulation: 'R22', year: '3', semester: '1', branch: 'AIML', section: 'A' },
             { regulation: 'R22', year: '3', semester: '1', branch: 'AIML', section: 'B' },
             { regulation: 'R22', year: '3', semester: '1', branch: 'IT', section: '' },
+            { regulation: 'R22', year: '3', semester: '2', branch: 'AIML', section: 'A' },
+            { regulation: 'R22', year: '3', semester: '2', branch: 'AIML', section: 'B' },
+            { regulation: 'R22', year: '3', semester: '2', branch: 'IT', section: '' },
             { regulation: 'R22', year: '4', semester: '1', branch: 'AIML', section: 'A' },
             { regulation: 'R22', year: '4', semester: '1', branch: 'AIML', section: 'B' },
-            { regulation: 'R22', year: '4', semester: '1', branch: 'IT', section: '' }
+            { regulation: 'R22', year: '4', semester: '1', branch: 'IT', section: '' },
+            { regulation: 'R22', year: '4', semester: '2', branch: 'AIML', section: 'A' },
+            { regulation: 'R22', year: '4', semester: '2', branch: 'AIML', section: 'B' },
+            { regulation: 'R22', year: '4', semester: '2', branch: 'IT', section: '' }
         ];
 
         function getAllowedGeneratedClassContextSpec(regulation, year, semester, branch, section) {
@@ -9542,7 +9551,7 @@ Exam Branch
                 return { counts: counts, labMergedCount: 0, totalHours: 0 };
             }
 
-            // For 2-1 (II-I) and 3-1 (III-I) timetables, use the balanced generator. It
+            // For 2-2 (II-II) and 3-2 (III-II) timetables, use the balanced generator. It
             // spreads every selected subject across distinct periods (hours 1-6) and
             // distinct days (Monday-Saturday) so no subject is piled into the same hour,
             // keeps labs as 2-hour merged blocks, and sets SPORTS to a 2-hour merged block
@@ -10584,9 +10593,9 @@ Exam Branch
                      (labMergedCount ? '; laboratory subjects are merged into two-hour blocks' : '') +
                      (repairSummary.sameHourRepeats ? '; same-hour repeated subjects were corrected' : '') +
                      (repairSummary.facultyConflicts ? '; faculty double-bookings were resolved' : '') +
-                     (repairSummary.labRoomConflicts ? '; same-room lab clashes were corrected across II-I, III-I, and IV-I' : '') +
-                     (repairSummary.addedAIMLOSLab ? '; R25 II-I CSE (AI&ML) full load was filled' : '') +
-                     (repairSummary.projectStageLabs ? '; IV-I Project Stage-1 Lab was added' : '') +
+                     (repairSummary.labRoomConflicts ? '; same-room lab clashes were corrected across II-II, III-II, and IV-II' : '') +
+                     (repairSummary.addedAIMLOSLab ? '; R25 II-II CSE (AI&ML) full load was filled' : '') +
+                     (repairSummary.projectStageLabs ? '; IV-II project lab was added' : '') +
                      (repairSummary.filledBlankSlots ? '; empty slots were filled where possible' : '') +
                      (repairSummary.movedActivities ? '; activity hours were moved to the last hours' : '') +
                      (repairSummary.annotatedLabRooms ? '; lab room numbers were added to lab slots' : '') +
@@ -10933,7 +10942,7 @@ Exam Branch
                         : (repairSummary.labRoomConflicts
                             ? 'Same-room lab clashes were corrected and saved'
                             : (repairSummary.projectStageLabs
-                                ? 'IV-I Project Stage-1 Lab was added and saved'
+                                ? 'IV-II project lab was added and saved'
                                 : (repairSummary.filledBlankSlots
                                     ? 'Empty timetable slots were filled and saved'
                                     : (repairSummary.movedActivities
