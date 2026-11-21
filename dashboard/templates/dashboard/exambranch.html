@@ -4003,7 +4003,12 @@ Exam Branch
                       const nextSlot = getClassSlot(startSlot.dataset.day, periodOrder[periodIndex + 1], slots);
                       const startValue = startSlot.value.trim();
                       const nextValue = nextSlot ? nextSlot.value.trim() : '';
-                      return (!startValue || isSELabRoomValue(startValue)) &&
+                      const startCell = getTimeTableSlotCell(startSlot);
+                      const nextCell = nextSlot ? getTimeTableSlotCell(nextSlot) : null;
+                      return Boolean(startCell && nextCell) &&
+                          startCell.style.display !== 'none' &&
+                          nextCell.style.display !== 'none' &&
+                          (!startValue || isSELabRoomValue(startValue)) &&
                           (!nextValue || isSELabRoomValue(nextValue));
                   }
 
@@ -4019,7 +4024,7 @@ Exam Branch
                       dayOrder.some(function (day) {
                           return [3, 0].some(function (periodIndex) {
                               const candidate = getClassSlot(day, periodOrder[periodIndex], slots);
-                              if (candidate === keep || !canMergeAt(candidate)) {
+                              if (!canMergeAt(candidate)) {
                                   return false;
                               }
                               startSlot = candidate;
@@ -4031,6 +4036,12 @@ Exam Branch
                       return;
                   }
                   if (startSlot !== keep) {
+                      const displacedValues = [startSlot, getClassSlot(startSlot.dataset.day, periodOrder[getSlotPeriodIndex(startSlot) + 1], slots)]
+                          .map(function (slot) { return slot ? slot.value.trim() : ''; })
+                          .filter(function (value) { return value && !isSELabRoomValue(value); });
+                      if (displacedValues.length) {
+                          return;
+                      }
                       clearClassSlotValue(keep);
                   }
                   if (mergeSlotWithNextPeriod(startSlot, canonicalValue, context.slotSelector)) {
