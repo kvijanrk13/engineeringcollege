@@ -6916,6 +6916,7 @@ Exam Branch
              const classContexts = getClassTimeTableContexts(savedSelections);
              repairedSameHourRepeats = applyTimeTableRequirementRepairs(classContexts, savedSelections).total;
              repairedSameHourRepeats += repairAllClassLabRoomConflicts(classContexts, savedSelections);
+             repairedSameHourRepeats += repairMorningTheoryCoverage(classContexts, savedSelections);
 
             const individualTables = Array.isArray(data.individualTables) && data.individualTables.length
                 ? data.individualTables
@@ -8328,6 +8329,78 @@ Exam Branch
             const semester = normalizeAcademicLevelValue(context.semester);
             return (regulation === 'R25' && year === '2' && semester === '2') ||
                 (regulation === 'R22' && ((year === '3' && semester === '2') || (year === '4' && semester === '2')));
+        }
+
+        function repairMorningTheoryCoverage(contexts, selections) {
+            let repaired = 0;
+            const normalizedSelections = normalizeSubjectSelections(selections || []);
+            (contexts || []).forEach(function (context) {
+                if (!requiresMorningTheoryCoverage(context)) {
+                    return;
+                }
+                const contextSelections = getSelectionsForClassContext(normalizedSelections, context);
+                const assignments = buildClassAssignments(contextSelections, context).filter(function (assignment) {
+                    return !assignment.isLab && !assignment.isActivity &&
+                        normalizeSubjectNameForSchedule(assignment.displayName || assignment.subjectName) !== 'SPORTS' &&
+                        (assignment.targetHours || 0) > 0;
+                });
+                assignments.forEach(function (assignment) {
+                    const subjectKey = getAssignmentSubjectKey(assignment);
+                    const slots = context.slots || [];
+                    const hasMorningSlot = slots.some(function (slot) {
+                        return slot.dataset.period === periodOrder[0] && isVisibleFilledClassSlot(slot) &&
+                            normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) === subjectKey;
+                    });
+                    if (hasMorningSlot) {
+                        return;
+                    }
+
+                    const occurrences = slots.filter(function (slot) {
+                        const cell = getTimeTableSlotCell(slot);
+                        return isVisibleFilledClassSlot(slot) && getSlotPeriodIndex(slot) > 0 &&
+                            (!cell || cell.colSpan <= 1) &&
+                            normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) === subjectKey;
+                    });
+                    if (!occurrences.length) {
+                        return;
+                    }
+
+                    let moved = false;
+                    const days = Array.from(new Set(slots.map(function (slot) {
+                        return slot.dataset.day || '';
+                    }).filter(Boolean)));
+                    days.some(function (day) {
+                        const target = getClassSlot(day, periodOrder[0], slots);
+                        if (!target || !target.closest('td') || target.closest('td').style.display === 'none' || target.value.trim()) {
+                            return false;
+                        }
+                        return occurrences.some(function (source) {
+                            const duplicateRemainsOnTargetDay = slots.some(function (slot) {
+                                return slot !== source && slot.dataset.day === day && isVisibleFilledClassSlot(slot) &&
+                                    normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) === subjectKey;
+                            });
+                            if (duplicateRemainsOnTargetDay) {
+                                return false;
+                            }
+                            const facultyOccupancyMap = createFacultyOccupancyMap();
+                            const labRoomOccupancyMap = createLabRoomOccupancyMap();
+                            prePopulateOccupancyMapsFromExistingData(facultyOccupancyMap, labRoomOccupancyMap);
+                            if (!canUseClassSlot(context, day, 0, 1, assignment.facultyKey, facultyOccupancyMap, false, assignment, null, labRoomOccupancyMap)) {
+                                return false;
+                            }
+                            target.value = source.value;
+                            source.value = '';
+                            repaired += 1;
+                            moved = true;
+                            return true;
+                        });
+                    });
+                    if (!moved) {
+                        console.warn('Could not place a 9:30-10:30 theory hour for', assignment.displayName || assignment.subjectName, context.label || 'timetable');
+                    }
+                });
+            });
+            return repaired;
         }
 
         function getSelectionContextKey(selection) {
@@ -10730,6 +10803,7 @@ Exam Branch
                    const finalResourceRepairs = repairAllTimetableResourceConflicts(classContexts, selections);
                    repairSummary.labRoomConflicts += finalResourceRepairs.labRoom;
                    repairSummary.facultyConflicts += finalResourceRepairs.faculty;
+                  repairSummary.morningTheoryCoverage = repairMorningTheoryCoverage(classContexts, selections);
                    classGeneration.contexts.forEach(function (contextSummary, index) {
                        contextSummary.hours = countClassContextHours(classContexts[index]);
                    });
