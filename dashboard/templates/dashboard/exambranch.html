@@ -3962,8 +3962,44 @@ Exam Branch
           function fillAllClassBlankSlots(classContexts, selections, facultyOccupancyMap, labRoomOccupancyMap) {
               const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
               return (classContexts || getClassTimeTableContexts(normalizedSelections)).reduce(function (total, context) {
-                  return total + fillClassBlankSlots(context, getSelectionsForClassContext(normalizedSelections, context), facultyOccupancyMap, labRoomOccupancyMap);
+                  const contextSelections = getSelectionsForClassContext(normalizedSelections, context);
+                  const trimmedHours = trimR25TwoTwoITHoursToTargets(context, contextSelections);
+                  return total + trimmedHours + fillClassBlankSlots(context, contextSelections, facultyOccupancyMap, labRoomOccupancyMap);
               }, 0);
+          }
+
+          function trimR25TwoTwoITHoursToTargets(context, selections) {
+              if (!isR25TwoTwoITContext(context)) {
+                  return 0;
+              }
+              const assignments = buildClassAssignments(selections, context);
+              let removedHours = 0;
+              assignments.forEach(function (assignment) {
+                  let currentHours = countClassAssignmentHours(context, assignment);
+                  if (currentHours <= assignment.targetHours) {
+                      return;
+                  }
+                  const matchingSlots = (context.slots || []).filter(function (slot) {
+                      return isVisibleFilledClassSlot(slot) &&
+                          normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) ===
+                          normalizeSubjectNameForSchedule(assignment.displayName);
+                  }).sort(function (left, right) {
+                      const dayOrder = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+                      const dayDifference = dayOrder.indexOf(right.dataset.day) - dayOrder.indexOf(left.dataset.day);
+                      return dayDifference || getSlotPeriodIndex(right) - getSlotPeriodIndex(left);
+                  });
+                  matchingSlots.forEach(function (slot) {
+                      if (currentHours <= assignment.targetHours) {
+                          return;
+                      }
+                      const cell = getTimeTableSlotCell(slot);
+                      const duration = cell && cell.colSpan > 1 ? cell.colSpan : 1;
+                      clearClassSlotValue(slot);
+                      currentHours -= duration;
+                      removedHours += duration;
+                  });
+              });
+              return removedHours;
           }
 
         function applyFixedDisplayPlan(context, plan) {
@@ -7924,6 +7960,9 @@ Exam Branch
         //  - 2-2 (II-II) timetables: a single 2-hour merged block;
         //  - 3-2 (III-II) and every other level: a single 1-hour block.
         function getSportsDurationForContext(context) {
+            if (isR25TwoTwoITContext(context)) {
+                return 1;
+            }
             const year = normalizeAcademicLevelValue(
                 (context && (context.year || (context.meta && context.meta.year) || (context.context && context.context.year))) || ''
             );
@@ -8840,6 +8879,7 @@ Exam Branch
                     return;
                 }
                 const isR25TwoOneReducedLoad = isR25TwoOneITContext(context) || isR25TwoOneAIMLContext(context);
+                const isR25TwoTwoIT = isR25TwoTwoITContext(context);
                 const isActivity = /^(SPORTS|LIBRARY|MENTORING|EVS\/IKS|VEGS)$/i.test(displayName);
                 const isLab = isLaboratorySubject(subjectName) || isLaboratorySubject(displayName);
                 assignmentMap.set(key, {
@@ -8850,9 +8890,11 @@ Exam Branch
                     labRoomNumber: selection.labRoomNumber || '',
                     isLab: isLab,
                     isActivity: isActivity,
-                    targetHours: isLab ? 2 : (isR25TwoOneReducedLoad
+                    targetHours: isLab ? 2 : (isR25TwoTwoIT
+                        ? (/^(VEGS|NJRJDU)$/i.test(displayName) ? 2 : (/^(SPORTS|LIBRARY)$/i.test(displayName) ? 1 : 4))
+                        : (isR25TwoOneReducedLoad
                         ? (/^(SPORTS|EVS\/IKS|VEGS)$/i.test(displayName) ? 2 : (/^(LIBRARY|MENTORING)$/i.test(displayName) ? 1 : 4))
-                        : (isActivity ? 1 : 5)),
+                        : (isActivity ? 1 : 5))),
                     placedHours: 0
                 });
             });
@@ -9009,6 +9051,14 @@ Exam Branch
                 normalizeClassValue(context.regulation || 'R22') === 'R25' &&
                 normalizeAcademicLevelValue(context.year) === '2' &&
                 normalizeAcademicLevelValue(context.semester) === '1' &&
+                normalizeClassValue(context.branch) === 'IT';
+        }
+
+        function isR25TwoTwoITContext(context) {
+            return context &&
+                normalizeClassValue(context.regulation || 'R22') === 'R25' &&
+                normalizeAcademicLevelValue(context.year) === '2' &&
+                normalizeAcademicLevelValue(context.semester) === '2' &&
                 normalizeClassValue(context.branch) === 'IT';
         }
 
@@ -9488,6 +9538,9 @@ Exam Branch
                 labMergedCount += 1;
             }
             function targetOf(assignment) {
+                if (isR25TwoTwoITContext(context)) {
+                    return assignment.targetHours || 1;
+                }
                 if (assignment.isLab) {
                     return 2;
                 }
