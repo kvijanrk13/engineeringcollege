@@ -7917,13 +7917,35 @@ Exam Branch
                     return candidate.dataset.day === slot.dataset.day &&
                         candidate.dataset.period === periodOrder[periodIndex + 1];
                 });
+                const nextCell = getTimeTableSlotCell(nextSlot);
+                const slotSelector = slot.classList.contains('empty-timetable-slot') ? '.empty-timetable-slot' : '.timetable-slot';
+                if (nextCell && nextCell.style.display === 'none') {
+                    return;
+                }
                 if (nextSlot && nextSlot.value.trim() &&
                     normalizeSubjectNameForSchedule(getComparableSubjectValue(nextSlot.value)) !==
                     normalizeSubjectNameForSchedule(getComparableSubjectValue(subjectName))) {
-                    return;
+                    const displacedValue = nextSlot.value.trim();
+                    const candidates = targetSlots.filter(function (candidate) {
+                        const candidatePeriod = getSlotPeriodIndex(candidate);
+                        const candidateCell = getTimeTableSlotCell(candidate);
+                        return candidate !== slot && candidate !== nextSlot &&
+                            candidate.dataset.day !== slot.dataset.day &&
+                            normalizeClassValue(candidate.dataset.day) !== 'SAT' &&
+                            [0, 3].includes(candidatePeriod) &&
+                            candidateCell && candidateCell.style.display !== 'none' &&
+                            !candidate.value.trim() &&
+                            canMoveSubjectToClassSlot(targetSlots, candidate, displacedValue, 1, new Set([slot, nextSlot]));
+                    });
+                    const replacementSlot = candidates[0];
+                    if (!replacementSlot) {
+                        return;
+                    }
+                    replacementSlot.value = displacedValue;
+                    nextSlot.value = '';
                 }
 
-                mergeSlotWithNextPeriod(slot, subjectName, slot.classList.contains('empty-timetable-slot') ? '.empty-timetable-slot' : '.timetable-slot');
+                mergeSlotWithNextPeriod(slot, subjectName, slotSelector);
             });
         }
 
