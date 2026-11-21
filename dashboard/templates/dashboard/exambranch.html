@@ -7633,7 +7633,11 @@ Exam Branch
             const comparableName = getComparableSubjectValue(subjectName || '');
             const label = comparableName.split(' - ').pop().trim();
             const normalizedName = normalizeSubjectNameForSchedule(label);
+            const roomMatch = String(subjectName || '').match(/\(\s*ROOM:\s*([^)]+)\)/i);
+            const isRoomAssignedSoftwareEngineeringLab = normalizedName === 'SE' && roomMatch &&
+                normalizeClassValue(roomMatch[1]) === 'D-314';
             return isLaboratorySubject(comparableName) || isLaboratorySubject(label) ||
+                Boolean(isRoomAssignedSoftwareEngineeringLab) ||
                 normalizedName === 'INT' || normalizedName === 'INTERNSHIP';
         }
 
@@ -7773,7 +7777,8 @@ Exam Branch
 
         function restoreClassLabMergesFromValues(slots) {
             const labStartPeriods = ['9:30-10:30', '1:20-2:15'];
-            (slots || timeTableSlots).forEach(function (slot) {
+            const targetSlots = slots || timeTableSlots;
+            targetSlots.forEach(function (slot) {
                 const subjectName = (slot.value || '').trim();
                 const subjectKey = normalizeSubjectNameForSchedule(subjectName);
                 if (
@@ -7785,7 +7790,18 @@ Exam Branch
                     return;
                 }
 
-                mergeSlotWithNextPeriod(slot, subjectName);
+                const periodIndex = getSlotPeriodIndex(slot);
+                const nextSlot = targetSlots.find(function (candidate) {
+                    return candidate.dataset.day === slot.dataset.day &&
+                        candidate.dataset.period === periodOrder[periodIndex + 1];
+                });
+                if (nextSlot && nextSlot.value.trim() &&
+                    normalizeSubjectNameForSchedule(getComparableSubjectValue(nextSlot.value)) !==
+                    normalizeSubjectNameForSchedule(getComparableSubjectValue(subjectName))) {
+                    return;
+                }
+
+                mergeSlotWithNextPeriod(slot, subjectName, slot.classList.contains('empty-timetable-slot') ? '.empty-timetable-slot' : '.timetable-slot');
             });
         }
 
