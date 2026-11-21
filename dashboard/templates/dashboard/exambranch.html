@@ -3882,9 +3882,46 @@ Exam Branch
               const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
               return (classContexts || getClassTimeTableContexts(normalizedSelections)).reduce(function (total, context) {
                   const contextSelections = getSelectionsForClassContext(normalizedSelections, context);
-                  const trimmedHours = trimR25TwoTwoITHoursToTargets(context, contextSelections);
+                  const trimmedHours = trimR25TwoTwoITHoursToTargets(context, contextSelections) +
+                      trimR22ThreeTwoITTheoryHoursToTargets(context, contextSelections);
                   return total + trimmedHours + fillClassBlankSlots(context, contextSelections, facultyOccupancyMap, labRoomOccupancyMap);
               }, 0);
+          }
+
+          function trimR22ThreeTwoITTheoryHoursToTargets(context, selections) {
+              if (!isR22ThreeTwoITContext(context)) {
+                  return 0;
+              }
+              const assignments = buildClassAssignments(selections, context).filter(function (assignment) {
+                  return !assignment.isLab && !assignment.isActivity;
+              });
+              let removedHours = 0;
+              assignments.forEach(function (assignment) {
+                  let currentHours = countClassAssignmentHours(context, assignment);
+                  if (currentHours <= 5) {
+                      return;
+                  }
+                  const matchingSlots = (context.slots || []).filter(function (slot) {
+                      return isVisibleFilledClassSlot(slot) &&
+                          normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) ===
+                          normalizeSubjectNameForSchedule(assignment.displayName);
+                  }).sort(function (left, right) {
+                      const dayOrder = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+                      const dayDifference = dayOrder.indexOf(right.dataset.day) - dayOrder.indexOf(left.dataset.day);
+                      return dayDifference || getSlotPeriodIndex(right) - getSlotPeriodIndex(left);
+                  });
+                  matchingSlots.forEach(function (slot) {
+                      if (currentHours <= 5) {
+                          return;
+                      }
+                      const cell = getTimeTableSlotCell(slot);
+                      const duration = cell && cell.colSpan > 1 ? cell.colSpan : 1;
+                      clearClassSlotValue(slot);
+                      currentHours -= duration;
+                      removedHours += duration;
+                  });
+              });
+              return removedHours;
           }
 
           function trimR25TwoTwoITHoursToTargets(context, selections) {
@@ -8901,6 +8938,14 @@ Exam Branch
                 normalizeAcademicLevelValue(context.semester) === '2' &&
                 normalizeClassValue(context.branch) === 'AIML' &&
                 ['A', 'B'].includes(normalizeClassValue(context.section));
+        }
+
+        function isR22ThreeTwoITContext(context) {
+            return Boolean(context) &&
+                normalizeClassValue(context.regulation || 'R22') === 'R22' &&
+                normalizeAcademicLevelValue(context.year) === '3' &&
+                normalizeAcademicLevelValue(context.semester) === '2' &&
+                normalizeBranchValue(context.branch) === 'IT';
         }
 
         function isR22ThreeTwoAIMLInternship(subjectName) {
