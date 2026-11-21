@@ -4515,6 +4515,7 @@ Exam Branch
             const roomsContainer = document.getElementById('labTimeTableRooms');
             const legendBody = document.getElementById('labTimeTableLegendBody');
             const labEntries = [];
+            const legendEntryKeys = new Set();
             const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
             const contexts = classContexts || getClassTimeTableContexts(normalizedSelections);
 
@@ -4526,7 +4527,7 @@ Exam Branch
                 const assignments = buildClassAssignments(contextSelections, context);
                 (context.slots || []).forEach(function (slot) {
                     const rawValue = (slot.value || '').trim();
-                    if (!rawValue || !isLaboratorySubject(rawValue)) {
+                    if (!rawValue) {
                         return;
                     }
                     const day = slot.dataset.day || '';
@@ -4535,12 +4536,18 @@ Exam Branch
                         return;
                     }
                     const comparableValue = getComparableSubjectValue(rawValue);
-                    const labRoom = extractLabRoomNumber(rawValue) || getStandardLabRoomNumber(comparableValue) || 'Unassigned';
+                    const assignment = assignments.find(function (candidate) {
+                        return normalizeSubjectNameForSchedule(candidate.displayName || candidate.subjectName) ===
+                            normalizeSubjectNameForSchedule(comparableValue);
+                    });
+                    const assignedRoom = assignment && String(assignment.labRoomNumber || '').trim();
+                    if (!isLaboratorySubject(rawValue) && !assignedRoom) {
+                        return;
+                    }
+                    const labRoom = extractLabRoomNumber(rawValue) || assignedRoom || getStandardLabRoomNumber(comparableValue) || 'Unassigned';
                     const roomKey = getLabRoomKey(labRoom) || 'UNASSIGNED';
                     const subjectDisplay = getShortSubjectLabel(comparableValue) || comparableValue || rawValue;
-                    const faculty = (assignments.find(function (a) {
-                        return normalizeSubjectNameForSchedule(a.displayName || a.subjectName) === normalizeSubjectNameForSchedule(comparableValue);
-                    }) || {}).facultyKey || '';
+                    const faculty = (assignment || {}).facultyKey || '';
 
                     if (!rooms.has(roomKey)) {
                         rooms.set(roomKey, { room: labRoom, cells: new Map() });
@@ -4572,14 +4579,18 @@ Exam Branch
                         }
                     }
 
-                    labEntries.push({
-                        day: day,
-                        period: period,
-                        subject: subjectDisplay,
-                        labRoom: labRoom,
-                        class: context.label || '',
-                        faculty: faculty
-                    });
+                    const legendEntryKey = [context.label || '', subjectDisplay, roomKey, faculty].join('|');
+                    if (!legendEntryKeys.has(legendEntryKey)) {
+                        legendEntryKeys.add(legendEntryKey);
+                        labEntries.push({
+                            day: day,
+                            period: period,
+                            subject: subjectDisplay,
+                            labRoom: labRoom,
+                            class: context.label || '',
+                            faculty: faculty
+                        });
+                    }
                 });
             });
 
