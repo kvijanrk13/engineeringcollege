@@ -7898,51 +7898,54 @@ Exam Branch
         }
 
         function restoreClassLabMergesFromValues(slots) {
-            const labStartPeriods = ['9:30-10:30', '1:20-2:15'];
             const targetSlots = slots || timeTableSlots;
+            const slotSelector = targetSlots.some(function (slot) { return slot.classList.contains('empty-timetable-slot'); })
+                ? '.empty-timetable-slot'
+                : '.timetable-slot';
             targetSlots.forEach(function (slot) {
                 const subjectName = (slot.value || '').trim();
-                const subjectKey = normalizeSubjectNameForSchedule(subjectName);
-                if (
-                    !subjectName ||
-                    !(
-                        (isLaboratoryScheduleValue(subjectName) && labStartPeriods.includes(slot.dataset.period))
-                    )
-                ) {
+                if (!subjectName || !isLaboratoryScheduleValue(subjectName)) {
                     return;
                 }
 
-                const periodIndex = getSlotPeriodIndex(slot);
-                const nextSlot = targetSlots.find(function (candidate) {
-                    return candidate.dataset.day === slot.dataset.day &&
-                        candidate.dataset.period === periodOrder[periodIndex + 1];
-                });
-                const nextCell = getTimeTableSlotCell(nextSlot);
-                const slotSelector = slot.classList.contains('empty-timetable-slot') ? '.empty-timetable-slot' : '.timetable-slot';
-                if (nextCell && nextCell.style.display === 'none') {
+                const currentCell = getTimeTableSlotCell(slot);
+                if (currentCell && currentCell.colSpan > 1) {
                     return;
                 }
-                if (nextSlot && nextSlot.value.trim() &&
-                    normalizeSubjectNameForSchedule(getComparableSubjectValue(nextSlot.value)) !==
-                    normalizeSubjectNameForSchedule(getComparableSubjectValue(subjectName))) {
+                const periodIndex = getSlotPeriodIndex(slot);
+                if (periodIndex < 0 || periodIndex + 1 >= periodOrder.length) {
+                    return;
+                }
+
+                const nextSlot = getClassSlot(slot.dataset.day, periodOrder[periodIndex + 1], targetSlots);
+                const nextCell = getTimeTableSlotCell(nextSlot);
+                if (!nextSlot || !nextCell || nextCell.style.display === 'none') {
+                    return;
+                }
+
+                if (nextSlot.value.trim() && !isLaboratoryScheduleValue(nextSlot.value)) {
                     const displacedValue = nextSlot.value.trim();
-                    const candidates = targetSlots.filter(function (candidate) {
-                        const candidatePeriod = getSlotPeriodIndex(candidate);
+                    const ignoredSlots = new Set([slot, nextSlot]);
+                    const replacementSlot = targetSlots.find(function (candidate) {
                         const candidateCell = getTimeTableSlotCell(candidate);
                         return candidate !== slot && candidate !== nextSlot &&
                             candidate.dataset.day !== slot.dataset.day &&
                             normalizeClassValue(candidate.dataset.day) !== 'SAT' &&
-                            [0, 3].includes(candidatePeriod) &&
                             candidateCell && candidateCell.style.display !== 'none' &&
                             !candidate.value.trim() &&
-                            canMoveSubjectToClassSlot(targetSlots, candidate, displacedValue, 1, new Set([slot, nextSlot]));
+                            canMoveSubjectToClassSlot(targetSlots, candidate, displacedValue, 1, ignoredSlots);
                     });
-                    const replacementSlot = candidates[0];
                     if (!replacementSlot) {
                         return;
                     }
                     replacementSlot.value = displacedValue;
                     nextSlot.value = '';
+                }
+
+                if (nextSlot.value.trim() && isLaboratoryScheduleValue(nextSlot.value)) {
+                    // Lab blocks cannot overlap. Leave this block intact and let the next
+                    // adjacent empty block be considered by subsequent lab slots.
+                    return;
                 }
 
                 mergeSlotWithNextPeriod(slot, subjectName, slotSelector);
