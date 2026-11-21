@@ -3092,7 +3092,7 @@ Exam Branch
             const ignored = ignoredSlots || new Set();
             return (context && context.slots ? context.slots : []).some(function (slot) {
                 return !ignored.has(slot) && isVisibleFilledClassSlot(slot) &&
-                    slot.dataset.day === day && isLaboratorySubject(slot.value);
+                    slot.dataset.day === day && isLaboratoryScheduleValue(slot.value);
             });
         }
 
@@ -3183,7 +3183,7 @@ Exam Branch
             const slots = context && context.slots ? context.slots : [];
             const daysWithLabs = new Set();
             slots.forEach(function (slot) {
-                if (!isVisibleFilledClassSlot(slot) || !isLaboratorySubject(slot.value)) {
+                if (!isVisibleFilledClassSlot(slot) || !isLaboratoryScheduleValue(slot.value)) {
                     return;
                 }
                 const sourceDay = slot.dataset.day || '';
@@ -3312,103 +3312,7 @@ Exam Branch
         // II-II both on Monday 1st hour). If a clash is found, one of the entries is moved
         // to a free slot in its own context, or cleared if none is available.
         function resolveCrossContextFacultyClashes(classContexts, selections) {
-            const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
-            const subjectToFaculty = new Map();
-            normalizedSelections.forEach(function (selection) {
-                const subjectKey = normalizeSubjectNameForSchedule(getShortSubjectLabel(selection.subjectName || ''));
-                const facultyKey = getFacultyScheduleKey(selection);
-                if (subjectKey && facultyKey) {
-                    subjectToFaculty.set(subjectKey, facultyKey);
-                }
-            });
-
-            const contexts = classContexts || getClassTimeTableContexts(normalizedSelections);
-            let guard = 0;
-            while (guard < 200) {
-                guard += 1;
-                const entries = [];
-                contexts.forEach(function (context) {
-                    (context.slots || []).forEach(function (slot) {
-                        if (!isVisibleFilledClassSlot(slot)) {
-                            return;
-                        }
-                        const value = (slot.value || '').trim();
-                        const subjectKey = normalizeSubjectNameForSchedule(getComparableSubjectValue(value));
-                        const facultyKey = subjectToFaculty.get(subjectKey);
-                        if (!facultyKey) {
-                            return;
-                        }
-                        const day = slot.dataset.day || '';
-                        const periodIndex = getSlotPeriodIndex(slot);
-                        const cell = getTimeTableSlotCell(slot);
-                        const duration = cell && cell.colSpan > 1 ? cell.colSpan : 1;
-                        if (day && periodIndex >= 0) {
-                            entries.push({ slot: slot, context: context, facultyKey: facultyKey, day: day, periodIndex: periodIndex, duration: duration });
-                        }
-                    });
-                });
-
-                let clash = null;
-                outer:
-                for (let i = 0; i < entries.length && !clash; i += 1) {
-                    for (let j = i + 1; j < entries.length; j += 1) {
-                        const a = entries[i];
-                        const b = entries[j];
-                        if (a.facultyKey !== b.facultyKey || a.context === b.context || a.day !== b.day) {
-                            continue;
-                        }
-                        const aEnd = a.periodIndex + a.duration - 1;
-                        const bEnd = b.periodIndex + b.duration - 1;
-                        if (a.periodIndex <= bEnd && b.periodIndex <= aEnd) {
-                            clash = { first: a, second: b };
-                            break outer;
-                        }
-                    }
-                }
-                if (!clash) {
-                    break;
-                }
-
-                const victim = clash.second;
-                const context = victim.context;
-                const duration = victim.duration;
-                const isLab = victim.duration > 1;
-                const targetSlot = (context.slots || []).find(function (candidate) {
-                    const cell = getTimeTableSlotCell(candidate);
-                    const targetPeriod = getSlotPeriodIndex(candidate);
-                    const targetDay = candidate.dataset.day || '';
-                    if (!cell || cell.style.display === 'none' || candidate.value.trim() || candidate === victim.slot) {
-                        return false;
-                    }
-                    if (targetPeriod < 0 || targetPeriod + duration > periodOrder.length) {
-                        return false;
-                    }
-                    if (isLab && (![0, 3].includes(targetPeriod) || normalizeClassValue(targetDay) === 'SAT')) {
-                        return false;
-                    }
-                    const alreadyBooked = entries.some(function (e) {
-                        return e.context === context && e.day === targetDay &&
-                            targetPeriod < e.periodIndex + e.duration && e.periodIndex < targetPeriod + duration;
-                    });
-                    return !alreadyBooked;
-                });
-
-                if (targetSlot) {
-                    moveClassSlotValue(context.slots, victim.slot, targetSlot, context.slotSelector || '.timetable-slot');
-                } else {
-                    clearClassSlotValue(victim.slot);
-                    if (victim.duration > 1) {
-                        restoreClassLabMergesFromValues(context.slots);
-                    }
-                }
-            }
-        }
-
-        function isFirstSemesterLabRoomContext(context) {
-            const year = normalizeAcademicLevelValue(context && context.year);
-            return Boolean(context) &&
-                ['2', '3', '4'].includes(year) &&
-                normalizeAcademicLevelValue(context.semester) === '1';
+            return repairAllFacultyConflicts(classContexts, selections);
         }
 
         function periodsOverlap(leftStart, leftDuration, rightStart, rightDuration) {
@@ -3422,24 +3326,21 @@ Exam Branch
             const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
 
             (contexts || getClassTimeTableContexts(normalizedSelections)).forEach(function (context) {
-                if (!isFirstSemesterLabRoomContext(context)) {
-                    return;
-                }
-
                 const assignments = buildClassAssignments(getSelectionsForClassContext(normalizedSelections, context), context);
                 (context.slots || []).forEach(function (slot) {
                     const cell = getTimeTableSlotCell(slot);
-                    const duration = cell && cell.colSpan > 1 ? cell.colSpan : 1;
                     const assignment = findClassAssignmentByLabel(assignments, getComparableSubjectValue(slot.value));
-                    const labRoomNumber = assignment && assignment.isLab ? (assignment.labRoomNumber || getStandardLabRoomNumber(assignment.displayName || assignment.subjectName)) : '';
-                    const labRoomKey = getLabRoomKey(labRoomNumber);
+                    const duration = cell && cell.colSpan > 1 ? cell.colSpan : (assignment && assignment.isLab ? 2 : 1);
+                    const labRoomNumber = assignment && assignment.isLab
+                        ? (extractLabRoomNumber(slot.value) || assignment.labRoomNumber || getStandardLabRoomNumber(assignment.displayName || assignment.subjectName))
+                        : '';
+                    const labRoomKey = getLabRoomKey(labRoomNumber) || 'UNASSIGNED';
                     const startPeriodIndex = getSlotPeriodIndex(slot);
 
                     if (
                         !isVisibleFilledClassSlot(slot) ||
                         !assignment ||
                         !assignment.isLab ||
-                        !labRoomKey ||
                         startPeriodIndex < 0
                     ) {
                         return;
@@ -3535,10 +3436,9 @@ Exam Branch
         function getContextFacultyEntries(classContexts, selections) {
             const entries = [];
             const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
-            const allSelections = getSelectionsForClassContexts(normalizedSelections, classContexts);
-            const assignments = buildClassAssignments(allSelections, {});
-
             (classContexts || getClassTimeTableContexts()).forEach(function (context) {
+                const contextSelections = getSelectionsForClassContext(normalizedSelections, context);
+                const assignments = buildClassAssignments(contextSelections, context);
                 (context.slots || []).forEach(function (slot) {
                     if (!isVisibleFilledClassSlot(slot)) {
                         return;
@@ -3552,7 +3452,7 @@ Exam Branch
                     const day = slot.dataset.day || '';
                     const periodIndex = getSlotPeriodIndex(slot);
                     const cell = getTimeTableSlotCell(slot);
-                    const duration = cell && cell.colSpan > 1 ? cell.colSpan : 1;
+                    const duration = cell && cell.colSpan > 1 ? cell.colSpan : (assignment.isLab ? 2 : 1);
 
                     if (day && periodIndex >= 0) {
                         entries.push({
@@ -3560,6 +3460,7 @@ Exam Branch
                             context: context,
                             facultyKey: assignment.facultyKey,
                             comparableValue: comparableValue,
+                            isLab: assignment.isLab,
                             day: day,
                             periodIndex: periodIndex,
                             duration: duration
@@ -3593,7 +3494,7 @@ Exam Branch
                         const aEnd = a.periodIndex + a.duration - 1;
                         const bStart = b.periodIndex;
                         const bEnd = b.periodIndex + b.duration - 1;
-                        if (aStart <= bEnd + 1 && bStart <= aEnd + 1) {
+                        if (periodsOverlap(aStart, a.duration, bStart, b.duration)) {
                             return { first: a, second: b };
                         }
                     }
@@ -3652,7 +3553,7 @@ Exam Branch
                     if (normalizeClassValue(targetDay) === 'SAT' && duration > 1) {
                         return false;
                     }
-                    if (isLaboratorySubject(conflictingEntry.comparableValue) &&
+                    if (conflictingEntry.isLab &&
                         contextHasOtherLabOnDay(context, targetDay, ignoredSlots)) {
                         return false;
                     }
@@ -3690,6 +3591,21 @@ Exam Branch
             return repairedCount;
         }
 
+        function repairAllTimetableResourceConflicts(classContexts, selections) {
+            const contexts = classContexts || getClassTimeTableContexts(selections || getStoredSubjectSelections());
+            const summary = { faculty: 0, labRoom: 0 };
+            for (let pass = 0; pass < 3; pass += 1) {
+                const facultyRepairs = repairAllFacultyConflicts(contexts, selections);
+                const labRoomRepairs = repairAllClassLabRoomConflicts(contexts, selections);
+                summary.faculty += facultyRepairs;
+                summary.labRoom += labRoomRepairs;
+                if (!facultyRepairs && !labRoomRepairs) {
+                    break;
+                }
+            }
+            return summary;
+        }
+
         function annotateClassLabRoomNumbers(classContexts, selections) {
             const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
             let annotatedCount = 0;
@@ -3697,7 +3613,7 @@ Exam Branch
             (classContexts || getClassTimeTableContexts(normalizedSelections)).forEach(function (context) {
                 const assignments = buildClassAssignments(getSelectionsForClassContext(normalizedSelections, context), context);
                 (context.slots || []).forEach(function (slot) {
-                    if (!isVisibleFilledClassSlot(slot) || !isLaboratorySubject(slot.value)) {
+                    if (!isVisibleFilledClassSlot(slot) || !isLaboratoryScheduleValue(slot.value)) {
                         return;
                     }
                     const assignment = findClassAssignmentByLabel(assignments, getComparableSubjectValue(slot.value));
@@ -3731,7 +3647,7 @@ Exam Branch
                          }
                          const value = slot.value.trim();
                          const key = normalizeSubjectNameForSchedule(getComparableSubjectValue(value));
-                         if (isLaboratorySubject(value) || key === 'SPORTS' || timetableActivityOrder.has(key)) {
+                         if (isLaboratoryScheduleValue(value) || key === 'SPORTS' || timetableActivityOrder.has(key)) {
                              return;
                          }
                          if (!subjectDayMap.has(key)) {
@@ -3805,6 +3721,9 @@ Exam Branch
              summary.labRoomConflicts += repairAllClassLabRoomConflicts(classContexts, normalizedSelections);
              summary.facultyConflicts += repairAllFacultyConflicts(classContexts, normalizedSelections);
              summary.filledBlankSlots += fillAllClassBlankSlots(contexts, normalizedSelections, freshFacultyOccupancyMap, freshLabRoomOccupancyMap);
+             const finalResourceRepairs = repairAllTimetableResourceConflicts(contexts, normalizedSelections);
+             summary.labRoomConflicts += finalResourceRepairs.labRoom;
+             summary.facultyConflicts += finalResourceRepairs.faculty;
              summary.total = summary.sameHourRepeats +
                  summary.labRoomConflicts +
                  summary.facultyConflicts +
@@ -3850,7 +3769,7 @@ Exam Branch
                  if (day && periodIndex >= 0) {
                      reserveSubjectPeriods(subjectPeriodUsageMap, assignment, periodIndex, duration);
                      if (assignment.isLab) {
-                         const labRoomLabel = slotValue.match(/\(LAB\s*ROOM:\s*([^)]+)\)/i);
+                         const labRoomLabel = slotValue.match(/\((?:LAB\s*)?ROOM:\s*([^)]+)\)/i);
                          const labRoomNumber = (labRoomLabel ? labRoomLabel[1] : '') || assignment.labRoomNumber || getStandardLabRoomNumber(comparableValue);
                          const labAssignment = Object.assign({}, assignment, { labRoomNumber: labRoomNumber });
                          reserveLabRoomPeriods(freshLabRoomMap, labAssignment, day, periodIndex, duration);
@@ -4236,7 +4155,7 @@ Exam Branch
                 summary.total += hours;
                 if (activities.has(value)) {
                     summary.activity += hours;
-                } else if (isLaboratorySubject(slot.value)) {
+                } else if (isLaboratoryScheduleValue(slot.value)) {
                     summary.lab += hours;
                 } else {
                     summary.theory += hours;
@@ -4541,7 +4460,7 @@ Exam Branch
                             normalizeSubjectNameForSchedule(comparableValue);
                     });
                     const assignedRoom = assignment && String(assignment.labRoomNumber || '').trim();
-                    if (!isLaboratorySubject(rawValue) && !assignedRoom) {
+                    if (!isLaboratorySubject(rawValue) && !(assignment && assignment.isLab) && !assignedRoom) {
                         return;
                     }
                     const labRoom = extractLabRoomNumber(rawValue) || assignedRoom || getStandardLabRoomNumber(comparableValue) || 'Unassigned';
@@ -6883,9 +6802,8 @@ Exam Branch
             const savedSelections = getStoredSubjectSelections();
             const classContexts = getClassTimeTableContexts(savedSelections);
             applyTimeTableRequirementRepairs(classContexts, savedSelections);
-            const finalLabRoomRepairs = repairAllClassLabRoomConflicts(classContexts, savedSelections);
-            const finalFacultyRepairs = repairAllFacultyConflicts(classContexts, savedSelections);
-            const finalBlankFills = fillAllClassBlankSlots(classContexts, savedSelections);
+            fillAllClassBlankSlots(classContexts, savedSelections);
+            repairAllTimetableResourceConflicts(classContexts, savedSelections);
             syncIndividualTimeTablesWithMainTables(savedSelections, classContexts);
             normalizeAllTimeTableSlotValues();
             const meta = {};
@@ -7537,6 +7455,7 @@ Exam Branch
             repairAllClassLabRoomConflicts(classContexts, selections);
             repairAllFacultyConflicts(classContexts, selections);
             fillAllClassBlankSlots(classContexts, selections);
+            repairAllTimetableResourceConflicts(classContexts, selections);
             syncIndividualTimeTablesWithMainTables(selections, classContexts);
             normalizeAllTimeTableSlotValues();
             markTimeTableDirty();
@@ -7655,6 +7574,14 @@ Exam Branch
             return /\b(lab|laboratory)\b/i.test(subjectName || '') ||
                 /\bes\s*lab\b|\bdm\s*lab\b|\bcd\s*lab\b|flutter\s*lab|\bsdc\s*lab\b/i.test(subjectName || '') ||
                 /skill development course|ui design flutter|project\s*stage\s*[-–]?\s*i\b|project\s*stage\s*1\b/i.test(subjectName || '');
+        }
+
+        function isLaboratoryScheduleValue(subjectName) {
+            const comparableName = getComparableSubjectValue(subjectName || '');
+            const label = comparableName.split(' - ').pop().trim();
+            const normalizedName = normalizeSubjectNameForSchedule(label);
+            return isLaboratorySubject(comparableName) || isLaboratorySubject(label) ||
+                normalizedName === 'INT' || normalizedName === 'INTERNSHIP';
         }
 
         function getShortSubjectLabel(subjectName) {
@@ -7799,7 +7726,7 @@ Exam Branch
                 if (
                     !subjectName ||
                     !(
-                        (isLaboratorySubject(subjectName) && labStartPeriods.includes(slot.dataset.period))
+                        (isLaboratoryScheduleValue(subjectName) && labStartPeriods.includes(slot.dataset.period))
                     )
                 ) {
                     return;
@@ -8664,7 +8591,9 @@ Exam Branch
         }
 
         function hasLabRoomPeriodConflict(occupancyMap, assignment, day, startPeriodIndex, duration) {
-            const labRoomKey = assignment && assignment.isLab ? getLabRoomKey(assignment.labRoomNumber) : '';
+            const labRoomKey = assignment && assignment.isLab
+                ? (getLabRoomKey(assignment.labRoomNumber || getStandardLabRoomNumber(assignment.displayName || assignment.subjectName)) || 'UNASSIGNED')
+                : '';
             if (!labRoomKey) {
                 return false;
             }
@@ -8678,7 +8607,9 @@ Exam Branch
         }
 
         function reserveLabRoomPeriods(occupancyMap, assignment, day, startPeriodIndex, duration) {
-            const labRoomKey = assignment && assignment.isLab ? getLabRoomKey(assignment.labRoomNumber) : '';
+            const labRoomKey = assignment && assignment.isLab
+                ? (getLabRoomKey(assignment.labRoomNumber || getStandardLabRoomNumber(assignment.displayName || assignment.subjectName)) || 'UNASSIGNED')
+                : '';
             if (!labRoomKey) {
                 return;
             }
@@ -8695,9 +8626,7 @@ Exam Branch
         }
 
         function getFacultyOccupancyKey(selection) {
-            const facultyName = (selection.facultyName || '').trim().toUpperCase();
-            const employeeCode = (selection.employeeCode || '').trim().toUpperCase();
-            return employeeCode || facultyName || '';
+            return getFacultyScheduleKey(selection);
         }
 
         function prePopulateOccupancyMapsFromExistingData(facultyOccupancyMap, labRoomOccupancyMap) {
@@ -8712,8 +8641,9 @@ Exam Branch
                 const day = slot.dataset.day || '';
                 const periodIndex = periodOrder.indexOf(slot.dataset.period || '');
                 if (day && periodIndex >= 0) {
-                    const isLab = isLaboratorySubject(comparableValue) || isLaboratorySubject(value);
-                    const duration = isLab ? 2 : 1;
+                    const isLab = isLaboratoryScheduleValue(comparableValue) || isLaboratoryScheduleValue(value);
+                    const cell = getTimeTableSlotCell(slot);
+                    const duration = cell && cell.colSpan > 1 ? cell.colSpan : (isLab ? 2 : 1);
                     const assignment = {
                         isLab: isLab,
                         subjectName: comparableValue,
@@ -8721,14 +8651,14 @@ Exam Branch
                         labRoomNumber: '',
                         facultyKey: ''
                     };
-                    const labRoomMatch = value.match(/\(LAB\s*ROOM:\s*([^)]+)\)/i);
+                    const labRoomMatch = value.match(/\((?:LAB\s*)?ROOM:\s*([^)]+)\)/i);
                     if (labRoomMatch) {
                         assignment.labRoomNumber = labRoomMatch[1].trim();
                     }
                     if (!assignment.labRoomNumber && isLab) {
                         assignment.labRoomNumber = getStandardLabRoomNumber(comparableValue);
                     }
-                    if (assignment.labRoomNumber && labRoomOccupancyMap) {
+                    if (isLab && labRoomOccupancyMap) {
                         reserveLabRoomPeriods(labRoomOccupancyMap, assignment, day, periodIndex, duration);
                     }
                 }
@@ -8738,33 +8668,30 @@ Exam Branch
             const classContexts = getClassTimeTableContexts(normalizedSelections);
             (classContexts || []).forEach(function (context) {
                 const contextSelections = getSelectionsForClassContext(normalizedSelections, context);
-                (contextSelections || []).forEach(function (selection) {
-                    const facultyKey = getFacultyOccupancyKey(selection);
-                    if (!facultyKey || !facultyOccupancyMap) {
+                const assignments = buildClassAssignments(contextSelections, context);
+                (context.slots || []).forEach(function (slot) {
+                    const slotValue = (slot.value || '').trim();
+                    if (!slotValue) {
                         return;
                     }
-                    context.slots.forEach(function (slot) {
-                        const slotValue = (slot.value || '').trim();
-                        if (!slotValue) {
-                            return;
-                        }
-                        const comparableValue = getComparableSubjectValue(slotValue);
-                        const subjectKey = normalizeSubjectNameForSchedule(comparableValue);
-                        const selectionLabels = getScheduleLabelsForSelection(selection);
-                        const matches = selectionLabels.some(function (label) {
-                            return normalizeSubjectNameForSchedule(label) === subjectKey;
+                    const comparableValue = getComparableSubjectValue(slotValue);
+                    const assignment = findClassAssignmentByLabel(assignments, comparableValue);
+                    const day = slot.dataset.day || '';
+                    const periodIndex = periodOrder.indexOf(slot.dataset.period || '');
+                    const cell = getTimeTableSlotCell(slot);
+                    if (!assignment || !day || periodIndex < 0) {
+                        return;
+                    }
+                    const duration = cell && cell.colSpan > 1 ? cell.colSpan : (assignment.isLab ? 2 : 1);
+                    reserveFacultyPeriods(facultyOccupancyMap, assignment.facultyKey, day, periodIndex, duration);
+                    if (assignment.isLab) {
+                        const roomMatch = slotValue.match(/\((?:LAB\s*)?ROOM:\s*([^)]+)\)/i);
+                        const labAssignment = Object.assign({}, assignment, {
+                            labRoomNumber: (roomMatch && roomMatch[1].trim()) || assignment.labRoomNumber ||
+                                getStandardLabRoomNumber(assignment.displayName || assignment.subjectName)
                         });
-                        if (!matches) {
-                            return;
-                        }
-                        const day = slot.dataset.day || '';
-                        const periodIndex = periodOrder.indexOf(slot.dataset.period || '');
-                        if (day && periodIndex >= 0) {
-                            const isLab = isLaboratorySubject(comparableValue) || isLaboratorySubject(slotValue);
-                            const duration = isLab ? 2 : 1;
-                            reserveFacultyPeriods(facultyOccupancyMap, facultyKey, day, periodIndex, duration);
-                        }
-                    });
+                        reserveLabRoomPeriods(labRoomOccupancyMap, labAssignment, day, periodIndex, duration);
+                    }
                 });
             });
         }
@@ -9369,7 +9296,7 @@ Exam Branch
                     }
                     const value = getComparableSubjectValue(slot.value);
                     const key = normalizeSubjectNameForSchedule(value);
-                    if (isLaboratorySubject(value) || normalizeSubjectNameForSchedule(value) === 'SPORTS') {
+                    if (isLaboratoryScheduleValue(value) || normalizeSubjectNameForSchedule(value) === 'SPORTS') {
                         return;
                     }
                     if (seen.has(key)) {
@@ -9390,7 +9317,7 @@ Exam Branch
                     return;
                 }
                 const value = getComparableSubjectValue(slot.value);
-                if (!isLaboratorySubject(value)) {
+                if (!isLaboratoryScheduleValue(value)) {
                     return;
                 }
                 if (!(cell.colSpan && cell.colSpan > 1)) {
@@ -9646,6 +9573,9 @@ Exam Branch
                             continue;
                         }
                         if (facultyClashes(day, start, duration, assignment.facultyKey)) {
+                            continue;
+                        }
+                        if (hasLabRoomPeriodConflict(labRoomOccupancyMap, assignment, day, start, duration)) {
                             continue;
                         }
                         placeMerged(assignment, day, start, duration);
@@ -10285,7 +10215,7 @@ Exam Branch
                 if (
                     !subjectName ||
                     !(
-                        (isLaboratorySubject(subjectName) && labStartPeriods.includes(slot.dataset.period))
+                        (isLaboratoryScheduleValue(subjectName) && labStartPeriods.includes(slot.dataset.period))
                     )
                 ) {
                     return;
@@ -10698,6 +10628,10 @@ Exam Branch
             const timetableSelections = getSelectionsForClassContexts(selections, classContexts);
 
              loadSyllabusSubjects(payload.subjectCode).then(function (data) {
+                 classContexts.forEach(function (context) {
+                     resetClassTimeTableMerges(context.slots);
+                     (context.slots || []).forEach(function (slot) { slot.value = ''; });
+                 });
                  const facultyOccupancyMap = createFacultyOccupancyMap();
                  const labRoomOccupancyMap = createLabRoomOccupancyMap();
                  prePopulateOccupancyMapsFromExistingData(facultyOccupancyMap, labRoomOccupancyMap);
@@ -10730,7 +10664,9 @@ Exam Branch
                    const finalBlankFills = fillAllClassBlankSlots(classContexts, selections);
                    repairSummary.filledBlankSlots += finalBlankFills;
                    repairSummary.total += finalBlankFills;
-                   resolveCrossContextFacultyClashes(classContexts, selections);
+                   const finalResourceRepairs = repairAllTimetableResourceConflicts(classContexts, selections);
+                   repairSummary.labRoomConflicts += finalResourceRepairs.labRoom;
+                   repairSummary.facultyConflicts += finalResourceRepairs.faculty;
                    classGeneration.contexts.forEach(function (contextSummary, index) {
                        contextSummary.hours = countClassContextHours(classContexts[index]);
                    });
@@ -10905,6 +10841,7 @@ Exam Branch
                 repairAllClassLabRoomConflicts(classContexts, selections);
                 repairAllFacultyConflicts(classContexts, selections);
                 fillAllClassBlankSlots(classContexts, selections);
+                repairAllTimetableResourceConflicts(classContexts, selections);
                 syncIndividualTimeTablesWithMainTables(selections, classContexts);
                 normalizeAllTimeTableSlotValues();
             });
@@ -10918,6 +10855,7 @@ Exam Branch
                 repairAllClassLabRoomConflicts(classContexts, selections);
                 repairAllFacultyConflicts(classContexts, selections);
                 fillAllClassBlankSlots(classContexts, selections);
+                repairAllTimetableResourceConflicts(classContexts, selections);
                 syncIndividualTimeTablesWithMainTables(selections, classContexts);
                 normalizeAllTimeTableSlotValues();
                 downloadMainTimeTableExcel(button);
@@ -10937,6 +10875,7 @@ Exam Branch
                 repairAllClassLabRoomConflicts(classContexts, selections);
                 repairAllFacultyConflicts(classContexts, selections);
                 fillAllClassBlankSlots(classContexts, selections);
+                repairAllTimetableResourceConflicts(classContexts, selections);
                 syncIndividualTimeTablesWithMainTables(selections, classContexts);
                 normalizeAllTimeTableSlotValues();
             });
@@ -10973,6 +10912,7 @@ Exam Branch
                     repairAllClassLabRoomConflicts(classContexts, selections);
                     repairAllFacultyConflicts(classContexts, selections);
                     fillAllClassBlankSlots(classContexts, selections);
+                    repairAllTimetableResourceConflicts(classContexts, selections);
                       normalizeAllTimeTableSlotValues();
                 }
             });
@@ -11110,6 +11050,10 @@ Exam Branch
              const finalBlankFills = fillAllClassBlankSlots(classContexts, selections);
              repairSummary.filledBlankSlots += finalBlankFills;
              repairSummary.total += finalBlankFills;
+             const finalResourceRepairs = repairAllTimetableResourceConflicts(classContexts, selections);
+             repairSummary.facultyConflicts += finalResourceRepairs.faculty;
+             repairSummary.labRoomConflicts += finalResourceRepairs.labRoom;
+             repairSummary.total += finalResourceRepairs.faculty + finalResourceRepairs.labRoom;
              if (repairSummary.total) {
                  syncIndividualTimeTablesWithMainTables(selections, classContexts);
              }
