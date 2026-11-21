@@ -3695,6 +3695,7 @@ Exam Branch
                  projectStageLabs: 0,
                  movedActivities: 0,
                  annotatedLabRooms: 0,
+                 mergedLabRepairs: 0,
                  total: 0
              };
 
@@ -3721,6 +3722,7 @@ Exam Branch
              summary.labRoomConflicts += repairAllClassLabRoomConflicts(classContexts, normalizedSelections);
              summary.facultyConflicts += repairAllFacultyConflicts(classContexts, normalizedSelections);
              summary.filledBlankSlots += fillAllClassBlankSlots(contexts, normalizedSelections, freshFacultyOccupancyMap, freshLabRoomOccupancyMap);
+             summary.mergedLabRepairs += repairR22ThreeTwoITSELabEntries(contexts);
              const finalResourceRepairs = repairAllTimetableResourceConflicts(contexts, normalizedSelections);
              summary.labRoomConflicts += finalResourceRepairs.labRoom;
              summary.facultyConflicts += finalResourceRepairs.faculty;
@@ -3732,7 +3734,8 @@ Exam Branch
                  summary.fixedLayouts +
                  summary.projectStageLabs +
                  summary.movedActivities +
-                 summary.annotatedLabRooms;
+                 summary.annotatedLabRooms +
+                 summary.mergedLabRepairs;
 
              return summary;
          }
@@ -3937,6 +3940,104 @@ Exam Branch
                   });
               });
               return removedHours;
+          }
+
+          function repairR22ThreeTwoITSELabEntries(contexts) {
+              let repaired = 0;
+              const canonicalValue = 'SE Lab (Room: D-314)';
+              const dayOrder = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+              function isSELabRoomValue(value) {
+                  const roomMatch = String(value || '').match(/\(\s*ROOM:\s*([^)]+)\)/i);
+                  const label = normalizeSubjectNameForSchedule(getComparableSubjectValue(value)).split(' - ').pop().trim();
+                  return Boolean(roomMatch) && normalizeClassValue(roomMatch[1]) === 'D-314' &&
+                      (label === 'SE' || label === 'SE LAB');
+              }
+              (contexts || []).forEach(function (context) {
+                  if (!isR22ThreeTwoITContext(context)) {
+                      return;
+                  }
+                  const slots = context.slots || [];
+                  const entries = slots.filter(function (slot) {
+                      return isVisibleFilledClassSlot(slot) && isSELabRoomValue(slot.value);
+                  }).sort(function (left, right) {
+                      const leftPeriod = getSlotPeriodIndex(left);
+                      const rightPeriod = getSlotPeriodIndex(right);
+                      const leftIsMergedStart = [0, 3].includes(leftPeriod) && getTimeTableSlotCell(left).colSpan > 1;
+                      const rightIsMergedStart = [0, 3].includes(rightPeriod) && getTimeTableSlotCell(right).colSpan > 1;
+                      if (leftIsMergedStart !== rightIsMergedStart) {
+                          return leftIsMergedStart ? -1 : 1;
+                      }
+                      const leftIsStart = [0, 3].includes(leftPeriod);
+                      const rightIsStart = [0, 3].includes(rightPeriod);
+                      if (leftIsStart !== rightIsStart) {
+                          return leftIsStart ? -1 : 1;
+                      }
+                      return dayOrder.indexOf(left.dataset.day) - dayOrder.indexOf(right.dataset.day) || leftPeriod - rightPeriod;
+                  });
+                  if (!entries.length) {
+                      return;
+                  }
+
+                  const keep = entries[0];
+                  entries.slice(1).forEach(function (duplicate) {
+                      clearClassSlotValue(duplicate);
+                      repaired += 1;
+                  });
+                  if (keep.value.trim() !== canonicalValue) {
+                      keep.value = canonicalValue;
+                      repaired += 1;
+                  }
+                  const keepCell = getTimeTableSlotCell(keep);
+                  if (keepCell && keepCell.colSpan > 1) {
+                      return;
+                  }
+
+                  function canMergeAt(startSlot) {
+                      if (!startSlot || normalizeClassValue(startSlot.dataset.day) === 'SAT') {
+                          return false;
+                      }
+                      const periodIndex = getSlotPeriodIndex(startSlot);
+                      if (![0, 3].includes(periodIndex)) {
+                          return false;
+                      }
+                      const nextSlot = getClassSlot(startSlot.dataset.day, periodOrder[periodIndex + 1], slots);
+                      const startValue = startSlot.value.trim();
+                      const nextValue = nextSlot ? nextSlot.value.trim() : '';
+                      return (!startValue || isSELabRoomValue(startValue)) &&
+                          (!nextValue || isSELabRoomValue(nextValue));
+                  }
+
+                  let startSlot = [0, 3].includes(getSlotPeriodIndex(keep)) ? keep : null;
+                  if (getSlotPeriodIndex(keep) === 4) {
+                      const previousSlot = getClassSlot(keep.dataset.day, periodOrder[3], slots);
+                      if (canMergeAt(previousSlot)) {
+                          startSlot = previousSlot;
+                      }
+                  }
+                  if (!canMergeAt(startSlot)) {
+                      startSlot = null;
+                      dayOrder.some(function (day) {
+                          return [3, 0].some(function (periodIndex) {
+                              const candidate = getClassSlot(day, periodOrder[periodIndex], slots);
+                              if (candidate === keep || !canMergeAt(candidate)) {
+                                  return false;
+                              }
+                              startSlot = candidate;
+                              return true;
+                          });
+                      });
+                  }
+                  if (!startSlot) {
+                      return;
+                  }
+                  if (startSlot !== keep) {
+                      clearClassSlotValue(keep);
+                  }
+                  if (mergeSlotWithNextPeriod(startSlot, canonicalValue, context.slotSelector)) {
+                      repaired += 1;
+                  }
+              });
+              return repaired;
           }
 
           function trimR25TwoTwoITHoursToTargets(context, selections) {
