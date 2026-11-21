@@ -8283,16 +8283,16 @@ Exam Branch
             normalizeSubjectSelections(selections).forEach(function (selection) {
                 const facultyName = (selection.facultyName || '').trim();
                 const employeeCode = (selection.employeeCode || '').trim();
+                const employeeCodeKey = normalizeClassValue(employeeCode).replace(/[^A-Z0-9]/g, '');
                 const subjectName = (selection.subjectName || '').trim();
                 const subjectLabels = getScheduleLabelsForSelection(selection);
                 const normalizedFacultyKey = normalizeSubjectNameForSchedule(facultyName).replace(/[^A-Z0-9]/g, '');
-                const key = normalizedFacultyKey || employeeCode || 'faculty-' + facultyMap.size;
+                const key = employeeCodeKey || normalizedFacultyKey || 'faculty-' + facultyMap.size;
 
                 if (!facultyMap.has(key)) {
                     facultyMap.set(key, {
                         facultyName: facultyName,
                         employeeCode: employeeCode,
-                        employeeCodes: [],
                         subjects: [],
                         subjectLabels: [],
                         selections: []
@@ -8303,10 +8303,9 @@ Exam Branch
                 if (facultyName && !schedule.facultyName) {
                     schedule.facultyName = facultyName;
                 }
-                if (employeeCode && !schedule.employeeCodes.includes(employeeCode)) {
-                    schedule.employeeCodes.push(employeeCode);
+                if (employeeCode && !schedule.employeeCode) {
+                    schedule.employeeCode = employeeCode;
                 }
-                schedule.employeeCode = schedule.employeeCodes.join(' / ') || schedule.employeeCode;
 
                 if (subjectName && !schedule.subjects.includes(subjectName)) {
                     schedule.subjects.push(subjectName);
