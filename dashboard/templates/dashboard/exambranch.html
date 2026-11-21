@@ -7738,7 +7738,8 @@ Exam Branch
         function isLaboratorySubject(subjectName) {
             return /\b(lab|laboratory)\b/i.test(subjectName || '') ||
                 /\bes\s*lab\b|\bdm\s*lab\b|\bcd\s*lab\b|flutter\s*lab|\bsdc\s*lab\b/i.test(subjectName || '') ||
-                /skill development course|ui design flutter|project\s*stage\s*[-–]?\s*i\b|project\s*stage\s*1\b/i.test(subjectName || '');
+                /skill development course|ui design flutter|project\s*stage\s*[-–]?\s*i\b|project\s*stage\s*1\b/i.test(subjectName || '') ||
+                /\biompi\b/i.test(subjectName || '');
         }
 
         function isLaboratoryScheduleValue(subjectName) {
