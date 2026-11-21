@@ -8884,6 +8884,24 @@ Exam Branch
             return false;
         }
 
+        function isR22ThreeTwoAIMLContext(context) {
+            return Boolean(context) &&
+                normalizeClassValue(context.regulation || 'R22') === 'R22' &&
+                normalizeAcademicLevelValue(context.year) === '3' &&
+                normalizeAcademicLevelValue(context.semester) === '2' &&
+                normalizeClassValue(context.branch) === 'AIML' &&
+                ['A', 'B'].includes(normalizeClassValue(context.section));
+        }
+
+        function isR22ThreeTwoAIMLInternship(subjectName) {
+            const normalizedName = normalizeSubjectNameForSchedule(subjectName);
+            return normalizedName === 'INTERNSHIP' || normalizedName === 'INT';
+        }
+
+        function isR22ThreeTwoAIMLSeminar(subjectName) {
+            return normalizeSubjectNameForSchedule(subjectName) === 'SEMINAR';
+        }
+
         function buildClassAssignments(classSelections, context) {
             const assignmentMap = new Map();
             const normalizedClassSelections = normalizeSubjectSelections(classSelections);
@@ -8900,8 +8918,11 @@ Exam Branch
                 }
                 const isR25TwoOneReducedLoad = isR25TwoOneITContext(context) || isR25TwoOneAIMLContext(context);
                 const isR25TwoTwoIT = isR25TwoTwoITContext(context);
-                const isActivity = /^(SPORTS|LIBRARY|MENTORING|EVS\/IKS|VEGS)$/i.test(displayName);
-                const isLab = isLaboratorySubject(subjectName) || isLaboratorySubject(displayName);
+                const isR22ThreeTwoAIML = isR22ThreeTwoAIMLContext(context);
+                const isActivity = /^(SPORTS|LIBRARY|MENTORING|EVS\/IKS|VEGS)$/i.test(displayName) ||
+                    (isR22ThreeTwoAIML && isR22ThreeTwoAIMLSeminar(displayName));
+                const isLab = isLaboratorySubject(subjectName) || isLaboratorySubject(displayName) ||
+                    (isR22ThreeTwoAIML && isR22ThreeTwoAIMLInternship(subjectName));
                 assignmentMap.set(key, {
                     selection: selection,
                     subjectName: subjectName,
@@ -8910,11 +8931,11 @@ Exam Branch
                     labRoomNumber: selection.labRoomNumber || '',
                     isLab: isLab,
                     isActivity: isActivity,
-                    targetHours: isLab ? 2 : (isR25TwoTwoIT
+                    targetHours: isLab ? 2 : (isR22ThreeTwoAIML && isActivity ? 1 : (isR25TwoTwoIT
                         ? (/^(VEGS|NJRJDU)$/i.test(displayName) ? 2 : (/^(SPORTS|LIBRARY)$/i.test(displayName) ? 1 : 4))
                         : (isR25TwoOneReducedLoad
                         ? (/^(SPORTS|EVS\/IKS|VEGS)$/i.test(displayName) ? 2 : (/^(LIBRARY|MENTORING)$/i.test(displayName) ? 1 : 4))
-                        : (isActivity ? 1 : 5))),
+                        : (isActivity ? 1 : 5)))),
                     placedHours: 0
                 });
             });
