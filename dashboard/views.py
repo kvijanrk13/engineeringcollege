@@ -10803,6 +10803,22 @@ def exam_branch_syllabus_subjects(request):
         if isinstance(subject, dict)
     ]
     add_exam_branch_extra_subjects(subjects, year, semester, branch, section)
+    if regulation == 'R22' and year == '3' and semester == '2' and branch == 'AIML' and not any(
+        subject.get('code') == 'AM626PE' for subject in subjects
+    ):
+        am625_index = next(
+            (index for index, subject in enumerate(subjects) if subject.get('code') == 'AM625PE'),
+            None,
+        )
+        hci_subject = {
+            'code': 'AM626PE',
+            'name': 'HUMAN COMPUTER INTERACTION',
+            'branch': 'AIML',
+        }
+        if am625_index is None:
+            subjects.append(hci_subject)
+        else:
+            subjects.insert(am625_index + 1, hci_subject)
     return JsonResponse({
         'regulation': regulation,
         'year': year,
