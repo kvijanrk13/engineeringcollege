@@ -3896,20 +3896,35 @@ Exam Branch
                   return !assignment.isLab && !assignment.isActivity;
               });
               let removedHours = 0;
-              assignments.forEach(function (assignment) {
-                  let currentHours = countClassAssignmentHours(context, assignment);
-                  if (currentHours <= 5) {
+              const subjectKeys = new Set();
+              function getTheorySubjectKey(value) {
+                  const assignment = findClassAssignmentByLabel(assignments, value);
+                  return normalizeSubjectNameForSchedule(assignment ? assignment.displayName : value);
+              }
+              (context.slots || []).forEach(function (slot) {
+                  if (!isVisibleFilledClassSlot(slot)) {
                       return;
                   }
+                  const value = getComparableSubjectValue(slot.value);
+                  const normalizedValue = normalizeSubjectNameForSchedule(value);
+                  if (isLaboratoryScheduleValue(value) || normalizedValue === 'SPORTS' || timetableActivityOrder.has(normalizedValue)) {
+                      return;
+                  }
+                  subjectKeys.add(getTheorySubjectKey(value));
+              });
+              subjectKeys.forEach(function (subjectKey) {
+                  let currentHours = 0;
                   const matchingSlots = (context.slots || []).filter(function (slot) {
-                      return isVisibleFilledClassSlot(slot) &&
-                          normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) ===
-                          normalizeSubjectNameForSchedule(assignment.displayName);
+                      return isVisibleFilledClassSlot(slot) && getTheorySubjectKey(getComparableSubjectValue(slot.value)) === subjectKey;
                   }).sort(function (left, right) {
                       const dayOrder = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
                       const dayDifference = dayOrder.indexOf(right.dataset.day) - dayOrder.indexOf(left.dataset.day);
                       return dayDifference || getSlotPeriodIndex(right) - getSlotPeriodIndex(left);
                   });
+                  currentHours = matchingSlots.reduce(function (total, slot) {
+                      const cell = getTimeTableSlotCell(slot);
+                      return total + (cell && cell.colSpan > 1 ? cell.colSpan : 1);
+                  }, 0);
                   matchingSlots.forEach(function (slot) {
                       if (currentHours <= 5) {
                           return;
@@ -10155,6 +10170,10 @@ Exam Branch
 
             if (normalized.includes('DESIGN AND ANALYSIS OF ALGORITHMS')) {
                 labels.push('DAA');
+            }
+            if (normalized.includes('DATA COMMUNICATIONS AND COMPUTER NETWORKS') ||
+                normalized.includes('DATA COMMUNICATION AND COMPUTER NETWORKS')) {
+                labels.push('DCACN');
             }
             if (normalized.includes('AUTOMATA AND COMPILER DESIGN')) {
                 labels.push('ACD');
