@@ -7703,6 +7703,16 @@ Exam Branch
             const labels = getScheduleLabelsForSubjectName(trimmedName).filter(function (label) {
                 return label && label !== trimmedName;
             });
+            if (isLaboratorySubject(trimmedName)) {
+                const laboratoryLabel = labels.find(function (label) {
+                    return isLaboratorySubject(label);
+                });
+                if (laboratoryLabel) {
+                    return laboratoryLabel;
+                }
+                const fallbackLabLabel = labels[0] || buildSubjectAcronym(trimmedName) || trimmedName;
+                return isLaboratorySubject(fallbackLabLabel) ? fallbackLabLabel : fallbackLabLabel + ' Lab';
+            }
             return labels[0] || buildSubjectAcronym(trimmedName) || trimmedName;
         }
 
