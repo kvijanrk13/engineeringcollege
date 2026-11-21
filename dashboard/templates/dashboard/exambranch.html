@@ -8319,6 +8319,17 @@ Exam Branch
             ));
         }
 
+        function requiresMorningTheoryCoverage(context) {
+            if (!context) {
+                return false;
+            }
+            const regulation = normalizeClassValue(context.regulation || 'R22');
+            const year = normalizeAcademicLevelValue(context.year);
+            const semester = normalizeAcademicLevelValue(context.semester);
+            return (regulation === 'R25' && year === '2' && semester === '2') ||
+                (regulation === 'R22' && ((year === '3' && semester === '2') || (year === '4' && semester === '2')));
+        }
+
         function getSelectionContextKey(selection) {
             const branch = normalizeBranchValue(selection.branch);
             return [
@@ -9556,7 +9567,7 @@ Exam Branch
             }
             function placeMergedBlock(assignment, idx, duration) {
                 const key = subjectKeyOf(assignment);
-                const startCandidates = [0, 3];
+                const startCandidates = requiresMorningTheoryCoverage(context) ? [3, 0] : [0, 3];
                 let placed = false;
                 for (let d = 0; d < days.length && !placed; d += 1) {
                     const day = days[(idx + d) % days.length];
@@ -9595,6 +9606,26 @@ Exam Branch
             const theory = (assignments || []).filter(function (a) {
                 return !a.isLab && !isSports(a) && !a.isActivity;
             });
+
+            if (requiresMorningTheoryCoverage(context)) {
+                theory.forEach(function (assignment, assignmentIndex) {
+                    const key = subjectKeyOf(assignment);
+                    if (targetOf(assignment) < 1) {
+                        return;
+                    }
+                    for (let dayOffset = 0; dayOffset < days.length; dayOffset += 1) {
+                        const day = days[(assignmentIndex + dayOffset) % days.length];
+                        if (subjectUsedDays(key).has(day) || subjectUsedPeriods(key).has(0) || !slotFree(day, 0)) {
+                            continue;
+                        }
+                        if (facultyClashes(day, 0, 1, assignment.facultyKey)) {
+                            continue;
+                        }
+                        placeSingle(assignment, day, 0);
+                        break;
+                    }
+                });
+            }
 
             labs.forEach(function (assignment, idx) {
                 placeMergedBlock(assignment, idx, 2);
@@ -9702,8 +9733,40 @@ Exam Branch
                 return slot.dataset.day || '';
             }).filter(Boolean)));
 
+            if (requiresMorningTheoryCoverage(context)) {
+                const theoryAssignments = assignments.filter(function (assignment) {
+                    return !assignment.isLab && !assignment.isActivity &&
+                        normalizeSubjectNameForSchedule(assignment.displayName || assignment.subjectName) !== 'SPORTS';
+                });
+                theoryAssignments.forEach(function (assignment, assignmentIndex) {
+                    if ((assignment.targetHours || 0) < 1) {
+                        return;
+                    }
+                    for (let dayOffset = 0; dayOffset < days.length; dayOffset += 1) {
+                        const day = days[(assignmentIndex + dayOffset) % days.length];
+                        if (contextHasAssignmentOnDay(context, assignment, day)) {
+                            continue;
+                        }
+                        if (!canUseClassSlot(context, day, 0, 1, assignment.facultyKey, occupancyMap, true, assignment, subjectPeriodUsageMap, labRoomOccupancyMap)) {
+                            continue;
+                        }
+                        const placedHours = placeClassAssignment(context, day, 0, assignment, occupancyMap, true, subjectPeriodUsageMap, labRoomOccupancyMap);
+                        if (placedHours) {
+                            counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
+                            totalHours += placedHours;
+                            break;
+                        }
+                    }
+                });
+            }
+
             days.forEach(function (day, dayIndex) {
-                const dailySubjects = new Set();
+                const dailySubjects = new Set((context.slots || []).filter(function (slot) {
+                    return slot.dataset.day === day && isVisibleFilledClassSlot(slot);
+                }).map(function (slot) {
+                    const assignment = findClassAssignmentByLabel(assignments, getComparableSubjectValue(slot.value));
+                    return assignment && !assignment.isActivity ? assignment.subjectName : '';
+                }).filter(Boolean));
                 periodOrder.forEach(function (period, periodIndex) {
                     for (let offset = 0; offset < placementAssignments.length; offset += 1) {
                         const assignment = placementAssignments[(dayIndex + periodIndex + offset) % placementAssignments.length];
