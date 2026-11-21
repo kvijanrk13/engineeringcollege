@@ -2498,16 +2498,14 @@ Exam Branch
             '4': 'examBranchEvaluationDataFourth'
         };
         let activeEvaluationSheet = '1';
-        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12', 'examBranchTimeTableDataAllowedContextsV13', 'examBranchTimeTableDataActivityPlacementV14', 'examBranchTimeTableDataNoLabClashesV15', 'examBranchTimeTableDataRequirementRepairV16', 'examBranchTimeTableDataRequiredLabsV17', 'examBranchTimeTableDataFixedLayoutsV18', 'examBranchTimeTableDataLoadSummaryV19', 'examBranchTimeTableDataPinnedFixedLayoutsV20'];
-        const timeTableStorageKey = 'examBranchTimeTableDataR22DataMiningLabV22';
+        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12', 'examBranchTimeTableDataAllowedContextsV13', 'examBranchTimeTableDataActivityPlacementV14', 'examBranchTimeTableDataNoLabClashesV15', 'examBranchTimeTableDataRequirementRepairV16', 'examBranchTimeTableDataRequiredLabsV17', 'examBranchTimeTableDataFixedLayoutsV18', 'examBranchTimeTableDataLoadSummaryV19', 'examBranchTimeTableDataPinnedFixedLayoutsV20', 'examBranchTimeTableDataR22DataMiningLabV22'];
+        const timeTableStorageKey = 'examBranchTimeTableDataR22DataMiningLabV23';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const labTimeTablePurgeFlag = 'examBranchLabTimeTablePurgeV1';
 
-        // One-time purge of any previously generated/stored timetable values so the
-        // Lab Time Table (and main/individual tables) start empty and are only generated
-        // from user-given faculty subject selections.
+        // Keep the one-time initial cleanup limited to legacy keys. Current saved
+        // timetables are migrated and repaired below instead of discarded.
         if (!localStorage.getItem(labTimeTablePurgeFlag)) {
-            localStorage.removeItem(timeTableStorageKey);
             legacyTimeTableStorageKeys.forEach(function (key) {
                 localStorage.removeItem(key);
             });
@@ -7011,6 +7009,9 @@ Exam Branch
                 localStorage.removeItem(key);
             });
             if (!saved) {
+                const defaultContexts = getClassTimeTableContexts(getStoredSubjectSelections());
+                enforceActivitiesLastHours(defaultContexts);
+                saveTimeTableData();
                 renderAllTimeTableLoadSummaries();
                 setStatus(timeTableStatus, 'Blank timetable ready', 'muted');
                 return;
@@ -7025,10 +7026,11 @@ Exam Branch
                     (repairedSameHourRepeats || migratedLegacyTimetable ? '; timetable clashes were corrected' : ''),
                     'success'
                 );
-                if (repairedSameHourRepeats || migratedLegacyTimetable) {
+                const activityRepairs = enforceActivitiesLastHours(getClassTimeTableContexts(getStoredSubjectSelections()));
+                if (repairedSameHourRepeats || migratedLegacyTimetable || activityRepairs) {
                     syncIndividualTimeTablesWithMainTables(getStoredSubjectSelections(), getClassTimeTableContexts(getStoredSubjectSelections()));
                 }
-                if (repairedSameHourRepeats || migratedLegacyTimetable) {
+                if (repairedSameHourRepeats || migratedLegacyTimetable || activityRepairs) {
                     saveTimeTableData();
                 }
             } catch (error) {
@@ -7760,7 +7762,7 @@ Exam Branch
         function isFirstSemesterTwoToFourContext(context) {
             const year = normalizeAcademicLevelValue(context && context.year);
             return ['2', '3', '4'].includes(year) &&
-                normalizeAcademicLevelValue(context && context.semester) === '1';
+                normalizeAcademicLevelValue(context && context.semester) === '2';
         }
 
         function isR25TwoOneAIMLContext(context) {
@@ -8043,10 +8045,8 @@ Exam Branch
                 }
             });
 
-            const contextYear = normalizeAcademicLevelValue(context.year);
-            const activityEntries = timetableActivityLabels.filter(function (label) {
-                return !(label === 'SPORTS' && (contextYear === '2' || contextYear === '3'));
-            }).map(function (label) {
+            // For semester-II cohorts, enforce only the requested weekly hours.
+            const activityEntries = ['SPORTS', 'LIBRARY'].map(function (label) {
                 return activityEntriesByKey.get(label) || {
                     key: label,
                     slot: null,
@@ -10986,6 +10986,10 @@ Exam Branch
         document.getElementById('studentCount').value = String(defaultEvaluationRollNumbers.length);
         loadTimeTableData();
         loadSubjectSelection();
+        // Persist the default Friday SPORTS and Saturday LIBRARY hours on first visit.
+        if (!localStorage.getItem(timeTableStorageKey)) {
+            saveTimeTableData();
+        }
 
         var savedSelections = getStoredSubjectSelections();
         if (savedSelections.length > 0) {
