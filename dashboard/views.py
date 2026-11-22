@@ -3387,13 +3387,13 @@ def google_login(request):
         role = 'admin'
 
     target = request.GET.get('target', '')
-    if target not in {'aeclibrary', 'etors', 'moocs', 'mentoring'}:
+    if target not in {'aeclibrary', 'etors', 'moocs', 'mentoring', 'exambranch'}:
         target = ''
     if target == 'mentoring':
         request.session.pop('mentoring_google_verified', None)
         request.session.pop('mentoring_student_id', None)
 
-    if target in {'aeclibrary', 'etors', 'moocs', 'mentoring'}:
+    if target in {'aeclibrary', 'etors', 'moocs', 'mentoring', 'exambranch'}:
         role = 'student'
 
     state_payload = {
@@ -3561,6 +3561,12 @@ def google_callback(request):
                 return redirect('/MOOCS')
             request.session['moocs_gmail_verified'] = True
             request.session['moocs_gmail_email'] = email
+            request.session['google_oauth_email'] = email
+            request.session['google_oauth_name'] = profile.get('name', '')
+
+        if state_payload.get('target') == 'exambranch':
+            request.session['exam_branch_gmail_verified'] = True
+            request.session['exam_branch_gmail_email'] = email
             request.session['google_oauth_email'] = email
             request.session['google_oauth_name'] = profile.get('name', '')
             audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=email)
@@ -10837,6 +10843,11 @@ def exam_branch_syllabus_subjects(request):
 
 @login_required
 def exam_branch(request):
+    if request.session.get('exam_branch_gmail_verified') is not True:
+        from django.shortcuts import redirect
+        from django.urls import reverse
+        from urllib.parse import urlencode
+        return redirect(f"{reverse('dashboard:google_login')}?{urlencode({'role':'student','target':'exambranch'})}")
     from django.core.paginator import Paginator
     from datetime import datetime, timedelta
 
