@@ -7934,7 +7934,9 @@ Exam Branch
                 'NATURAL LANGUAGE PROCESSING': 'NLP',
                 'HUMAN COMPUTER INTERACTION': 'HCI',
                 'RENEWABLE ENERGY SOURCES': 'RES',
+                'NATURAL LANGUAGE PROCESSING LAB': 'NLP Lab',
                 'NATURAL LANGUAGE PROCESSING LABORATORY': 'NLP Lab',
+                'NLP LABORATORY': 'NLP Lab',
                 'DATA ANALYTICS LABORATORY': 'DA Lab',
                 'ADVANCED ENGLISH COMMUNICATION SKILLS LAB': 'AECS Lab',
                 'ADVANCED ENGLISH COMMUNICATION SKILLS LABORATORY': 'AECS Lab',
@@ -9304,7 +9306,7 @@ Exam Branch
                 { key: 'nlp', codes: ['AM603PC'], aliases: ['NATURAL LANGUAGE PROCESSING', 'NLP'], name: 'NATURAL LANGUAGE PROCESSING', shortLabel: 'NLP', type: 'theory' },
                 { key: 'hci', codes: ['AM626PE'], aliases: ['HUMAN COMPUTER INTERACTION', 'HCI'], name: 'HUMAN COMPUTER INTERACTION', shortLabel: 'HCI', type: 'theory' },
                 { key: 'res', codes: ['EE611OE'], aliases: ['RENEWABLE ENERGY SOURCES', 'RES'], name: 'RENEWABLE ENERGY SOURCES', shortLabel: 'RES', type: 'theory' },
-                { key: 'nlpLab', codes: ['AM604PC'], aliases: ['NATURAL LANGUAGE PROCESSING LABORATORY', 'NLP LAB'], name: 'NATURAL LANGUAGE PROCESSING LABORATORY', shortLabel: 'NLP Lab', type: 'lab' },
+                { key: 'nlpLab', codes: ['AM604PC'], aliases: ['NATURAL LANGUAGE PROCESSING LAB', 'NATURAL LANGUAGE PROCESSING LABORATORY', 'NLP LAB', 'NLP LABORATORY'], name: 'NATURAL LANGUAGE PROCESSING LABORATORY', shortLabel: 'NLP Lab', type: 'lab' },
                 { key: 'dataAnalyticsLab', codes: ['AM605PC'], aliases: ['DATA ANALYTICS LABORATORY', 'DA LAB'], name: 'DATA ANALYTICS LABORATORY', shortLabel: 'DA Lab', type: 'lab' },
                 { key: 'aecsLab', codes: ['AE606HS'], aliases: ['ADVANCED ENGLISH COMMUNICATION SKILLS LAB', 'ADVANCED ENGLISH COMMUNICATION SKILLS LABORATORY', 'AECS LAB'], name: 'ADVANCED ENGLISH COMMUNICATION SKILLS LAB', shortLabel: 'AECS Lab', type: 'lab' },
                 { key: 'internship', codes: ['AM607PW'], aliases: ['INDUSTRIAL ORIENTED MINI PROJECT/ INTERNSHIP', 'INTERNSHIP'], name: 'INTERNSHIP', shortLabel: 'INTERNSHIP', type: 'lab' }
@@ -9347,9 +9349,15 @@ Exam Branch
                 const assignments = {};
                 courseSpecs.forEach(function (spec) {
                     const selection = classSelections.find(function (candidate) {
-                        const subjectCode = normalizeClassValue(candidate.subjectCode || '');
+                        const subjectCode = normalizeClassValue(candidate.subjectCode || '').replace(/[^A-Z0-9]/g, '');
                         const subjectName = normalizeSubjectNameForSchedule(candidate.subjectName || '');
-                        return spec.codes.includes(subjectCode) || spec.aliases.some(function (alias) {
+                        const matchesCourseCode = spec.codes.some(function (code) {
+                            return subjectCode === normalizeClassValue(code).replace(/[^A-Z0-9]/g, '');
+                        });
+                        const matchesNlpLabName = spec.key === 'nlpLab' &&
+                            (subjectName.includes('NATURAL LANGUAGE PROCESSING') || /\bNLP\b/.test(subjectName)) &&
+                            /\bLAB(?:ORATORY)?\b/.test(subjectName);
+                        return matchesCourseCode || matchesNlpLabName || spec.aliases.some(function (alias) {
                             return subjectName === alias || (alias.length > 8 && subjectName.includes(alias));
                         });
                     }) || null;
@@ -10697,6 +10705,11 @@ Exam Branch
         function getScheduleLabelsForSubjectName(subjectName) {
             const normalized = normalizeSubjectNameForSchedule(subjectName);
             const labels = [subjectName];
+
+            if ((normalized.includes('NATURAL LANGUAGE PROCESSING') || /\bNLP\b/.test(normalized)) &&
+                /\bLAB(?:ORATORY)?\b/.test(normalized)) {
+                labels.push('NLP Lab');
+            }
 
             if (normalized.includes('DESIGN AND ANALYSIS OF ALGORITHMS')) {
                 labels.push('DAA');
