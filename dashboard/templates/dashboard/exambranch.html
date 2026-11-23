@@ -11660,6 +11660,21 @@ Exam Branch
             renderAllTimeTableLoadSummaries();
         }, 500);
         const labTimeTableTabButton = document.getElementById('lab-timetable-tab');
+        const timeTableTabButton = document.getElementById('timetable-tab');
+        if (timeTableTabButton) {
+            timeTableTabButton.addEventListener('shown.bs.tab', function () {
+                const selections = getStoredSubjectSelections();
+                const classContexts = getClassTimeTableContexts(selections);
+                const fixedAIMLSectionPlan = enforceR22ThreeTwoAIMLSectionAPlan(classContexts);
+                if (fixedAIMLSectionPlan) {
+                    syncIndividualTimeTablesWithMainTables(selections, classContexts);
+                    saveTimeTableData();
+                    setStatus(timeTableStatus, 'R22 III-II CSE (AI&ML) Section A timetable updated and saved with 36 hours', 'success');
+                }
+                renderAllTimeTableLoadSummaries();
+            });
+        }
+
         if (labTimeTableTabButton) {
             labTimeTableTabButton.addEventListener('shown.bs.tab', function () {
                 const selections = getStoredSubjectSelections();
