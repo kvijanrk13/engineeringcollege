@@ -2488,7 +2488,6 @@ Exam Branch
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sheetjs@0.19.3/dist/xlsx.full.min.js"></script>
 <script>
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
@@ -7290,11 +7289,6 @@ Exam Branch
                 setStatus(timeTableStatus, 'Time table not found for download', 'warning');
                 return;
             }
-            if (!window.XLSX || !window.XLSX.utils || typeof window.XLSX.writeFile !== 'function') {
-                setStatus(timeTableStatus, 'Excel export library did not load. Refresh the page and try again.', 'warning');
-                return;
-            }
-            const wb = XLSX.utils.book_new();
             const rows = [];
             Array.from(table.rows).forEach(function (row) {
                 if (row.style.display === 'none') {
@@ -7315,14 +7309,109 @@ Exam Branch
                     rows.push(rowData);
                 }
             });
-            const ws = XLSX.utils.aoa_to_sheet(rows);
-            XLSX.utils.book_append_sheet(wb, ws, 'Time Table');
             if (rows.length === 0) {
                 setStatus(timeTableStatus, 'This time table has no values to export', 'warning');
                 return;
             }
-            XLSX.writeFile(wb, tableTitle.replace(/[^\w-]+/g, '_') + '.xlsx');
+            downloadTimeTableWorkbook(rows, tableTitle);
             setStatus(timeTableStatus, 'Time table Excel downloaded', 'success');
+        }
+
+        function downloadTimeTableWorkbook(rows, tableTitle) {
+            const escapeXml = function (value) {
+                return String(value == null ? '' : value)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/\"/g, '&quot;')
+                    .replace(/'/g, '&apos;');
+            };
+            const columnName = function (index) {
+                let name = '';
+                while (index > 0) {
+                    const remainder = (index - 1) % 26;
+                    name = String.fromCharCode(65 + remainder) + name;
+                    index = Math.floor((index - 1) / 26);
+                }
+                return name;
+            };
+            const sheetRows = rows.map(function (row, rowIndex) {
+                const cells = row.map(function (value, columnIndex) {
+                    const address = columnName(columnIndex + 1) + (rowIndex + 1);
+                    return '<c r="' + address + '" t="inlineStr"><is><t xml:space="preserve">' + escapeXml(value) + '</t></is></c>';
+                }).join('');
+                return '<row r="' + (rowIndex + 1) + '">' + cells + '</row>';
+            }).join('');
+            const safeTitle = tableTitle.replace(/[^\w-]+/g, '_').replace(/^_+|_+$/g, '') || 'Time_Table';
+            const files = [
+                { name: '[Content_Types].xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>' },
+                { name: '_rels/.rels', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+                { name: 'xl/workbook.xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Time Table" sheetId="1" r:id="rId1"/></sheets></workbook>' },
+                { name: 'xl/_rels/workbook.xml.rels', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>' },
+                { name: 'xl/worksheets/sheet1.xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>' + sheetRows + '</sheetData></worksheet>' }
+            ];
+            createStoredZip(files).then(function (blob) {
+                const link = document.createElement('a');
+                const downloadUrl = URL.createObjectURL(blob);
+                link.href = downloadUrl;
+                link.download = safeTitle + '.xlsx';
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 1000);
+            }).catch(function (error) {
+                console.error('Failed to create timetable workbook', error);
+                setStatus(timeTableStatus, 'Could not create the Excel file. Please try again.', 'warning');
+            });
+        }
+
+        function createStoredZip(files) {
+            const encoder = new TextEncoder();
+            const crcTable = createCrc32Table();
+            const crc32 = function (bytes) {
+                let crc = 0xffffffff;
+                for (let i = 0; i < bytes.length; i += 1) {
+                    crc = (crc >>> 8) ^ crcTable[(crc ^ bytes[i]) & 0xff];
+                }
+                return (crc ^ 0xffffffff) >>> 0;
+            };
+            const u16 = function (value) { return [value & 0xff, (value >>> 8) & 0xff]; };
+            const u32 = function (value) { return [value & 0xff, (value >>> 8) & 0xff, (value >>> 16) & 0xff, (value >>> 24) & 0xff]; };
+            const concat = function (parts) {
+                const size = parts.reduce(function (total, part) { return total + part.length; }, 0);
+                const result = new Uint8Array(size);
+                let offset = 0;
+                parts.forEach(function (part) { result.set(part, offset); offset += part.length; });
+                return result;
+            };
+            const localParts = [];
+            const centralParts = [];
+            let offset = 0;
+            files.forEach(function (file) {
+                const name = encoder.encode(file.name);
+                const data = encoder.encode(file.content);
+                const crc = crc32(data);
+                const localHeader = concat([new Uint8Array(u32(0x04034b50)), new Uint8Array(u16(20)), new Uint8Array(u16(0x0800)), new Uint8Array(u16(0)), new Uint8Array(u16(0)), new Uint8Array(u16(0)), new Uint8Array(u32(crc)), new Uint8Array(u32(data.length)), new Uint8Array(u32(data.length)), new Uint8Array(u16(name.length)), new Uint8Array(u16(0)), name]);
+                localParts.push(localHeader, data);
+                const centralHeader = concat([new Uint8Array(u32(0x02014b50)), new Uint8Array(u16(20)), new Uint8Array(u16(20)), new Uint8Array(u16(0x0800)), new Uint8Array(u16(0)), new Uint8Array(u16(0)), new Uint8Array(u16(0)), new Uint8Array(u32(crc)), new Uint8Array(u32(data.length)), new Uint8Array(u32(data.length)), new Uint8Array(u16(name.length)), new Uint8Array(u16(0)), new Uint8Array(u16(0)), new Uint8Array(u16(0)), new Uint8Array(u16(0)), new Uint8Array(u32(0)), new Uint8Array(u32(offset)), name]);
+                centralParts.push(centralHeader);
+                offset += localHeader.length + data.length;
+            });
+            const centralDirectory = concat(centralParts);
+            const end = new Uint8Array(u32(0x06054b50).concat(u16(0), u16(0), u16(files.length), u16(files.length), u32(centralDirectory.length), u32(offset), u16(0)));
+            return Promise.resolve(new Blob([concat(localParts), centralDirectory, end], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+        }
+
+        function createCrc32Table() {
+            const table = new Uint32Array(256);
+            for (let i = 0; i < 256; i += 1) {
+                let value = i;
+                for (let bit = 0; bit < 8; bit += 1) {
+                    value = value & 1 ? (0xedb88320 ^ (value >>> 1)) : (value >>> 1);
+                }
+                table[i] = value >>> 0;
+            }
+            return table;
         }
 
         function clearAllTimeTableSlotValues() {
