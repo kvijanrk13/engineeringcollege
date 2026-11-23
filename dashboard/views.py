@@ -10841,7 +10841,6 @@ def exam_branch_syllabus_subjects(request):
     })
 
 
-@login_required
 def exam_branch(request):
     from django.core.paginator import Paginator
     from datetime import datetime, timedelta
