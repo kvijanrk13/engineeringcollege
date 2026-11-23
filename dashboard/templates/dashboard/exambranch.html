@@ -7282,7 +7282,13 @@ Exam Branch
         function downloadMainTimeTableExcel(button) {
             const tableSelector = button.getAttribute('data-table-selector');
             const tableTitle = button.getAttribute('data-table-title') || 'Time Table';
-            const table = document.querySelector(tableSelector);
+            let table = null;
+            if (tableSelector) {
+                table = document.querySelector(tableSelector);
+            }
+            if (!table) {
+                table = button.closest('.card, .exam-panel, .table-responsive').querySelector('table');
+            }
             if (!table) {
                 setStatus(timeTableStatus, 'Time table not found for download', 'warning');
                 return;
