@@ -10843,11 +10843,6 @@ def exam_branch_syllabus_subjects(request):
 
 @login_required
 def exam_branch(request):
-    if request.session.get('exam_branch_gmail_verified') is not True:
-        from django.shortcuts import redirect
-        from django.urls import reverse
-        from urllib.parse import urlencode
-        return redirect(f"{reverse('dashboard:google_login')}?{urlencode({'role':'student','target':'exambranch'})}")
     from django.core.paginator import Paginator
     from datetime import datetime, timedelta
 
