@@ -1258,21 +1258,10 @@ Exam Branch
                                         <button id="addBtn" class="btn exam-btn exam-btn-primary">
                                             <i class="fas fa-plus-circle me-2"></i>Add Date Range
                                         </button>
-                    </div>
-                    <div class="exam-actions">
-                        <div id="labTimeTableStatus" class="status-chip" data-tone="muted">
-                            <i class="fas fa-cloud"></i>
-                            Lab timetable not saved yet
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="exam-action-buttons">
-                            <button type="button" id="labTimeTableClearBtn" class="btn exam-btn exam-btn-danger">
-                                <i class="fas fa-broom me-2"></i>Clear Lab Time Table
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
                     </div>
 
                     <div class="exam-table-wrap">
@@ -1315,8 +1304,6 @@ Exam Branch
                         </div>
                     </div>
                 </div>
-            </div>
-
             </div>
 
             <div class="tab-pane fade" id="evaluation" role="tabpanel" aria-labelledby="evaluation-tab">
@@ -2483,6 +2470,18 @@ Exam Branch
                             </tbody>
                         </table>
                     </div>
+
+                    <div class="exam-actions">
+                        <div id="labTimeTableStatus" class="status-chip" data-tone="muted">
+                            <i class="fas fa-cloud"></i>
+                            Lab timetable not saved yet
+                        </div>
+                        <div class="exam-action-buttons">
+                            <button type="button" id="labTimeTableClearBtn" class="btn exam-btn exam-btn-danger">
+                                <i class="fas fa-broom me-2"></i>Clear Lab Time Table
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2530,6 +2529,7 @@ Exam Branch
 
         const lessonPlanBody = document.getElementById('teachingPlanBody');
         const lessonPlanStatus = document.getElementById('lessonPlanStatus');
+        const labTimeTableStatus = document.getElementById('labTimeTableStatus');
         const evaluationSaveStatus = document.getElementById('evaluationSaveStatus');
         const evaluationSheetSelect = document.getElementById('evaluationSheetSelect');
         const timeTableStatus = document.getElementById('timeTableStatus');
@@ -4550,6 +4550,7 @@ Exam Branch
             if (legendBody) {
                 legendBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Generate or load a timetable to view lab sessions.</td></tr>';
             }
+            setStatus(labTimeTableStatus, 'Lab timetable not saved yet', 'muted');
         }
 
         function renderLabRoomTimeTableCard(roomData) {
@@ -4702,6 +4703,13 @@ Exam Branch
                 } else {
                     legendBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No lab sessions found.</td></tr>';
                 }
+            }
+
+            if (labEntries.length) {
+                const sessionLabel = labEntries.length === 1 ? 'lab session' : 'lab sessions';
+                setStatus(labTimeTableStatus, 'Showing ' + labEntries.length + ' ' + sessionLabel + ' from the saved timetable', 'success');
+            } else {
+                setStatus(labTimeTableStatus, 'No lab sessions in the current timetable', 'warning');
             }
 
             return labEntries.length;
