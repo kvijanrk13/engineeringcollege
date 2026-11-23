@@ -7279,6 +7279,27 @@ Exam Branch
             }
         }
 
+        function downloadMainTimeTableExcel(button) {
+            const tableSelector = button.getAttribute('data-table-selector');
+            const tableTitle = button.getAttribute('data-table-title') || 'Time Table';
+            const table = document.querySelector(tableSelector);
+            if (!table) {
+                setStatus(timeTableStatus, 'Time table not found for download', 'warning');
+                return;
+            }
+            const html = buildTableExcelHtml(table, tableTitle);
+            const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+            const link = document.createElement('a');
+            const downloadUrl = URL.createObjectURL(blob);
+            link.href = downloadUrl;
+            link.download = tableTitle.replace(/\s+/g, '_') + '.xls';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 1000);
+            setStatus(timeTableStatus, 'Time table Excel downloaded', 'success');
+        }
+
         function clearAllTimeTableSlotValues() {
             const slotGroups = [
                 timeTableSlots,
