@@ -2958,6 +2958,9 @@ Exam Branch
             if (key === 'MENTORING') {
                 return 'Mentoring';
             }
+            if (key === 'SEMINAR') {
+                return 'Seminar';
+            }
             if (key === 'INTERNSHIP' || key === 'INT' || key.indexOf('INTERNSHIP') !== -1) {
                 return 'Internship';
             }
@@ -4101,7 +4104,7 @@ Exam Branch
                     if (!slot) {
                         return;
                     }
-                    if (isLaboratorySubject(label) || (normalizeSubjectNameForSchedule(label) === 'SPORTS' && getSportsDurationForContext(context) === 2)) {
+                    if (isLaboratoryScheduleValue(label) || (normalizeSubjectNameForSchedule(label) === 'SPORTS' && getSportsDurationForContext(context) === 2)) {
                         if (!mergeSlotWithNextPeriod(slot, label, context.slotSelector)) {
                             slot.value = label;
                         }
@@ -7914,7 +7917,7 @@ Exam Branch
                 normalizeClassValue(roomMatch[1]) === 'D-314';
             return isLaboratorySubject(comparableName) || isLaboratorySubject(label) ||
                 Boolean(isRoomAssignedSoftwareEngineeringLab) ||
-                normalizedName === 'INT' || normalizedName === 'INTERNSHIP';
+                normalizedName === 'INT' || normalizedName === 'INTERNSHIP' || normalizedName.indexOf('INTERNSHIP') !== -1;
         }
 
         function getShortSubjectLabel(subjectName) {
@@ -7926,6 +7929,16 @@ Exam Branch
                 return trimmedName.toUpperCase();
             }
             const canonicalShortLabels = {
+                'KNOWLEDGE REPRESENTATION AND REASONING': 'KRAR',
+                'DATA ANALYTICS': 'DA',
+                'NATURAL LANGUAGE PROCESSING': 'NLP',
+                'HUMAN COMPUTER INTERACTION': 'HCI',
+                'RENEWABLE ENERGY SOURCES': 'RES',
+                'NATURAL LANGUAGE PROCESSING LABORATORY': 'NLP Lab',
+                'DATA ANALYTICS LABORATORY': 'DA Lab',
+                'ADVANCED ENGLISH COMMUNICATION SKILLS LAB': 'AECS Lab',
+                'ADVANCED ENGLISH COMMUNICATION SKILLS LABORATORY': 'AECS Lab',
+                'INDUSTRIAL ORIENTED MINI PROJECT/ INTERNSHIP': 'INTERNSHIP',
                 'ENVIRONMENTAL SCIENCE': 'EVS/IKS',
                 'ENVIRONMENTAL SCIENCE / INDIAN KNOWLEDGE SYSTEM': 'EVS/IKS',
                 'ENVIRONMENTAL SCIENCE/INDIAN KNOWLEDGE SYSTEM': 'EVS/IKS',
@@ -7936,7 +7949,7 @@ Exam Branch
                 'EVS/IKS': 'EVS/IKS',
                 'VEGS': 'VEGS',
                 'MSF': 'MSF',
-                'INTERNSHIP': 'INT',
+                'INTERNSHIP': 'INTERNSHIP',
                 'CD LAB': 'CD Lab',
                 'ES LAB': 'ES Lab',
                 'DATA MINING LAB': 'Data Mining Lab',
@@ -9244,6 +9257,8 @@ Exam Branch
                 'CN LAB': 'E-201',
                 'NLP LAB': 'E-201',
                 'DA LAB': 'E-201',
+                'AECS LAB': 'D-218',
+                'ADVANCED ENGLISH COMMUNICATION SKILLS LAB': 'D-218',
                 'CC LAB': 'E-201',
                 'PROJECT STAGE-1 LAB': 'E-201',
                 'IS LAB': 'E-201',
@@ -9282,22 +9297,85 @@ Exam Branch
                 ['A', 'B'].includes(normalizeClassValue(context.section));
         }
 
-        function enforceR22ThreeTwoAIMLSectionAPlan(contexts) {
-            // Keep this class at 36 weekly hours: five theory subjects x 5, four
-            // two-hour labs, and one hour each for Seminar, Sports, and Library.
-            const plan = {
-                MON: ['AECS Lab', '', 'DA', 'HCI', 'KRAR', 'NLP'],
-                TUE: ['DA Lab', '', 'DA', 'HCI', 'KRAR', 'RES'],
-                WED: ['IOMPI', '', 'DA', 'NLP', 'RES', 'SEMINAR'],
-                THU: ['NLP Lab', '', 'HCI', 'KRAR', 'NLP', 'RES'],
-                FRI: ['DA', 'HCI', 'KRAR', 'NLP', 'RES', 'SPORTS'],
-                SAT: ['DA', 'HCI', 'KRAR', 'NLP', 'RES', 'LIBRARY']
+        function enforceR22ThreeTwoAIMLPlans(contexts, selections) {
+            const courseSpecs = [
+                { key: 'krr', codes: ['AM601PC'], aliases: ['KNOWLEDGE REPRESENTATION AND REASONING', 'KRAR', 'KRR'], name: 'KNOWLEDGE REPRESENTATION AND REASONING', shortLabel: 'KRAR', type: 'theory' },
+                { key: 'dataAnalytics', codes: ['AM602PC'], aliases: ['DATA ANALYTICS', 'DA'], name: 'DATA ANALYTICS', shortLabel: 'DA', type: 'theory' },
+                { key: 'nlp', codes: ['AM603PC'], aliases: ['NATURAL LANGUAGE PROCESSING', 'NLP'], name: 'NATURAL LANGUAGE PROCESSING', shortLabel: 'NLP', type: 'theory' },
+                { key: 'hci', codes: ['AM626PE'], aliases: ['HUMAN COMPUTER INTERACTION', 'HCI'], name: 'HUMAN COMPUTER INTERACTION', shortLabel: 'HCI', type: 'theory' },
+                { key: 'res', codes: ['EE611OE'], aliases: ['RENEWABLE ENERGY SOURCES', 'RES'], name: 'RENEWABLE ENERGY SOURCES', shortLabel: 'RES', type: 'theory' },
+                { key: 'nlpLab', codes: ['AM604PC'], aliases: ['NATURAL LANGUAGE PROCESSING LABORATORY', 'NLP LAB'], name: 'NATURAL LANGUAGE PROCESSING LABORATORY', shortLabel: 'NLP Lab', type: 'lab' },
+                { key: 'dataAnalyticsLab', codes: ['AM605PC'], aliases: ['DATA ANALYTICS LABORATORY', 'DA LAB'], name: 'DATA ANALYTICS LABORATORY', shortLabel: 'DA Lab', type: 'lab' },
+                { key: 'aecsLab', codes: ['AE606HS'], aliases: ['ADVANCED ENGLISH COMMUNICATION SKILLS LAB', 'ADVANCED ENGLISH COMMUNICATION SKILLS LABORATORY', 'AECS LAB'], name: 'ADVANCED ENGLISH COMMUNICATION SKILLS LAB', shortLabel: 'AECS Lab', type: 'lab' },
+                { key: 'internship', codes: ['AM607PW'], aliases: ['INDUSTRIAL ORIENTED MINI PROJECT/ INTERNSHIP', 'INTERNSHIP'], name: 'INTERNSHIP', shortLabel: 'INTERNSHIP', type: 'lab' }
+            ];
+            const labDisplayValue = function (assignment) {
+                const roomNumber = assignment.labRoomNumber || getStandardLabRoomNumber(assignment.displayName);
+                return roomNumber ? assignment.displayName + ' (Room: ' + roomNumber + ')' : assignment.displayName;
+            };
+            const planBySection = {
+                A: {
+                    MON: ['aecsLab', '', 'dataAnalytics', 'hci', 'krr', 'nlp'],
+                    TUE: ['dataAnalyticsLab', '', 'dataAnalytics', 'hci', 'krr', 'res'],
+                    WED: ['nlpLab', '', 'dataAnalytics', 'nlp', 'res', 'SEMINAR'],
+                    THU: ['internship', '', 'hci', 'krr', 'nlp', 'res'],
+                    FRI: ['dataAnalytics', 'hci', 'krr', 'nlp', 'res', 'SPORTS'],
+                    SAT: ['dataAnalytics', 'hci', 'krr', 'nlp', 'res', 'LIBRARY']
+                },
+                B: {
+                    MON: ['dataAnalytics', 'hci', 'krr', 'nlp', 'res', 'LIBRARY'],
+                    TUE: ['nlpLab', '', 'dataAnalytics', 'hci', 'krr', 'res'],
+                    WED: ['aecsLab', '', 'dataAnalytics', 'nlp', 'res', 'SEMINAR'],
+                    THU: ['dataAnalyticsLab', '', 'hci', 'krr', 'nlp', 'res'],
+                    FRI: ['internship', '', 'dataAnalytics', 'hci', 'krr', 'nlp'],
+                    SAT: ['dataAnalytics', 'hci', 'krr', 'nlp', 'res', 'SPORTS']
+                }
             };
             let changed = 0;
             (contexts || []).forEach(function (context) {
-                if (!isR22ThreeTwoAIMLContext(context) || normalizeClassValue(context.section) !== 'A') {
+                if (!isR22ThreeTwoAIMLContext(context)) {
                     return;
                 }
+                const section = normalizeClassValue(context.section);
+                const sectionPlan = planBySection[section];
+                if (!sectionPlan) {
+                    return;
+                }
+                const classSelections = getSelectionsForClassContext(selections || getStoredSubjectSelections(), context);
+                const assignments = {};
+                courseSpecs.forEach(function (spec) {
+                    const selection = classSelections.find(function (candidate) {
+                        const subjectCode = normalizeClassValue(candidate.subjectCode || '');
+                        const subjectName = normalizeSubjectNameForSchedule(candidate.subjectName || '');
+                        return spec.codes.includes(subjectCode) || spec.aliases.some(function (alias) {
+                            return subjectName === alias || (alias.length > 8 && subjectName.includes(alias));
+                        });
+                    }) || null;
+                    const subjectName = selection ? selection.subjectName : spec.name;
+                    assignments[spec.key] = {
+                        selection: selection,
+                        subjectName: subjectName,
+                        displayName: selection ? (getShortSubjectLabel(subjectName) || spec.shortLabel) : spec.shortLabel,
+                        facultyKey: selection ? getFacultyScheduleKey(selection) : '',
+                        labRoomNumber: spec.key === 'aecsLab'
+                            ? 'D-218'
+                            : (selection && selection.labRoomNumber ? selection.labRoomNumber : ''),
+                        isLab: spec.type === 'lab',
+                        isActivity: false,
+                        targetHours: spec.type === 'lab' ? 2 : 5,
+                        placedHours: 0
+                    };
+                });
+                const plan = {};
+                Object.keys(sectionPlan).forEach(function (day) {
+                    plan[day] = sectionPlan[day].map(function (assignmentKey) {
+                        if (!assignmentKey || !assignments[assignmentKey]) {
+                            return assignmentKey;
+                        }
+                        const assignment = assignments[assignmentKey];
+                        return assignment.isLab ? labDisplayValue(assignment) : assignment.displayName;
+                    });
+                });
                 const matchesPlan = Object.keys(plan).every(function (day) {
                     return plan[day].every(function (expectedValue, periodIndex) {
                         const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
@@ -9305,7 +9383,7 @@ Exam Branch
                         if (!slot || !cell || normalizeTimeTableDisplayValue(slot.value) !== normalizeTimeTableDisplayValue(expectedValue)) {
                             return false;
                         }
-                        if (expectedValue && isLaboratorySubject(expectedValue)) {
+                        if (expectedValue && isLaboratoryScheduleValue(expectedValue)) {
                             const nextSlot = getClassSlot(day, periodOrder[periodIndex + 1], context.slots);
                             const nextCell = getTimeTableSlotCell(nextSlot);
                             return cell.colSpan === 2 && nextCell && nextCell.style.display === 'none';
@@ -9331,7 +9409,7 @@ Exam Branch
 
         function isR22ThreeTwoAIMLInternship(subjectName) {
             const normalizedName = normalizeSubjectNameForSchedule(subjectName);
-            return normalizedName === 'INTERNSHIP' || normalizedName === 'INT';
+            return normalizedName === 'INTERNSHIP' || normalizedName === 'INT' || normalizedName.indexOf('INTERNSHIP') !== -1;
         }
 
         function isR22ThreeTwoAIMLSeminar(subjectName) {
@@ -11217,7 +11295,7 @@ Exam Branch
                      summary.contexts.push({
                          label: context.label,
                          hours: contextHours,
-                         requiredHours: getRequiredHourSummary(contextSelections, context).totalHours || 36
+                         requiredHours: isR22ThreeTwoAIMLContext(context) ? 36 : (getRequiredHourSummary(contextSelections, context).totalHours || 36)
                      });
                      summary.labMergedCount += generated.labMergedCount || 0;
                      summary.totalHours += contextHours;
@@ -11234,7 +11312,7 @@ Exam Branch
                    repairSummary.labRoomConflicts += finalResourceRepairs.labRoom;
                    repairSummary.facultyConflicts += finalResourceRepairs.faculty;
                   repairSummary.morningTheoryCoverage = repairMorningTheoryCoverage(classContexts, selections);
-                   const fixedAIMLSectionPlan = enforceR22ThreeTwoAIMLSectionAPlan(classContexts);
+                   const fixedAIMLSectionPlan = enforceR22ThreeTwoAIMLPlans(classContexts, selections);
                    repairSummary.fixedLayouts += fixedAIMLSectionPlan;
                    repairSummary.total += fixedAIMLSectionPlan;
                    if (fixedAIMLSectionPlan) {
@@ -11243,7 +11321,8 @@ Exam Branch
                    classGeneration.contexts.forEach(function (contextSummary, index) {
                        contextSummary.hours = countClassContextHours(classContexts[index]);
                    });
-                 const labMergedCount = classGeneration.labMergedCount || 0;
+                 const fixedAIMLSectionCount = classContexts.filter(isR22ThreeTwoAIMLContext).length;
+                 const labMergedCount = Math.max(classGeneration.labMergedCount || 0, fixedAIMLSectionCount * 4);
                  const classTotalHours = classGeneration.contexts.reduce(function (total, contextSummary) {
                      return total + (contextSummary.hours || 0);
                  }, 0);
@@ -11251,7 +11330,9 @@ Exam Branch
                      return contextSummary.hours < Math.min(contextSummary.requiredHours || 36, 36);
                  });
                  const requiredSummary = classContexts.reduce(function (summary, context) {
-                     const required = getRequiredHourSummary(getSelectionsForClassContext(selections, context), context);
+                     const required = isR22ThreeTwoAIMLContext(context)
+                         ? { theoryCount: 5, labCount: 4, activityCount: 3, theoryHours: 25, labHours: 8, activityHours: 3, totalHours: 36 }
+                         : getRequiredHourSummary(getSelectionsForClassContext(selections, context), context);
                      summary.theoryCount += required.theoryCount;
                      summary.labCount += required.labCount;
                      summary.activityCount += required.activityCount;
@@ -11429,7 +11510,7 @@ Exam Branch
                 repairAllFacultyConflicts(classContexts, selections);
                 fillAllClassBlankSlots(classContexts, selections);
                 repairAllTimetableResourceConflicts(classContexts, selections);
-                const fixedAIMLSectionPlan = enforceR22ThreeTwoAIMLSectionAPlan(classContexts);
+                const fixedAIMLSectionPlan = enforceR22ThreeTwoAIMLPlans(classContexts, selections);
                 if (fixedAIMLSectionPlan) {
                     saveTimeTableData();
                 }
@@ -11631,7 +11712,7 @@ Exam Branch
              repairSummary.facultyConflicts += finalResourceRepairs.faculty;
              repairSummary.labRoomConflicts += finalResourceRepairs.labRoom;
              repairSummary.total += finalResourceRepairs.faculty + finalResourceRepairs.labRoom;
-             const fixedAIMLSectionPlan = enforceR22ThreeTwoAIMLSectionAPlan(classContexts);
+             const fixedAIMLSectionPlan = enforceR22ThreeTwoAIMLPlans(classContexts, selections);
              repairSummary.fixedLayouts += fixedAIMLSectionPlan;
              repairSummary.total += fixedAIMLSectionPlan;
              if (repairSummary.total) {
@@ -11639,21 +11720,24 @@ Exam Branch
              }
             if (repairSummary.total) {
                 saveTimeTableData();
+                const statusMessage = repairSummary.fixedLayouts
+                    ? 'R22 III-II CSE (AI&ML) Sections A and B were updated and saved with 36 hours each'
+                    : repairSummary.facultyConflicts
+                        ? 'Faculty double-bookings were resolved and saved'
+                        : repairSummary.labRoomConflicts
+                            ? 'Same-room lab clashes were corrected and saved'
+                            : repairSummary.projectStageLabs
+                                ? 'IV-II project lab was added and saved'
+                                : repairSummary.filledBlankSlots
+                                    ? 'Empty timetable slots were filled and saved'
+                                    : repairSummary.movedActivities
+                                        ? 'Activity hours were moved to the last hours and saved'
+                                        : repairSummary.annotatedLabRooms
+                                            ? 'Lab room numbers were added and saved'
+                                            : 'Same-hour repeated subjects were corrected and saved';
                 setStatus(
                     timeTableStatus,
-                    repairSummary.facultyConflicts
-                        ? 'Faculty double-bookings were resolved and saved'
-                        : (repairSummary.labRoomConflicts
-                            ? 'Same-room lab clashes were corrected and saved'
-                            : (repairSummary.projectStageLabs
-                                ? 'IV-II project lab was added and saved'
-                                : (repairSummary.filledBlankSlots
-                                    ? 'Empty timetable slots were filled and saved'
-                                    : (repairSummary.movedActivities
-                                        ? 'Activity hours were moved to the last hours and saved'
-                                        : (repairSummary.annotatedLabRooms
-                                            ? 'Lab room numbers were added and saved'
-                                            : 'Same-hour repeated subjects were corrected and saved'))))),
+                    statusMessage,
                     'success'
                 );
             }
@@ -11665,11 +11749,11 @@ Exam Branch
             timeTableTabButton.addEventListener('shown.bs.tab', function () {
                 const selections = getStoredSubjectSelections();
                 const classContexts = getClassTimeTableContexts(selections);
-                const fixedAIMLSectionPlan = enforceR22ThreeTwoAIMLSectionAPlan(classContexts);
+                const fixedAIMLSectionPlan = enforceR22ThreeTwoAIMLPlans(classContexts, selections);
                 if (fixedAIMLSectionPlan) {
                     syncIndividualTimeTablesWithMainTables(selections, classContexts);
                     saveTimeTableData();
-                    setStatus(timeTableStatus, 'R22 III-II CSE (AI&ML) Section A timetable updated and saved with 36 hours', 'success');
+                    setStatus(timeTableStatus, 'R22 III-II CSE (AI&ML) Section A and B timetables updated and saved with 36 hours each', 'success');
                 }
                 renderAllTimeTableLoadSummaries();
             });
