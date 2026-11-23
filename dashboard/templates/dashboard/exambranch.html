@@ -2488,6 +2488,7 @@ Exam Branch
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sheetjs@0.19.3/dist/xlsx.full.min.js"></script>
 <script>
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
@@ -7293,16 +7294,27 @@ Exam Branch
                 setStatus(timeTableStatus, 'Time table not found for download', 'warning');
                 return;
             }
-            const html = buildTableExcelHtml(table, tableTitle);
-            const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
-            const link = document.createElement('a');
-            const downloadUrl = URL.createObjectURL(blob);
-            link.href = downloadUrl;
-            link.download = tableTitle.replace(/\s+/g, '_') + '.xls';
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            window.setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 1000);
+            const wb = XLSX.utils.book_new();
+            const rows = [];
+            Array.from(table.rows).forEach(function (row) {
+                if (row.style.display === 'none') {
+                    return;
+                }
+                const rowData = [];
+                Array.from(row.cells).forEach(function (cell) {
+                    if (cell.style.display === 'none') {
+                        return;
+                    }
+                    const input = cell.querySelector('textarea, input, select');
+                    rowData.push(input ? input.value.trim() : (cell.textContent || '').trim());
+                });
+                if (rowData.some(function (cell) { return cell !== ''; })) {
+                    rows.push(rowData);
+                }
+            });
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            XLSX.utils.book_append_sheet(wb, ws, 'Time Table');
+            XLSX.writeFile(wb, tableTitle.replace(/\s+/g, '_') + '.xlsx');
             setStatus(timeTableStatus, 'Time table Excel downloaded', 'success');
         }
 
