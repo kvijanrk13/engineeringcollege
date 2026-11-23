@@ -9382,7 +9382,9 @@ Exam Branch
                     return plan[day].every(function (expectedValue, periodIndex) {
                         const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
                         const cell = getTimeTableSlotCell(slot);
-                        if (!slot || !cell || normalizeTimeTableDisplayValue(slot.value) !== normalizeTimeTableDisplayValue(expectedValue)) {
+                        const actualValue = slot ? String(slot.value || '').trim() : '';
+                        const expectedDisplayValue = String(expectedValue || '').trim();
+                        if (!slot || !cell || actualValue !== expectedDisplayValue) {
                             return false;
                         }
                         if (expectedValue && isLaboratoryScheduleValue(expectedValue)) {
