@@ -9355,7 +9355,9 @@ Exam Branch
                     assignments[spec.key] = {
                         selection: selection,
                         subjectName: subjectName,
-                        displayName: selection ? (getShortSubjectLabel(subjectName) || spec.shortLabel) : spec.shortLabel,
+                        // Use the timetable's canonical course label so every scheduled
+                        // period for a selected course is counted under the same name.
+                        displayName: spec.shortLabel,
                         facultyKey: selection ? getFacultyScheduleKey(selection) : '',
                         labRoomNumber: spec.key === 'aecsLab'
                             ? 'D-218'
