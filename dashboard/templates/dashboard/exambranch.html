@@ -7281,17 +7281,17 @@ Exam Branch
         }
 
         function downloadMainTimeTableExcel(button) {
-            const tableSelector = button.getAttribute('data-table-selector');
             const tableTitle = button.getAttribute('data-table-title') || 'Time Table';
-            let table = null;
-            if (tableSelector) {
-                table = document.querySelector(tableSelector);
-            }
-            if (!table) {
-                table = button.closest('.card, .exam-panel, .table-responsive').querySelector('table');
-            }
-            if (!table) {
+            const tableSelector = button.getAttribute('data-table-selector');
+            const table = tableSelector
+                ? document.querySelector(tableSelector)
+                : button.closest('[data-empty-timetable-card]')?.querySelector('table.time-table-grid');
+            if (!table || !table.matches('table.time-table-grid')) {
                 setStatus(timeTableStatus, 'Time table not found for download', 'warning');
+                return;
+            }
+            if (!window.XLSX || !window.XLSX.utils || typeof window.XLSX.writeFile !== 'function') {
+                setStatus(timeTableStatus, 'Excel export library did not load. Refresh the page and try again.', 'warning');
                 return;
             }
             const wb = XLSX.utils.book_new();
@@ -7305,8 +7305,11 @@ Exam Branch
                     if (cell.style.display === 'none') {
                         return;
                     }
-                    const input = cell.querySelector('textarea, input, select');
-                    rowData.push(input ? input.value.trim() : (cell.textContent || '').trim());
+                    const inputs = Array.from(cell.querySelectorAll('textarea, input, select'));
+                    const value = inputs.length
+                        ? inputs.map(function (input) { return String(input.value || '').trim(); }).filter(Boolean).join('\n')
+                        : (cell.textContent || '').trim();
+                    rowData.push(value);
                 });
                 if (rowData.some(function (cell) { return cell !== ''; })) {
                     rows.push(rowData);
@@ -7314,7 +7317,11 @@ Exam Branch
             });
             const ws = XLSX.utils.aoa_to_sheet(rows);
             XLSX.utils.book_append_sheet(wb, ws, 'Time Table');
-            XLSX.writeFile(wb, tableTitle.replace(/\s+/g, '_') + '.xlsx');
+            if (rows.length === 0) {
+                setStatus(timeTableStatus, 'This time table has no values to export', 'warning');
+                return;
+            }
+            XLSX.writeFile(wb, tableTitle.replace(/[^\w-]+/g, '_') + '.xlsx');
             setStatus(timeTableStatus, 'Time table Excel downloaded', 'success');
         }
 
