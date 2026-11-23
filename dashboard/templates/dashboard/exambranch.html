@@ -9316,11 +9316,11 @@ Exam Branch
             const planBySection = {
                 A: {
                     MON: ['aecsLab', '', 'dataAnalytics', 'hci', 'krr', 'nlp'],
-                    TUE: ['dataAnalyticsLab', '', 'dataAnalytics', 'hci', 'krr', 'res'],
-                    WED: ['nlpLab', '', 'dataAnalytics', 'nlp', 'res', 'SEMINAR'],
+                    TUE: ['dataAnalyticsLab', '', 'hci', 'dataAnalytics', 'krr', 'res'],
+                    WED: ['nlpLab', '', 'nlp', 'dataAnalytics', 'res', 'SEMINAR'],
                     THU: ['internship', '', 'hci', 'krr', 'nlp', 'res'],
                     FRI: ['dataAnalytics', 'hci', 'krr', 'nlp', 'res', 'SPORTS'],
-                    SAT: ['dataAnalytics', 'hci', 'krr', 'nlp', 'res', 'LIBRARY']
+                    SAT: ['hci', 'dataAnalytics', 'krr', 'nlp', 'res', 'LIBRARY']
                 },
                 B: {
                     MON: ['dataAnalytics', 'hci', 'krr', 'nlp', 'res', 'LIBRARY'],
@@ -9331,7 +9331,9 @@ Exam Branch
                     SAT: ['dataAnalytics', 'hci', 'krr', 'nlp', 'res', 'SPORTS']
                 }
             };
-            let changed = 0;
+            const sectionContexts = {};
+            const assignmentsBySection = {};
+            const sectionPlans = { A: planBySection.A, B: planBySection.B };
             (contexts || []).forEach(function (context) {
                 if (!isR22ThreeTwoAIMLContext(context)) {
                     return;
@@ -9368,9 +9370,108 @@ Exam Branch
                         placedHours: 0
                     };
                 });
-                const plan = {};
-                Object.keys(sectionPlan).forEach(function (day) {
-                    plan[day] = sectionPlan[day].map(function (assignmentKey) {
+                sectionContexts[section] = context;
+                assignmentsBySection[section] = assignments;
+            });
+
+            const theoryKeys = courseSpecs.filter(function (spec) {
+                return spec.type === 'theory';
+            }).map(function (spec) { return spec.key; });
+            const pinnedSectionBSlots = new Set(['TUE|2', 'WED|2', 'SAT|0']);
+            const getFacultyAt = function (section, day, periodIndex) {
+                const sectionPlan = sectionPlans[section];
+                const assignments = assignmentsBySection[section] || {};
+                const dayPlan = sectionPlan && sectionPlan[day] ? sectionPlan[day] : [];
+                for (let startIndex = 0; startIndex <= periodIndex; startIndex += 1) {
+                    const assignment = assignments[dayPlan[startIndex]];
+                    if (!assignment || !assignment.facultyKey) {
+                        continue;
+                    }
+                    const duration = assignment.isLab ? 2 : 1;
+                    if (periodIndex < startIndex + duration) {
+                        return assignment.facultyKey;
+                    }
+                }
+                return '';
+            };
+            const countSectionFacultyClashes = function () {
+                let clashes = 0;
+                ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].forEach(function (day) {
+                    for (let periodIndex = 0; periodIndex < periodOrder.length; periodIndex += 1) {
+                        const facultyA = getFacultyAt('A', day, periodIndex);
+                        const facultyB = getFacultyAt('B', day, periodIndex);
+                        if (facultyA && facultyA === facultyB) {
+                            clashes += 1;
+                        }
+                    }
+                });
+                return clashes;
+            };
+            const findTheorySlots = function (section) {
+                const slots = [];
+                Object.keys(sectionPlans[section]).forEach(function (day) {
+                    sectionPlans[section][day].forEach(function (assignmentKey, periodIndex) {
+                        if (theoryKeys.includes(assignmentKey)) {
+                            slots.push({ day: day, periodIndex: periodIndex });
+                        }
+                    });
+                });
+                return slots;
+            };
+
+            if (sectionContexts.A && sectionContexts.B) {
+                let clashCount = countSectionFacultyClashes();
+                for (let attempt = 0; clashCount > 0 && attempt < 40; attempt += 1) {
+                    let bestSwap = null;
+                    let bestClashCount = clashCount;
+                    ['A', 'B'].forEach(function (section) {
+                        const theorySlots = findTheorySlots(section);
+                        for (let firstIndex = 0; firstIndex < theorySlots.length; firstIndex += 1) {
+                            for (let secondIndex = firstIndex + 1; secondIndex < theorySlots.length; secondIndex += 1) {
+                                const first = theorySlots[firstIndex];
+                                const second = theorySlots[secondIndex];
+                                if (section === 'B' && (pinnedSectionBSlots.has(first.day + '|' + first.periodIndex) || pinnedSectionBSlots.has(second.day + '|' + second.periodIndex))) {
+                                    continue;
+                                }
+                                const dayPlan = sectionPlans[section];
+                                const firstKey = dayPlan[first.day][first.periodIndex];
+                                const secondKey = dayPlan[second.day][second.periodIndex];
+                                if (firstKey === secondKey) {
+                                    continue;
+                                }
+                                dayPlan[first.day][first.periodIndex] = secondKey;
+                                dayPlan[second.day][second.periodIndex] = firstKey;
+                                const candidateClashes = countSectionFacultyClashes();
+                                dayPlan[first.day][first.periodIndex] = firstKey;
+                                dayPlan[second.day][second.periodIndex] = secondKey;
+                                if (candidateClashes < bestClashCount) {
+                                    bestClashCount = candidateClashes;
+                                    bestSwap = { section: section, first: first, second: second };
+                                }
+                            }
+                        }
+                    });
+                    if (!bestSwap) {
+                        break;
+                    }
+                    const plan = sectionPlans[bestSwap.section];
+                    const firstKey = plan[bestSwap.first.day][bestSwap.first.periodIndex];
+                    plan[bestSwap.first.day][bestSwap.first.periodIndex] = plan[bestSwap.second.day][bestSwap.second.periodIndex];
+                    plan[bestSwap.second.day][bestSwap.second.periodIndex] = firstKey;
+                    clashCount = bestClashCount;
+                }
+            }
+
+            let changed = 0;
+            ['A', 'B'].forEach(function (section) {
+                const context = sectionContexts[section];
+                const assignments = assignmentsBySection[section] || {};
+                if (!context) {
+                    return;
+                }
+                const displayPlan = {};
+                Object.keys(sectionPlans[section]).forEach(function (day) {
+                    displayPlan[day] = sectionPlans[section][day].map(function (assignmentKey) {
                         if (!assignmentKey || !assignments[assignmentKey]) {
                             return assignmentKey;
                         }
@@ -9378,10 +9479,7 @@ Exam Branch
                         return assignment.isLab ? labDisplayValue(assignment) : assignment.displayName;
                     });
                 });
-                // These two class plans are fixed weekly loads. Rebuild them on
-                // every repair pass so saved browser data cannot retain a partial
-                // or stale subject count (for example, only two DA hours).
-                applyFixedDisplayPlan(context, plan);
+                applyFixedDisplayPlan(context, displayPlan);
                 changed += 1;
             });
             return changed;
