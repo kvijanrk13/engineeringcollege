@@ -9378,27 +9378,11 @@ Exam Branch
                         return assignment.isLab ? labDisplayValue(assignment) : assignment.displayName;
                     });
                 });
-                const matchesPlan = Object.keys(plan).every(function (day) {
-                    return plan[day].every(function (expectedValue, periodIndex) {
-                        const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
-                        const cell = getTimeTableSlotCell(slot);
-                        const actualValue = slot ? String(slot.value || '').trim() : '';
-                        const expectedDisplayValue = String(expectedValue || '').trim();
-                        if (!slot || !cell || actualValue !== expectedDisplayValue) {
-                            return false;
-                        }
-                        if (expectedValue && isLaboratoryScheduleValue(expectedValue)) {
-                            const nextSlot = getClassSlot(day, periodOrder[periodIndex + 1], context.slots);
-                            const nextCell = getTimeTableSlotCell(nextSlot);
-                            return cell.colSpan === 2 && nextCell && nextCell.style.display === 'none';
-                        }
-                        return expectedValue || cell.style.display !== 'none' ? cell.colSpan === 1 : true;
-                    });
-                });
-                if (!matchesPlan) {
-                    applyFixedDisplayPlan(context, plan);
-                    changed += 1;
-                }
+                // These two class plans are fixed weekly loads. Rebuild them on
+                // every repair pass so saved browser data cannot retain a partial
+                // or stale subject count (for example, only two DA hours).
+                applyFixedDisplayPlan(context, plan);
+                changed += 1;
             });
             return changed;
         }
