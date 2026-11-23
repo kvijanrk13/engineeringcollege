@@ -9282,6 +9282,45 @@ Exam Branch
                 ['A', 'B'].includes(normalizeClassValue(context.section));
         }
 
+        function enforceR22ThreeTwoAIMLSectionAPlan(contexts) {
+            // Keep this class at 36 weekly hours: five theory subjects x 5, four
+            // two-hour labs, and one hour each for Seminar, Sports, and Library.
+            const plan = {
+                MON: ['AECS Lab', '', 'DA', 'HCI', 'KRAR', 'NLP'],
+                TUE: ['DA Lab', '', 'DA', 'HCI', 'KRAR', 'RES'],
+                WED: ['IOMPI', '', 'DA', 'NLP', 'RES', 'SEMINAR'],
+                THU: ['NLP Lab', '', 'HCI', 'KRAR', 'NLP', 'RES'],
+                FRI: ['DA', 'HCI', 'KRAR', 'NLP', 'RES', 'SPORTS'],
+                SAT: ['DA', 'HCI', 'KRAR', 'NLP', 'RES', 'LIBRARY']
+            };
+            let changed = 0;
+            (contexts || []).forEach(function (context) {
+                if (!isR22ThreeTwoAIMLContext(context) || normalizeClassValue(context.section) !== 'A') {
+                    return;
+                }
+                const matchesPlan = Object.keys(plan).every(function (day) {
+                    return plan[day].every(function (expectedValue, periodIndex) {
+                        const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
+                        const cell = getTimeTableSlotCell(slot);
+                        if (!slot || !cell || normalizeTimeTableDisplayValue(slot.value) !== normalizeTimeTableDisplayValue(expectedValue)) {
+                            return false;
+                        }
+                        if (expectedValue && isLaboratorySubject(expectedValue)) {
+                            const nextSlot = getClassSlot(day, periodOrder[periodIndex + 1], context.slots);
+                            const nextCell = getTimeTableSlotCell(nextSlot);
+                            return cell.colSpan === 2 && nextCell && nextCell.style.display === 'none';
+                        }
+                        return expectedValue || cell.style.display !== 'none' ? cell.colSpan === 1 : true;
+                    });
+                });
+                if (!matchesPlan) {
+                    applyFixedDisplayPlan(context, plan);
+                    changed += 1;
+                }
+            });
+            return changed;
+        }
+
         function isR22ThreeTwoITContext(context) {
             return Boolean(context) &&
                 normalizeClassValue(context.regulation || 'R22') === 'R22' &&
@@ -11195,6 +11234,12 @@ Exam Branch
                    repairSummary.labRoomConflicts += finalResourceRepairs.labRoom;
                    repairSummary.facultyConflicts += finalResourceRepairs.faculty;
                   repairSummary.morningTheoryCoverage = repairMorningTheoryCoverage(classContexts, selections);
+                   const fixedAIMLSectionPlan = enforceR22ThreeTwoAIMLSectionAPlan(classContexts);
+                   repairSummary.fixedLayouts += fixedAIMLSectionPlan;
+                   repairSummary.total += fixedAIMLSectionPlan;
+                   if (fixedAIMLSectionPlan) {
+                       syncIndividualTimeTablesWithMainTables(selections, classContexts);
+                   }
                    classGeneration.contexts.forEach(function (contextSummary, index) {
                        contextSummary.hours = countClassContextHours(classContexts[index]);
                    });
@@ -11384,6 +11429,10 @@ Exam Branch
                 repairAllFacultyConflicts(classContexts, selections);
                 fillAllClassBlankSlots(classContexts, selections);
                 repairAllTimetableResourceConflicts(classContexts, selections);
+                const fixedAIMLSectionPlan = enforceR22ThreeTwoAIMLSectionAPlan(classContexts);
+                if (fixedAIMLSectionPlan) {
+                    saveTimeTableData();
+                }
                 syncIndividualTimeTablesWithMainTables(selections, classContexts);
                 normalizeAllTimeTableSlotValues();
                 downloadMainTimeTableExcel(button);
@@ -11582,6 +11631,9 @@ Exam Branch
              repairSummary.facultyConflicts += finalResourceRepairs.faculty;
              repairSummary.labRoomConflicts += finalResourceRepairs.labRoom;
              repairSummary.total += finalResourceRepairs.faculty + finalResourceRepairs.labRoom;
+             const fixedAIMLSectionPlan = enforceR22ThreeTwoAIMLSectionAPlan(classContexts);
+             repairSummary.fixedLayouts += fixedAIMLSectionPlan;
+             repairSummary.total += fixedAIMLSectionPlan;
              if (repairSummary.total) {
                  syncIndividualTimeTablesWithMainTables(selections, classContexts);
              }
