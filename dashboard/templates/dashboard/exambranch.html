@@ -7319,16 +7319,21 @@ Exam Branch
             const summaryBody = tableSelector
                 ? document.getElementById('mainTimeTableLoadSummary')
                 : button.closest('[data-empty-timetable-card]')?.querySelector('.empty-timetable-load-summary');
-            const summaryTable = summaryBody ? summaryBody.closest('table') : null;
-            const summaryRows = summaryTable
-                ? Array.from(summaryTable.querySelectorAll('thead tr, tbody tr')).map(function (row) {
-                    const cells = Array.from(row.cells);
-                    if (cells.length === 1 && cells[0].colSpan > 1) {
-                        return [cells[0].textContent.trim(), '', ''];
-                    }
-                    return cells.map(function (cell) { return (cell.textContent || '').trim(); });
-                }).filter(function (row) { return row.some(Boolean); })
-                : [];
+            const summarySlots = Array.from(table.querySelectorAll('.timetable-slot, .empty-timetable-slot'));
+            const summaryData = buildTimeTableLoadSummary(summarySlots);
+            renderTimeTableLoadSummary(summarySlots, summaryBody);
+            const summaryHours = summaryData.reduce(function (total, row) {
+                return total + row.hours;
+            }, 0);
+            const summaryRows = [['Type', 'Subject / Activity', 'Hours Filled']];
+            if (summaryData.length) {
+                summaryData.forEach(function (row) {
+                    summaryRows.push([row.type, row.label, row.hours]);
+                });
+                summaryRows.push(['Total', summaryHours + ' / 36 hours filled', summaryHours]);
+            } else {
+                summaryRows.push(['No timetable hours filled yet.', '', '']);
+            }
             downloadTimeTableWorkbook(rows, tableTitle, summaryRows);
             setStatus(timeTableStatus, 'Time table Excel downloaded', 'success');
         }
