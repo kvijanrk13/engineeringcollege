@@ -2280,7 +2280,12 @@ Exam Branch
 
                     <div id="individualTimeTableContainer">
                         <div class="exam-card mb-4" data-individual-timetable-card>
-                        <h3 class="card-title">Individual Time Table</h3>
+                        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3">
+                            <h3 class="card-title mb-0">Individual Time Table</h3>
+                            <button type="button" class="btn exam-btn exam-btn-success" data-download-individual-timetable>
+                                <i class="fas fa-file-excel me-2"></i>Download Excel
+                            </button>
+                        </div>
                         <div class="table-responsive" style="overflow-x: auto;">
                             <table class="table individual-time-table mb-0" id="individualTimeTableGrid">
                                 <colgroup>
@@ -7373,7 +7378,88 @@ Exam Branch
             setStatus(timeTableStatus, 'Time table Excel downloaded', 'success');
         }
 
-        function downloadTimeTableWorkbook(rows, tableTitle, summaryRows, summaryData, formulaLabels) {
+        function downloadIndividualTimeTableExcel(card) {
+            if (!card) {
+                return;
+            }
+            const table = card.querySelector('.individual-time-table');
+            if (!table) {
+                setStatus(timeTableStatus, 'Individual time table not found for download', 'warning');
+                return;
+            }
+
+            const metaFields = getIndividualTimeTableMetaFields(card);
+            const facultyName = (metaFields.find(function (field) {
+                return field.getAttribute('aria-label') === 'Faculty Name';
+            })?.value || '').trim();
+            const declaredHours = (metaFields.find(function (field) {
+                return field.getAttribute('aria-label') === 'Number of hours';
+            })?.value || '').trim();
+            const dayRows = Array.from(table.tBodies[0]?.rows || []);
+            const rows = [
+                ['Faculty', facultyName, 'Number of hours', declaredHours],
+                Array.from(table.tHead.rows[1]?.cells || []).map(function (cell) {
+                    return (cell.textContent || '').trim();
+                })
+            ];
+            const periodColumns = [1, 2, 3, 5, 6, 7];
+            const summarySlots = [];
+            dayRows.forEach(function (row) {
+                const rowData = Array(8).fill('');
+                rowData[0] = (row.cells[0]?.textContent || '').trim();
+                const slots = Array.from(row.querySelectorAll('.individual-timetable-slot'));
+                slots.forEach(function (slot, periodIndex) {
+                    const cell = slot.closest('td');
+                    const value = String(slot.value || '').trim();
+                    if (!cell || cell.style.display === 'none') {
+                        return;
+                    }
+                    rowData[periodColumns[periodIndex]] = value;
+                    const hours = Math.max(1, Number(cell.colSpan) || 1);
+                    for (let offset = 1; offset < hours && periodIndex + offset < periodColumns.length; offset += 1) {
+                        rowData[periodColumns[periodIndex + offset]] = value;
+                    }
+                    if (value) {
+                        summarySlots.push({ value: value, hours: hours });
+                    }
+                });
+                rowData[4] = 'LUNCH BREAK';
+                rows.push(rowData);
+            });
+
+            const summaryByKey = new Map();
+            summarySlots.forEach(function (slot) {
+                const label = normalizeTimeTableDisplayValue(getComparableSubjectValue(slot.value));
+                if (!label) {
+                    return;
+                }
+                const type = getLoadSummaryType(label);
+                const key = type + '|' + normalizeSubjectNameForSchedule(label);
+                if (!summaryByKey.has(key)) {
+                    summaryByKey.set(key, { type: type, label: label, hours: 0 });
+                }
+                summaryByKey.get(key).hours += slot.hours;
+            });
+            const summaryData = Array.from(summaryByKey.values());
+            const summaryHours = summaryData.reduce(function (total, item) {
+                return total + item.hours;
+            }, 0);
+            const summaryRows = [['Type', 'Subject / Activity', 'Hours Filled']];
+            if (summaryData.length) {
+                summaryData.forEach(function (item) {
+                    summaryRows.push([item.type, item.label, item.hours]);
+                });
+                summaryRows.push(['Total', summaryHours + ' / 36 hours filled', summaryHours]);
+            } else {
+                summaryRows.push(['No timetable hours filled yet.', '', '']);
+            }
+
+            const title = 'Individual Time Table - ' + (facultyName || 'Faculty');
+            downloadTimeTableWorkbook(rows, title, summaryRows, summaryData, [], 3);
+            setStatus(timeTableStatus, 'Individual time table Excel downloaded', 'success');
+        }
+
+        function downloadTimeTableWorkbook(rows, tableTitle, summaryRows, summaryData, formulaLabels, sourceRowStart) {
             const escapeXml = function (value) {
                 return String(value == null ? '' : value)
                     .replace(/&/g, '&amp;')
@@ -7403,12 +7489,13 @@ Exam Branch
             const helperStartRow = 2;
             const helperEndRow = helperStartRow + 35;
             const helperColumns = ['B', 'C', 'D', 'F', 'G', 'H'];
+            const timetableFirstRow = Number(sourceRowStart) || 2;
             const helperFormulas = new Map();
             const uniqueIndexFormulas = new Map();
             const seenHelperValues = new Set();
             let firstOccurrenceCount = 0;
             for (let index = 0; index < summaryCapacity; index += 1) {
-                const dayRow = Math.floor(index / 6) + 2;
+                const dayRow = Math.floor(index / 6) + timetableFirstRow;
                 const periodColumn = helperColumns[index % 6];
                 const sourceAddress = periodColumn + dayRow;
                 const sourceColumnIndex = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].indexOf(periodColumn);
@@ -11781,6 +11868,12 @@ Exam Branch
         });
 
         if (individualTimeTableContainer) {
+            individualTimeTableContainer.addEventListener('click', function (event) {
+                const downloadButton = event.target.closest('[data-download-individual-timetable]');
+                if (downloadButton) {
+                    downloadIndividualTimeTableExcel(downloadButton.closest('[data-individual-timetable-card]'));
+                }
+            });
             individualTimeTableContainer.addEventListener('input', function (event) {
                 if (
                     event.target.classList.contains('individual-timetable-slot') ||
