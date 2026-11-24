@@ -4533,6 +4533,88 @@ Exam Branch
             return filledHours;
         }
 
+        function syncClassTimeTablesFromIndividualCard(card, selections, classContexts) {
+            if (!card) {
+                return false;
+            }
+            const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
+            const contexts = classContexts || getClassTimeTableContexts(normalizedSelections);
+            const facultyName = (getIndividualTimeTableMetaFields(card).find(function (field) {
+                return field.getAttribute('aria-label') === 'Faculty Name';
+            })?.value || '').trim();
+            const employeeCode = (getIndividualTimeTableMetaFields(card).find(function (field) {
+                return field.getAttribute('aria-label') === 'Employee Code';
+            })?.value || '').trim();
+            const schedule = buildIndividualFacultySchedules(normalizedSelections).find(function (item) {
+                return (employeeCode && normalizeClassValue(item.employeeCode) === normalizeClassValue(employeeCode)) ||
+                    (facultyName && normalizeFacultyNameForSort(item.facultyName) === normalizeFacultyNameForSort(facultyName));
+            });
+            if (!schedule) {
+                return false;
+            }
+            const scheduleKeys = new Set(schedule.selections.map(getSubjectSelectionDuplicateKey));
+            const originalClassValues = new Map();
+            contexts.forEach(function (context) {
+                context.slots.forEach(function (slot) {
+                    originalClassValues.set(slot.dataset.day + '|' + slot.dataset.period, slot.value);
+                });
+            });
+            const slotValues = new Map(getIndividualTimeTableSlots(card).map(function (slot) {
+                const rawValue = String(slot.value || '').trim();
+                const prefix = contextLabelPrefix(rawValue, contexts);
+                return [slot.dataset.day + '|' + slot.dataset.period, {
+                    value: rawValue,
+                    subject: prefix ? rawValue.slice(prefix.length).trim() : rawValue
+                }];
+            }));
+            let changed = false;
+            contexts.forEach(function (context) {
+                const labels = getIndividualScheduleLabelsForContext(schedule, context);
+                if (!labels.size) {
+                    return;
+                }
+                context.slots.forEach(function (classSlot) {
+                    const edited = slotValues.get(classSlot.dataset.day + '|' + classSlot.dataset.period);
+                    const original = originalClassValues.get(classSlot.dataset.day + '|' + classSlot.dataset.period);
+                    const subject = original ? getComparableSubjectValue(original) : '';
+                    if (!subject || !labels.has(normalizeSubjectNameForSchedule(subject)) || !edited) {
+                        return;
+                    }
+                    const assignmentExists = getSelectionsForClassContext(normalizedSelections, context).some(function (selection) {
+                        return scheduleKeys.has(getSubjectSelectionDuplicateKey(selection)) &&
+                            getScheduleLabelsForSelection(selection).some(function (label) {
+                                return normalizeSubjectNameForSchedule(label) === normalizeSubjectNameForSchedule(subject);
+                            });
+                    });
+                    if (!assignmentExists) return;
+                    const sameSubject = labels.has(normalizeSubjectNameForSchedule(edited.subject));
+                    const nextValue = edited.value && sameSubject
+                        ? normalizeTimeTableDisplayValue(edited.subject + (extractLabRoomNumber(classSlot.value) ? ' (LAB ROOM: ' + extractLabRoomNumber(classSlot.value) + ')' : ''))
+                        : '';
+                    if (original !== nextValue) {
+                        classSlot.value = nextValue;
+                        changed = true;
+                    }
+                });
+            });
+            if (changed) {
+                contexts.forEach(function (context) { restoreClassLabMergesFromValues(context.slots); });
+                normalizeAllTimeTableSlotValues();
+                syncIndividualTimeTablesWithMainTables(normalizedSelections, contexts);
+                saveTimeTableData();
+            }
+            return changed;
+        }
+
+        function contextLabelPrefix(value, contexts) {
+            const text = String(value || '');
+            const match = text.match(/^(.*?)\s+-\s+/);
+            if (!match) return '';
+            return (contexts || []).some(function (context) {
+                return normalizeClassValue(context.label) === normalizeClassValue(match[1]);
+            }) ? match[0] : '';
+        }
+
         function extractLabRoomNumber(slotValue) {
             const match = String(slotValue || '').match(/\((?:LAB\s*)?ROOM:\s*([^)]+)\)/i);
             return match ? match[1].trim() : '';
@@ -7374,7 +7456,35 @@ Exam Branch
             } else {
                 summaryRows.push(['No timetable hours filled yet.', '', '']);
             }
-            downloadTimeTableWorkbook(rows, tableTitle, summaryRows, summaryData, formulaLabels);
+            const individualRows = getIndividualTimeTableCards().map(function (card) {
+                const meta = getIndividualTimeTableMetaFields(card);
+                const facultyName = (meta.find(function (field) { return field.getAttribute('aria-label') === 'Faculty Name'; })?.value || '').trim();
+                const hours = (meta.find(function (field) { return field.getAttribute('aria-label') === 'Number of hours'; })?.value || '').trim();
+                const individualTable = card.querySelector('.individual-time-table');
+                const output = [
+                    ['Faculty', facultyName, 'Number of hours', hours],
+                    Array.from(individualTable?.tHead.rows[1]?.cells || []).map(function (cell) { return (cell.textContent || '').trim(); })
+                ];
+                const columns = [1, 2, 3, 5, 6, 7];
+                Array.from(individualTable?.tBodies[0]?.rows || []).forEach(function (row) {
+                    const values = Array(8).fill('');
+                    values[0] = (row.cells[0]?.textContent || '').trim();
+                    values[4] = 'LUNCH BREAK';
+                    getIndividualTimeTableSlots(card).filter(function (slot) { return slot.closest('tr') === row; }).forEach(function (slot) {
+                        const periodIndex = periodOrder.indexOf(slot.dataset.period || '');
+                        if (periodIndex < 0) return;
+                        const value = String(slot.value || '').trim();
+                        const cell = slot.closest('td');
+                        if (!cell || cell.style.display === 'none') return;
+                        const span = Math.max(1, Number(cell.colSpan) || 1);
+                        for (let offset = 0; offset < span && periodIndex + offset < columns.length; offset += 1) values[columns[periodIndex + offset]] = value;
+                    });
+                    output.push(values);
+                });
+                return { name: 'Individual ' + (facultyName || 'Faculty'), rows: output, sourceRowStart: 3 };
+            });
+            const linkedClassRows = [{ name: 'Class Time Table', rows: rows, sourceRowStart: 2, summaryRows: summaryRows, summaryData: summaryData }];
+            downloadTimeTableWorkbook(individualRows[0]?.rows || rows, individualRows[0]?.name || tableTitle, summaryRows, summaryData, [], individualRows.length ? 3 : 2, linkedClassRows.concat(individualRows.slice(1)));
             setStatus(timeTableStatus, 'Time table Excel downloaded', 'success');
         }
 
@@ -7455,11 +7565,72 @@ Exam Branch
             }
 
             const title = 'Individual Time Table - ' + (facultyName || 'Faculty');
-            downloadTimeTableWorkbook(rows, title, summaryRows, summaryData, [], 3);
+            const selectionList = getStoredSubjectSelections();
+            const cardSchedule = buildIndividualFacultySchedules(selectionList).find(function (schedule) {
+                const name = (getIndividualTimeTableMetaFields(card).find(function (field) { return field.getAttribute('aria-label') === 'Faculty Name'; })?.value || '').trim();
+                return normalizeFacultyNameForSort(schedule.facultyName) === normalizeFacultyNameForSort(name);
+            });
+            const cardContext = cardSchedule && cardSchedule.selections.length
+                ? getClassTimeTableContexts(selectionList).find(function (context) { return getSelectionContextKey(cardSchedule.selections[0]) === context.selectionKey; })
+                : null;
+            const mainButton = cardContext
+                ? mainTimeTableDownloadButtons.find(function (button) { return document.querySelector(button.getAttribute('data-table-selector') || '') === cardContext.slots[0]?.closest('table'); })
+                : mainTimeTableDownloadButtons[0];
+            const mainTable = mainButton ? (document.querySelector(mainButton.getAttribute('data-table-selector') || '') || mainButton.closest('[data-empty-timetable-card]')?.querySelector('table.time-table-grid')) : timeTableSlots[0]?.closest('table');
+            const mainRows = [];
+            if (mainTable) {
+                mainRows.push(Array.from(mainTable.tHead.rows[0].cells).map(function (cell) { return (cell.textContent || '').trim(); }));
+                const columns = [1, 2, 3, 5, 6, 7];
+                Array.from(mainTable.tBodies).forEach(function (body) {
+                    Array.from(body.rows).forEach(function (row) {
+                        if (row.style.display === 'none') return;
+                        const values = Array(8).fill('');
+                        values[0] = (row.cells[0]?.textContent || '').trim();
+                        const breakCell = row.querySelector('.break-slot');
+                        if (breakCell) values[4] = (breakCell.textContent || '').trim();
+                        Array.from(row.querySelectorAll('.timetable-slot, .empty-timetable-slot')).forEach(function (slot) {
+                            const periodIndex = periodOrder.indexOf(slot.dataset.period || '');
+                            if (periodIndex < 0) return;
+                            const cell = getTimeTableSlotCell(slot);
+                            if (!cell || cell.style.display === 'none') return;
+                            const value = String(slot.value || '').trim();
+                            for (let offset = 0; offset < Math.max(1, Number(cell.colSpan) || 1) && periodIndex + offset < columns.length; offset += 1) values[columns[periodIndex + offset]] = value;
+                        });
+                        mainRows.push(values);
+                    });
+                });
+            }
+            const allIndividualRows = getIndividualTimeTableCards().map(function (currentCard) {
+                const meta = getIndividualTimeTableMetaFields(currentCard);
+                const name = (meta.find(function (field) { return field.getAttribute('aria-label') === 'Faculty Name'; })?.value || '').trim();
+                const hours = (meta.find(function (field) { return field.getAttribute('aria-label') === 'Number of hours'; })?.value || '').trim();
+                const individualTable = currentCard.querySelector('.individual-time-table');
+                const data = [ ['Faculty', name, 'Number of hours', hours], Array.from(individualTable?.tHead.rows[1]?.cells || []).map(function (cell) { return (cell.textContent || '').trim(); }) ];
+                const columns = [1, 2, 3, 5, 6, 7];
+                Array.from(individualTable?.tBodies[0]?.rows || []).forEach(function (row) {
+                    const values = Array(8).fill(''); values[0] = (row.cells[0]?.textContent || '').trim(); values[4] = 'LUNCH BREAK';
+                    getIndividualTimeTableSlots(currentCard).filter(function (slot) { return slot.closest('tr') === row; }).forEach(function (slot) {
+                        const periodIndex = periodOrder.indexOf(slot.dataset.period || ''); if (periodIndex < 0) return;
+                        const cell = slot.closest('td'); if (!cell || cell.style.display === 'none') return;
+                        const value = String(slot.value || '').trim();
+                        for (let offset = 0; offset < Math.max(1, Number(cell.colSpan) || 1) && periodIndex + offset < columns.length; offset += 1) values[columns[periodIndex + offset]] = value;
+                    }); data.push(values);
+                });
+                return { name: 'Individual ' + (name || 'Faculty'), rows: data, sourceRowStart: 3 };
+            });
+            const classSummarySlots = mainTable ? Array.from(mainTable.querySelectorAll('.timetable-slot, .empty-timetable-slot')) : [];
+            const classSummaryData = buildTimeTableLoadSummary(classSummarySlots);
+            const classSummaryHours = classSummaryData.reduce(function (total, item) { return total + item.hours; }, 0);
+            const classSummaryRows = [['Type', 'Subject / Activity', 'Hours Filled']];
+            classSummaryData.forEach(function (item) { classSummaryRows.push([item.type, item.label, item.hours]); });
+            classSummaryRows.push(['Total', classSummaryHours + ' / 36 hours filled', classSummaryHours]);
+            const selectedFacultyRows = allIndividualRows.find(function (item) { return item.name === 'Individual ' + (facultyName || 'Faculty'); }) || { name: title, rows: rows, sourceRowStart: 3 };
+            const linkedClass = { name: 'Class Time Table', rows: mainRows.length ? mainRows : rows, sourceRowStart: 2, summaryRows: classSummaryRows, summaryData: classSummaryData };
+            downloadTimeTableWorkbook(selectedFacultyRows.rows, selectedFacultyRows.name, summaryRows, summaryData, [], selectedFacultyRows.sourceRowStart || 3, [linkedClass].concat(allIndividualRows.filter(function (item) { return item !== selectedFacultyRows; })));
             setStatus(timeTableStatus, 'Individual time table Excel downloaded', 'success');
         }
 
-        function downloadTimeTableWorkbook(rows, tableTitle, summaryRows, summaryData, formulaLabels, sourceRowStart) {
+        function downloadTimeTableWorkbook(rows, tableTitle, summaryRows, summaryData, formulaLabels, sourceRowStart, linkedTables) {
             const escapeXml = function (value) {
                 return String(value == null ? '' : value)
                     .replace(/&/g, '&amp;')
@@ -7540,6 +7711,94 @@ Exam Branch
                     addCellToRow(rowNumber, writeInlineCell(columnName(columnIndex + 1) + rowNumber, value, 0));
                 });
             });
+            const workbookSheets = [{ name: 'Time Table', rows: rows, sourceRowStart: Number(sourceRowStart) || 2, summaryRows: summaryRows, summaryData: summaryData }];
+            (linkedTables || []).forEach(function (table) {
+                if (table && Array.isArray(table.rows) && table.rows.length) workbookSheets.push(table);
+            });
+            if (workbookSheets.length > 1) {
+                const sheetFiles = [];
+                const sheetOverrides = [];
+                const sheetRelationships = [];
+                const workbookSheetEntries = [];
+                workbookSheets.forEach(function (sheet, sheetIndex) {
+                    const sheetId = sheetIndex + 1;
+                    const sheetRows = sheet.rows;
+                    const sheetSummaryData = sheet.summaryData || [];
+                    const sheetSummaryRows = sheet.summaryRows || [['Type', 'Subject / Activity', 'Hours Filled']];
+                    const summaryHeader = sheetSummaryRows[0] || ['Type', 'Subject / Activity', 'Hours Filled'];
+                    const summaryHeaderRow = sheetRows.length + 2;
+                    const summaryFirstDataRow = summaryHeaderRow + 1;
+                    const totalRow = summaryFirstDataRow + summaryCapacity;
+                    const firstRow = Number(sheet.sourceRowStart) || 2;
+                    const sheetOutput = new Map();
+                    const put = function (rowNo, xml) {
+                        if (!sheetOutput.has(rowNo)) sheetOutput.set(rowNo, []);
+                        sheetOutput.get(rowNo).push(xml);
+                    };
+                    sheetRows.forEach(function (row, rowIdx) {
+                        row.forEach(function (value, columnIdx) {
+                            const addr = columnName(columnIdx + 1) + (rowIdx + 1);
+                            put(rowIdx + 1, writeInlineCell(addr, value, rowIdx === 0 ? 1 : 0));
+                        });
+                    });
+                    summaryHeader.forEach(function (value, columnIdx) { put(summaryHeaderRow, writeInlineCell(columnName(columnIdx + 1) + summaryHeaderRow, value, 1)); });
+                    const sources = [];
+                    const helperCols = ['B', 'C', 'D', 'F', 'G', 'H'];
+                    const seen = new Map();
+                    for (let idx = 0; idx < 36; idx += 1) {
+                        const dayRow = Math.floor(idx / 6) + firstRow;
+                        const col = helperCols[idx % 6];
+                        const colIdx = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].indexOf(col);
+                        const raw = sheetRows[dayRow - 1] && sheetRows[dayRow - 1][colIdx] ? getComparableSubjectValue(sheetRows[dayRow - 1][colIdx]) : '';
+                        const addr = col + dayRow;
+                        const formula = 'IFERROR(TRIM(LEFT(' + addr + ',FIND("(LAB ROOM:",UPPER(' + addr + '))-1)),IFERROR(TRIM(LEFT(' + addr + ',FIND("(ROOM:",UPPER(' + addr + '))-1)),' + addr + '))';
+                        const helperRow = 2 + idx;
+                        put(helperRow, writeFormulaCell('J' + helperRow, formula, raw, 0, true));
+                        const key = String(raw || '').toUpperCase();
+                        let uniqueNumber = '';
+                        if (key) { if (!seen.has(key)) seen.set(key, seen.size + 1); uniqueNumber = seen.get(key); }
+                        put(helperRow, writeFormulaCell('K' + helperRow, 'IF(J' + helperRow + '="","",IF(COUNTIF($J$2:J' + helperRow + ',J' + helperRow + ')=1,COUNT($K$1:K' + (helperRow - 1) + ')+1,""))', uniqueNumber, 0, false));
+                        if (key && !sources.some(function (entry) { return entry.key === key; })) sources.push({ key: key, label: raw, number: seen.get(key), item: sheetSummaryData.find(function (entry) { return normalizeSubjectNameForSchedule(entry.label) === normalizeSubjectNameForSchedule(raw); }) });
+                    }
+                    for (let idx = 0; idx < summaryCapacity; idx += 1) {
+                        const rowNo = summaryFirstDataRow + idx;
+                        const entry = sources[idx];
+                        const subjectFormula = 'IFERROR(INDEX($J$2:$J$37,MATCH(ROWS($B$' + summaryFirstDataRow + ':B' + rowNo + '),$K$2:$K$37,0)),"")';
+                        const typeFormula = 'IF(B' + rowNo + '="","",IF(ISNUMBER(SEARCH("SPORTS",B' + rowNo + ')),"Sports",IF(ISNUMBER(SEARCH("LIBRARY",B' + rowNo + ')),"Library",IF(ISNUMBER(SEARCH("MENTORING",B' + rowNo + ')),"Mentoring",IF(ISNUMBER(SEARCH("SEMINAR",B' + rowNo + ')),"Seminar",IF(ISNUMBER(SEARCH("INTERNSHIP",B' + rowNo + ')),"Internship",IF(OR(ISNUMBER(SEARCH("LAB",B' + rowNo + ')),ISNUMBER(SEARCH("IOMPI",B' + rowNo + '))),"Lab","Subject")))))))';
+                        put(rowNo, writeFormulaCell('A' + rowNo, typeFormula, entry ? (entry.item?.type || getLoadSummaryType(entry.label)) : '', 0, true));
+                        put(rowNo, writeFormulaCell('B' + rowNo, subjectFormula, entry ? entry.label : '', 0, true));
+                        put(rowNo, writeFormulaCell('C' + rowNo, 'IF(B' + rowNo + '="","",COUNTIF($J$2:$J$37,B' + rowNo + '))', entry?.item?.hours || '', 0, false));
+                    }
+                    const total = sheetSummaryData.reduce(function (sum, item) { return sum + item.hours; }, 0);
+                    put(totalRow, writeInlineCell('A' + totalRow, 'Total', 2));
+                    put(totalRow, writeFormulaCell('B' + totalRow, 'C' + totalRow + '&" / 36 hours filled"', total + ' / 36 hours filled', 2, true));
+                    put(totalRow, writeFormulaCell('C' + totalRow, 'COUNTIF($J$2:$J$37,"?*")', total, 2, false));
+                    const lastRow = totalRow;
+                    const xmlRows = Array.from({ length: lastRow }, function (_, idx) {
+                        const rowNo = idx + 1;
+                        const cells = sheetOutput.get(rowNo) || [];
+                        cells.sort(function (left, right) { return left.match(/r="([A-Z]+)(\d+)"/)[1].localeCompare(right.match(/r="([A-Z]+)(\d+)"/)[1]); });
+                        return '<row r="' + rowNo + '">' + cells.join('') + '</row>';
+                    }).join('');
+                    const sheetName = String(sheet.name || ('Time Table ' + sheetId)).replace(/[\\/*?:\[\]]/g, ' ').slice(0, 31);
+                    workbookSheetEntries.push('<sheet name="' + escapeXml(sheetName) + '" sheetId="' + sheetId + '" r:id="rId' + sheetId + '"/>');
+                    sheetRelationships.push('<Relationship Id="rId' + sheetId + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + sheetId + '.xml"/>');
+                    sheetOverrides.push('<Override PartName="/xl/worksheets/sheet' + sheetId + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>');
+                    sheetFiles.push({ name: 'xl/worksheets/sheet' + sheetId + '.xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols><col min="10" max="11" width="2" hidden="1" customWidth="1"/></cols><sheetData>' + xmlRows + '</sheetData></worksheet>' });
+                });
+                const linkedFiles = [
+                    { name: '[Content_Types].xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' + sheetOverrides.join('') + '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>' },
+                    { name: '_rels/.rels', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+                    { name: 'xl/workbook.xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' + workbookSheetEntries.join('') + '</sheets><calcPr calcId="0" calcMode="auto" fullCalcOnLoad="1" forceFullCalc="1" calcOnSave="1"/></workbook>' },
+                    { name: 'xl/_rels/workbook.xml.rels', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + sheetRelationships.join('') + '<Relationship Id="rId' + (workbookSheets.length + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
+                    { name: 'xl/styles.xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF1F3B5B"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF111111"/><name val="Calibri"/></font></fonts><fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE8F1FE"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFF2CC"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFD9E6F5"/></left><right style="thin"><color rgb="FFD9E6F5"/></right><top style="thin"><color rgb="FFD9E6F5"/></top><bottom style="thin"><color rgb="FFD9E6F5"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/><xf numFmtId="0" fontId="2" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></styleSheet>' }
+                ].concat(sheetFiles);
+                const linkedTitle = (tableTitle || 'Time_Table').replace(/[^^\w-]+/g, '_').replace(/^_+|_+$/g, '') || 'Time_Table';
+                createStoredZip(linkedFiles).then(function (blob) {
+                    const link = document.createElement('a'); const downloadUrl = URL.createObjectURL(blob); link.href = downloadUrl; link.download = linkedTitle + '_and_individuals.xlsx'; document.body.appendChild(link); link.click(); link.remove(); window.setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 1000);
+                }).catch(function (error) { console.error('Failed to create linked timetable workbook', error); setStatus(timeTableStatus, 'Could not create the Excel file. Please try again.', 'warning'); });
+                return;
+            }
             const summaryHeader = (summaryRows && summaryRows[0]) || ['Type', 'Subject / Activity', 'Hours Filled'];
             summaryHeader.forEach(function (value, columnIndex) {
                 addCellToRow(summaryHeaderRow, writeInlineCell(columnName(columnIndex + 1) + summaryHeaderRow, value, 1));
@@ -11886,8 +12145,9 @@ Exam Branch
                 if (event.target.classList.contains('individual-timetable-slot')) {
                     event.target.value = normalizeTimeTableDisplayValue(event.target.value);
                     const selections = getStoredSubjectSelections();
-                const classContexts = getClassTimeTableContexts(selections);
-                repairAllClassTimeTableSameHourRepeats(classContexts);
+                    const classContexts = getClassTimeTableContexts(selections);
+                    syncClassTimeTablesFromIndividualCard(event.target.closest('[data-individual-timetable-card]'), selections, classContexts);
+                    repairAllClassTimeTableSameHourRepeats(classContexts);
                     repairAllFacultyConflicts(classContexts, selections);
                     repairAllClassLabRoomConflicts(classContexts, selections);
                     enforceActivitiesLastHours(classContexts);
@@ -11895,7 +12155,9 @@ Exam Branch
                     repairAllFacultyConflicts(classContexts, selections);
                     fillAllClassBlankSlots(classContexts, selections);
                     repairAllTimetableResourceConflicts(classContexts, selections);
-                      normalizeAllTimeTableSlotValues();
+                    syncIndividualTimeTablesWithMainTables(selections, classContexts);
+                    normalizeAllTimeTableSlotValues();
+                    saveTimeTableData();
                 }
             });
         }
