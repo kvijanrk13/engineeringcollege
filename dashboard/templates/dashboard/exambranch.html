@@ -7443,8 +7443,9 @@ Exam Branch
                 addCellToRow(summaryHeaderRow, writeInlineCell(columnName(columnIndex + 1) + summaryHeaderRow, value, 1));
             });
             const makeSubjectFormula = function (rowNumber) {
-                const previousSummaryRow = rowNumber - 1;
-                return 'IFERROR(INDEX($J$' + helperStartRow + ':$J$' + helperEndRow + ',AGGREGATE(15,6,(ROW($J$' + helperStartRow + ':$J$' + helperEndRow + ')-ROW($J$' + helperStartRow + ')+1)/(($J$' + helperStartRow + ':$J$' + helperEndRow + '<>"")*(COUNTIF($B$' + (summaryHeaderRow) + ':B' + previousSummaryRow + ',$J$' + helperStartRow + ':$J$' + helperEndRow + ')=0)),1)),"")';
+                // Dynamic arrays keep this summary tied to the exported timetable cells.
+                // UNIQUE/FILTER means added, edited, or cleared slots are reflected on open.
+                return 'IFERROR(INDEX(SORT(UNIQUE(FILTER($J$' + helperStartRow + ':$J$' + helperEndRow + ',$J$' + helperStartRow + ':$J$' + helperEndRow + '<>""))),ROWS($B$' + summaryFirstDataRow + ':B' + rowNumber + ')),"")';
             };
             for (let index = 0; index < summaryCapacity; index += 1) {
                 const rowNumber = summaryFirstDataRow + index;
