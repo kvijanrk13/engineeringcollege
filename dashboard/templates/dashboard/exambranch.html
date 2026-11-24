@@ -7399,11 +7399,14 @@ Exam Branch
             const summaryByLabel = new Map((summaryData || []).map(function (item) {
                 return [item.label, item];
             }));
-            const sortedLabels = Array.isArray(formulaLabels) ? formulaLabels : Array.from(summaryByLabel.keys());
+            const sortedLabels = [];
             const helperStartRow = 2;
             const helperEndRow = helperStartRow + 35;
             const helperColumns = ['B', 'C', 'D', 'F', 'G', 'H'];
             const helperFormulas = new Map();
+            const uniqueIndexFormulas = new Map();
+            const seenHelperValues = new Set();
+            let firstOccurrenceCount = 0;
             for (let index = 0; index < summaryCapacity; index += 1) {
                 const dayRow = Math.floor(index / 6) + 2;
                 const periodColumn = helperColumns[index % 6];
@@ -7416,6 +7419,18 @@ Exam Branch
                 helperFormulas.set(helperStartRow + index, {
                     formula: normalizedFormula,
                     cachedValue: sourceValue
+                });
+                const helperRow = helperStartRow + index;
+                const helperValueKey = String(sourceValue || '').toUpperCase();
+                const isFirstOccurrence = Boolean(helperValueKey) && !seenHelperValues.has(helperValueKey);
+                if (isFirstOccurrence) {
+                    seenHelperValues.add(helperValueKey);
+                    firstOccurrenceCount += 1;
+                    sortedLabels.push(sourceValue);
+                }
+                uniqueIndexFormulas.set(helperRow, {
+                    formula: 'IF(J' + helperRow + '="","",IF(COUNTIF($J$' + helperStartRow + ':J' + helperRow + ',J' + helperRow + ')=1,COUNT($K$1:K' + (helperRow - 1) + ')+1,""))',
+                    cachedValue: isFirstOccurrence ? firstOccurrenceCount : ''
                 });
             }
             const writeInlineCell = function (address, value, styleId) {
@@ -7443,9 +7458,8 @@ Exam Branch
                 addCellToRow(summaryHeaderRow, writeInlineCell(columnName(columnIndex + 1) + summaryHeaderRow, value, 1));
             });
             const makeSubjectFormula = function (rowNumber) {
-                // Dynamic arrays keep this summary tied to the exported timetable cells.
-                // UNIQUE/FILTER means added, edited, or cleared slots are reflected on open.
-                return 'IFERROR(INDEX(SORT(UNIQUE(FILTER($J$' + helperStartRow + ':$J$' + helperEndRow + ',$J$' + helperStartRow + ':$J$' + helperEndRow + '<>""))),ROWS($B$' + summaryFirstDataRow + ':B' + rowNumber + ')),"")';
+                // Use legacy-compatible formulas so changes recalculate in older Excel versions too.
+                return 'IFERROR(INDEX($J$' + helperStartRow + ':$J$' + helperEndRow + ',MATCH(ROWS($B$' + summaryFirstDataRow + ':B' + rowNumber + '),$K$' + helperStartRow + ':$K$' + helperEndRow + ',0)),"")';
             };
             for (let index = 0; index < summaryCapacity; index += 1) {
                 const rowNumber = summaryFirstDataRow + index;
@@ -7465,6 +7479,9 @@ Exam Branch
             helperFormulas.forEach(function (source, rowNumber) {
                 addCellToRow(rowNumber, writeFormulaCell('J' + rowNumber, source.formula, source.cachedValue, 0, true));
             });
+            uniqueIndexFormulas.forEach(function (source, rowNumber) {
+                addCellToRow(rowNumber, writeFormulaCell('K' + rowNumber, source.formula, source.cachedValue, 0, false));
+            });
             const sheetRows = Array.from({ length: summaryLastRow }, function (_, index) {
                 const rowNumber = index + 1;
                 const cells = outputRows.get(rowNumber) || [];
@@ -7482,7 +7499,7 @@ Exam Branch
                 { name: 'xl/workbook.xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Time Table" sheetId="1" r:id="rId1"/></sheets><calcPr calcMode="auto" fullCalcOnLoad="1" forceFullCalc="1"/></workbook>' },
                 { name: 'xl/_rels/workbook.xml.rels', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
                 { name: 'xl/styles.xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF1F3B5B"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF111111"/><name val="Calibri"/></font></fonts><fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE8F1FE"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFF2CC"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFD9E6F5"/></left><right style="thin"><color rgb="FFD9E6F5"/></right><top style="thin"><color rgb="FFD9E6F5"/></top><bottom style="thin"><color rgb="FFD9E6F5"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/><xf numFmtId="0" fontId="2" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>' },
-                { name: 'xl/worksheets/sheet1.xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols><col min="10" max="10" width="2" hidden="1" customWidth="1"/></cols><sheetData>' + sheetRows + '</sheetData></worksheet>' }
+                { name: 'xl/worksheets/sheet1.xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols><col min="10" max="11" width="2" hidden="1" customWidth="1"/></cols><sheetData>' + sheetRows + '</sheetData></worksheet>' }
             ];
             createStoredZip(files).then(function (blob) {
                 const link = document.createElement('a');
