@@ -7090,10 +7090,6 @@ Exam Branch
         function getTimeTablePayload() {
             const savedSelections = getStoredSubjectSelections();
             const classContexts = getClassTimeTableContexts(savedSelections);
-            applyTimeTableRequirementRepairs(classContexts, savedSelections);
-            fillAllClassBlankSlots(classContexts, savedSelections);
-            repairAllTimetableResourceConflicts(classContexts, savedSelections);
-            syncIndividualTimeTablesWithMainTables(savedSelections, classContexts);
             normalizeAllTimeTableSlotValues();
             const meta = {};
             timeTableMetaFields.forEach(function (field) {
@@ -7258,6 +7254,13 @@ Exam Branch
             const payload = getTimeTablePayload();
             localStorage.setItem(timeTableStorageKey, JSON.stringify(payload));
             setStatus(timeTableStatus, 'Timetable saved at ' + formatSavedTime(payload.savedAt), 'success');
+        }
+
+        function persistManualTimeTableEdit() {
+            const selections = getStoredSubjectSelections();
+            const classContexts = getClassTimeTableContexts(selections);
+            refreshIndividualTimeTablesFromCurrentSelections();
+            saveTimeTableData();
         }
 
         function loadTimeTableData() {
@@ -12055,6 +12058,7 @@ Exam Branch
             button.innerHTML = enabled
                 ? '<i class="fas fa-check me-2"></i>Done Editing'
                 : (scope === 'individual' ? '<i class="fas fa-edit me-2"></i>Edit Individual Time Table' : '<i class="fas fa-edit me-2"></i>Edit Timetable');
+            if (!enabled) saveTimeTableData();
         });
         document.getElementById('timeTableSaveBtn').addEventListener('click', saveTimeTableData);
         document.getElementById('timeTableClearBtn').addEventListener('click', clearTimeTableData);
@@ -12101,19 +12105,14 @@ Exam Branch
         document.getElementById('studentCount').addEventListener('input', markEvaluationDirty);
 
         timeTableSlots.forEach(function (slot) {
-            slot.addEventListener('input', markTimeTableDirty);
+            slot.addEventListener('input', function () {
+                markTimeTableDirty();
+                persistManualTimeTableEdit();
+            });
             slot.addEventListener('change', function () {
                 slot.value = normalizeTimeTableDisplayValue(slot.value);
                 const selections = getStoredSubjectSelections();
                 const classContexts = getClassTimeTableContexts(selections);
-                repairAllClassTimeTableSameHourRepeats(classContexts);
-                repairAllFacultyConflicts(classContexts, selections);
-                repairAllClassLabRoomConflicts(classContexts, selections);
-                enforceActivitiesLastHours(classContexts);
-                repairAllClassLabRoomConflicts(classContexts, selections);
-                repairAllFacultyConflicts(classContexts, selections);
-                fillAllClassBlankSlots(classContexts, selections);
-                repairAllTimetableResourceConflicts(classContexts, selections);
                 syncIndividualTimeTablesWithMainTables(selections, classContexts);
                 normalizeAllTimeTableSlotValues();
                 saveTimeTableData();
@@ -12140,19 +12139,14 @@ Exam Branch
         });
 
         getEmptyTimeTableSlots().forEach(function (slot) {
-            slot.addEventListener('input', markTimeTableDirty);
+            slot.addEventListener('input', function () {
+                markTimeTableDirty();
+                persistManualTimeTableEdit();
+            });
             slot.addEventListener('change', function () {
                 slot.value = normalizeTimeTableDisplayValue(slot.value);
                 const selections = getStoredSubjectSelections();
                 const classContexts = getClassTimeTableContexts(selections);
-                repairAllClassTimeTableSameHourRepeats(classContexts);
-                repairAllFacultyConflicts(classContexts, selections);
-                repairAllClassLabRoomConflicts(classContexts, selections);
-                enforceActivitiesLastHours(classContexts);
-                repairAllClassLabRoomConflicts(classContexts, selections);
-                repairAllFacultyConflicts(classContexts, selections);
-                fillAllClassBlankSlots(classContexts, selections);
-                repairAllTimetableResourceConflicts(classContexts, selections);
                 syncIndividualTimeTablesWithMainTables(selections, classContexts);
                 normalizeAllTimeTableSlotValues();
                 saveTimeTableData();
@@ -12182,6 +12176,11 @@ Exam Branch
                     event.target.classList.contains('individual-timetable-meta-input')
                 ) {
                     markTimeTableDirty();
+                    if (event.target.classList.contains('individual-timetable-slot')) {
+                        const card = event.target.closest('[data-individual-timetable-card]');
+                        if (card) saveTimeTableData();
+                    }
+                    saveTimeTableData();
                 }
             });
             individualTimeTableContainer.addEventListener('change', function (event) {
