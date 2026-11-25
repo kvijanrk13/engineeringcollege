@@ -2120,6 +2120,9 @@ Exam Branch
                             <a href="{{ syllabus_url }}" class="btn exam-btn exam-btn-primary">
                                 <i class="fas fa-book me-2"></i>Open Syllabus
                             </a>
+                            <button type="button" class="btn exam-btn exam-btn-primary timetable-edit-btn" data-edit-scope="main">
+                                <i class="fas fa-edit me-2"></i>Edit Timetable
+                            </button>
                             <button type="button" class="btn exam-btn exam-btn-success main-timetable-download-btn" data-download-main-timetable data-table-title="III-II IT Time Table" data-table-selector="#timeTableGrid">
                                 <i class="fas fa-file-excel me-2"></i>Download Excel
                             </button>
@@ -2228,6 +2231,9 @@ Exam Branch
                             </div>
                             <div class="d-flex align-items-center gap-2 flex-wrap">
                                 <span class="subject-count-pill">{{ empty_timetable.year_sem }} {{ empty_timetable.branch_label }}{% if empty_timetable.section %} {{ empty_timetable.section }}{% endif %}</span>
+                                <button type="button" class="btn exam-btn exam-btn-primary timetable-edit-btn" data-edit-scope="empty">
+                                    <i class="fas fa-edit me-2"></i>Edit Timetable
+                                </button>
                                 <button type="button" class="btn exam-btn exam-btn-success main-timetable-download-btn" data-download-main-timetable data-table-title="{{ empty_timetable.year_label }} {{ empty_timetable.branch_label }}{% if empty_timetable.section %} Section {{ empty_timetable.section }}{% endif %} Time Table">
                                     <i class="fas fa-file-excel me-2"></i>Download Excel
                                 </button>
@@ -2282,9 +2288,14 @@ Exam Branch
                         <div class="exam-card mb-4" data-individual-timetable-card>
                         <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3">
                             <h3 class="card-title mb-0">Individual Time Table</h3>
-                            <button type="button" class="btn exam-btn exam-btn-success" data-download-individual-timetable>
-                                <i class="fas fa-file-excel me-2"></i>Download Excel
-                            </button>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <button type="button" class="btn exam-btn exam-btn-primary timetable-edit-btn" data-edit-scope="individual">
+                                    <i class="fas fa-edit me-2"></i>Edit Individual Time Table
+                                </button>
+                                <button type="button" class="btn exam-btn exam-btn-success" data-download-individual-timetable>
+                                    <i class="fas fa-file-excel me-2"></i>Download Excel
+                                </button>
+                            </div>
                         </div>
                         <div class="table-responsive" style="overflow-x: auto;">
                             <table class="table individual-time-table mb-0" id="individualTimeTableGrid">
@@ -2687,6 +2698,7 @@ Exam Branch
             getIndividualTimeTableMetaFields(card).forEach(function (field) {
                 field.value = '';
             });
+            setTimetableFieldsEditable(card, false);
             return card;
         }
 
@@ -5007,6 +5019,20 @@ Exam Branch
         function markTimeTableDirty() {
             renderAllTimeTableLoadSummaries();
             setStatus(timeTableStatus, 'Timetable has unsaved changes', 'warning');
+        }
+
+        function setTimetableFieldsEditable(root, enabled) {
+            if (!root) return;
+            root.querySelectorAll('.timetable-slot, .empty-timetable-slot, .individual-timetable-slot').forEach(function (field) {
+                field.readOnly = !enabled;
+                field.classList.toggle('timetable-readonly', !enabled);
+            });
+        }
+
+        function initializeTimetableEditState() {
+            setTimetableFieldsEditable(document.getElementById('timeTableGrid'), false);
+            emptyTimeTableCards.forEach(function (card) { setTimetableFieldsEditable(card, false); });
+            getIndividualTimeTableCards().forEach(function (card) { setTimetableFieldsEditable(card, false); });
         }
 
         function markSubjectSelectionDirty() {
@@ -12015,6 +12041,21 @@ Exam Branch
             loadEvaluationData();
             updateAllEvaluationAverages();
         });
+        document.addEventListener('click', function (event) {
+            const button = event.target.closest('.timetable-edit-btn');
+            if (!button) return;
+            const enabled = button.dataset.editing !== 'true';
+            const scope = button.dataset.editScope;
+            let root = null;
+            if (scope === 'main') root = document.getElementById('timeTableGrid');
+            if (scope === 'empty') root = button.closest('[data-empty-timetable-card]');
+            if (scope === 'individual') root = button.closest('[data-individual-timetable-card]');
+            setTimetableFieldsEditable(root, enabled);
+            button.dataset.editing = String(enabled);
+            button.innerHTML = enabled
+                ? '<i class="fas fa-check me-2"></i>Done Editing'
+                : (scope === 'individual' ? '<i class="fas fa-edit me-2"></i>Edit Individual Time Table' : '<i class="fas fa-edit me-2"></i>Edit Timetable');
+        });
         document.getElementById('timeTableSaveBtn').addEventListener('click', saveTimeTableData);
         document.getElementById('timeTableClearBtn').addEventListener('click', clearTimeTableData);
         document.getElementById('labTimeTableClearBtn').addEventListener('click', clearTimeTableData);
@@ -12075,6 +12116,7 @@ Exam Branch
                 repairAllTimetableResourceConflicts(classContexts, selections);
                 syncIndividualTimeTablesWithMainTables(selections, classContexts);
                 normalizeAllTimeTableSlotValues();
+                saveTimeTableData();
             });
         });
 
@@ -12113,6 +12155,7 @@ Exam Branch
                 repairAllTimetableResourceConflicts(classContexts, selections);
                 syncIndividualTimeTablesWithMainTables(selections, classContexts);
                 normalizeAllTimeTableSlotValues();
+                saveTimeTableData();
             });
         });
 
@@ -12262,6 +12305,7 @@ Exam Branch
         evaluationSheetSelect.value = '1';
         document.getElementById('studentCount').value = String(defaultEvaluationRollNumbers.length);
         loadTimeTableData();
+        initializeTimetableEditState();
         loadSubjectSelection();
         // Persist the default Friday SPORTS and Saturday LIBRARY hours on first visit.
         if (!localStorage.getItem(timeTableStorageKey)) {
