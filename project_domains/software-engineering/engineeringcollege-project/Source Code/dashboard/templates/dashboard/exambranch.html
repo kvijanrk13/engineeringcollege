@@ -1324,6 +1324,10 @@ Exam Branch
                     </div>
 
                     <div class="exam-table-wrap mb-4">
+                        <div class="d-flex justify-content-end gap-2 mb-2">
+                            <button type="button" class="btn exam-btn exam-btn-primary" id="classTimeTableEditBtn"><i class="fas fa-edit me-2"></i>Edit Timetable</button>
+                            <button type="button" class="btn exam-btn exam-btn-success" id="timeTableExcelBtn"><i class="fas fa-file-excel me-2"></i>Download Excel</button>
+                        </div>
                         <div class="table-responsive" style="overflow-x: auto;">
                             <table class="table exam-table time-table-grid align-middle" id="timeTableGrid">
                                 <thead>
@@ -1406,7 +1410,7 @@ Exam Branch
 
                     <div id="individualTimeTableContainer">
                         <div class="exam-card mb-4" data-individual-timetable-card>
-                        <h3 class="card-title">Individual Time Table</h3>
+                        <div class="d-flex justify-content-between align-items-center mb-2"><h3 class="card-title mb-0">Individual Time Table</h3><div class="d-flex gap-2"><button type="button" class="btn exam-btn exam-btn-primary individual-time-table-edit-btn"><i class="fas fa-edit me-2"></i>Edit Individual Time Table</button><button type="button" class="btn exam-btn exam-btn-success individual-time-table-excel-btn"><i class="fas fa-file-excel me-2"></i>Download Excel</button></div></div>
                         <div class="table-responsive" style="overflow-x: auto;">
                             <table class="table individual-time-table mb-0" id="individualTimeTableGrid">
                                 <colgroup>
@@ -1569,6 +1573,7 @@ Exam Branch
         const timeTableStorageKey = 'examBranchTimeTableData';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
+        const timeTableDataUrl = "{% url 'dashboard:exam_branch_timetable_data' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
         const csrfTokenValue = '{{ csrf_token }}';
 
@@ -1675,6 +1680,7 @@ Exam Branch
             getIndividualTimeTableMetaFields(card).forEach(function (field) {
                 field.value = '';
             });
+            setTableEditing(card, false);
             return card;
         }
 
@@ -1950,6 +1956,25 @@ Exam Branch
 
         function markTimeTableDirty() {
             setStatus(timeTableStatus, 'Timetable has unsaved changes', 'warning');
+        }
+
+        function setTableEditing(root, enabled) {
+            if (!root) return;
+            root.querySelectorAll('.timetable-slot, .individual-timetable-slot, .timetable-meta-input, .individual-timetable-meta-input').forEach(function (field) {
+                field.readOnly = !enabled;
+                field.disabled = field.tagName === 'SELECT' ? !enabled : false;
+                field.classList.toggle('timetable-readonly', !enabled);
+            });
+        }
+
+        function timetableQuery() {
+            const query = new URLSearchParams({
+                program: (document.getElementById('timeTableProgram').value || 'B.Tech').trim(),
+                branch: timeTableBranchField.value || 'IT',
+                year: timeTableYearField.value || '3',
+                semester: timeTableSemesterField.value || '1'
+            });
+            return query.toString();
         }
 
         function markSubjectSelectionDirty() {
@@ -2596,24 +2621,63 @@ Exam Branch
         function saveTimeTableData() {
             const payload = getTimeTablePayload();
             localStorage.setItem(timeTableStorageKey, JSON.stringify(payload));
-            setStatus(timeTableStatus, 'Timetable saved at ' + formatSavedTime(payload.savedAt), 'success');
+            fetch(timeTableDataUrl, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken()},
+                body: JSON.stringify({payload: payload})
+            }).then(function (response) {
+                if (!response.ok) throw new Error('Server save failed');
+                return response.json();
+            }).then(function () {
+                setStatus(timeTableStatus, 'Timetable saved at ' + formatSavedTime(payload.savedAt), 'success');
+            }).catch(function (error) {
+                console.error('Timetable server save failed', error);
+                setStatus(timeTableStatus, 'Saved in this browser only; server save failed', 'warning');
+            });
         }
 
         function loadTimeTableData() {
-            const saved = localStorage.getItem(timeTableStorageKey);
-            if (!saved) {
-                setStatus(timeTableStatus, 'Blank timetable ready', 'muted');
-                return;
-            }
+            fetch(timeTableDataUrl + '?' + timetableQuery(), {credentials: 'same-origin'})
+                .then(function (response) { if (!response.ok) throw new Error('Server load failed'); return response.json(); })
+                .then(function (result) {
+                    const local = localStorage.getItem(timeTableStorageKey);
+                    let payload = result.payload;
+                    if (!payload && local) {
+                        const localPayload = JSON.parse(local);
+                        const localMeta = localPayload.meta || {};
+                        if ((localMeta.timeTableBranch || 'IT') === (timeTableBranchField.value || 'IT') &&
+                            String(localMeta.timeTableYear || '3') === String(timeTableYearField.value || '3') &&
+                            String(localMeta.timeTableSemester || '1') === String(timeTableSemesterField.value || '1')) {
+                            payload = localPayload;
+                        }
+                    }
+                    if (!payload) { setStatus(timeTableStatus, 'Blank timetable ready', 'muted'); return; }
+                    setTimeTablePayload(payload);
+                    localStorage.setItem(timeTableStorageKey, JSON.stringify(payload));
+                    setStatus(timeTableStatus, result.payload ? 'Shared timetable loaded' : 'Browser timetable loaded', 'success');
+                }).catch(function (error) {
+                    console.error('Failed to load timetable data', error);
+                    const saved = localStorage.getItem(timeTableStorageKey);
+                    if (saved) { try { const payload = JSON.parse(saved); setTimeTablePayload(payload); setStatus(timeTableStatus, 'Browser timetable loaded', 'success'); } catch (_) { setStatus(timeTableStatus, 'Could not read saved timetable', 'warning'); } }
+                    else setStatus(timeTableStatus, 'Blank timetable ready', 'muted');
+                });
+        }
 
-            try {
-                const payload = JSON.parse(saved);
-                setTimeTablePayload(payload);
-                setStatus(timeTableStatus, 'Timetable loaded from ' + formatSavedTime(payload.savedAt), 'success');
-            } catch (error) {
-                console.error('Failed to load timetable data', error);
-                setStatus(timeTableStatus, 'Could not read saved timetable', 'warning');
-            }
+        function downloadTimeTableExcel() {
+            fetch(timeTableDataUrl, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken()},
+                body: JSON.stringify({action: 'download', payload: getTimeTablePayload()})
+            }).then(function (response) {
+                if (!response.ok) throw new Error('Excel download failed');
+                return response.blob();
+            }).then(function (blob) {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'timetable.xlsx';
+                link.click();
+                URL.revokeObjectURL(link.href);
+            }).catch(function (error) { console.error(error); setStatus(timeTableStatus, 'Could not download Excel file', 'warning'); });
         }
 
         function clearTimeTableData() {
@@ -2623,6 +2687,7 @@ Exam Branch
             localStorage.removeItem(timeTableStorageKey);
             setTimeTablePayload({ slots: [], individualSlots: [], individualMeta: {} });
             setStatus(timeTableStatus, 'Timetable cleared', 'muted');
+            saveTimeTableData();
         }
 
         function getSubjectSelectionPayload() {
@@ -3543,6 +3608,28 @@ Exam Branch
         document.getElementById('evalClearBtn').addEventListener('click', clearEvaluationData);
         document.getElementById('timeTableSaveBtn').addEventListener('click', saveTimeTableData);
         document.getElementById('timeTableClearBtn').addEventListener('click', clearTimeTableData);
+        document.getElementById('classTimeTableEditBtn').addEventListener('click', function () {
+            const enabled = this.dataset.editing !== 'true';
+            this.dataset.editing = String(enabled);
+            setTableEditing(document.getElementById('timeTableGrid'), enabled);
+            setTableEditing(document.querySelector('.time-table-meta'), enabled);
+            this.innerHTML = enabled ? '<i class="fas fa-check me-2"></i>Done Editing' : '<i class="fas fa-edit me-2"></i>Edit Timetable';
+        });
+        document.getElementById('timeTableExcelBtn').addEventListener('click', downloadTimeTableExcel);
+        if (individualTimeTableContainer) {
+            individualTimeTableContainer.addEventListener('click', function (event) {
+                if (event.target.closest('.individual-time-table-excel-btn')) {
+                    downloadTimeTableExcel();
+                    return;
+                }
+                const button = event.target.closest('.individual-time-table-edit-btn');
+                if (!button) return;
+                const enabled = button.dataset.editing !== 'true';
+                button.dataset.editing = String(enabled);
+                setTableEditing(button.closest('[data-individual-timetable-card]'), enabled);
+                button.innerHTML = enabled ? '<i class="fas fa-check me-2"></i>Done Editing' : '<i class="fas fa-edit me-2"></i>Edit Individual Time Table';
+            });
+        }
         subjectSelectionForm.addEventListener('submit', saveSubjectSelection);
         document.getElementById('subjectSelectionAddFacultyBtn').addEventListener('click', addFacultySubjectSelection);
         document.getElementById('subjectSelectionAddBtn').addEventListener('click', generateTimeTableFromSubjectSelection);
@@ -3567,7 +3654,11 @@ Exam Branch
         document.getElementById('studentCount').addEventListener('input', markEvaluationDirty);
 
         timeTableSlots.forEach(function (slot) {
-            slot.addEventListener('input', markTimeTableDirty);
+            slot.addEventListener('input', function () {
+                markTimeTableDirty();
+                const selections = getTimeTableClassSelections();
+                if (selections.length) renderIndividualFacultyTimeTables(selections);
+            });
         });
 
         timeTableMetaFields.forEach(function (field) {
@@ -3620,6 +3711,9 @@ Exam Branch
         loadTimeTableData();
         loadSubjectSelection();
         loadSyllabusSubjects();
+        setTableEditing(document.getElementById('timeTableGrid'), false);
+        setTableEditing(document.querySelector('.time-table-meta'), false);
+        getIndividualTimeTableCards().forEach(function (card) { setTableEditing(card, false); });
     })();
 </script>
 {% endblock %}

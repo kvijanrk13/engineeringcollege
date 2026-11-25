@@ -270,6 +270,7 @@ urlpatterns = [
 
     # Exam
     path('exam-branch/', views.exam_branch, name='exam_branch'),
+    path('exam-branch/timetable/data/', views.exam_branch_timetable_data, name='exam_branch_timetable_data'),
     path('exam-branch/syllabus-subjects/', views.exam_branch_syllabus_subjects, name='exam_branch_syllabus_subjects'),
     path('exam-branch/lesson-plan/download/', views.exam_branch_download_lesson_plan, name='exam_branch_download_lesson_plan'),
     path('exam-branch/report/', views.exam_branch_generate_report, name='exam_branch_generate_report'),

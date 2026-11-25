@@ -76,6 +76,7 @@ from .models import (
     Subject, FacultyProfile, ResearchProject, Student,
     ResearchPublication, StudentResearchPublication, FDP, BTechProject,
     KavachSecureFile, ProjectDownloadPayment, SuspiciousActivity,
+    ExamBranchTimetable,
 )
 from .forms import (
     StudentForm, CertificateForm,
@@ -9635,6 +9636,59 @@ def get_syllabus_options():
     years = sorted({item.split('-', 1)[0] for item in available_year_sems}, key=int)
     semesters = sorted({item.split('-', 1)[1] for item in available_year_sems}, key=int)
     return syllabus_data, branches, years, semesters
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def exam_branch_timetable_data(request):
+    if request.method == 'GET':
+        branch = (request.GET.get('branch') or 'IT').strip().upper()
+        year = (request.GET.get('year') or '3').strip()
+        semester = (request.GET.get('semester') or '1').strip()
+        program = (request.GET.get('program') or 'B.Tech').strip()
+        item = ExamBranchTimetable.objects.filter(program=program, branch=branch, year=year, semester=semester).first()
+        return JsonResponse({'payload': item.payload if item else None, 'updatedAt': item.updated_at.isoformat() if item else None})
+    try:
+        data = json.loads(request.body or '{}')
+        payload = data.get('payload')
+        if not isinstance(payload, dict):
+            return JsonResponse({'error': 'A timetable payload is required.'}, status=400)
+        meta = payload.get('meta') or {}
+        branch = str(meta.get('timeTableBranch') or 'IT').strip().upper()
+        year = str(meta.get('timeTableYear') or '3').strip()
+        semester = str(meta.get('timeTableSemester') or '1').strip()
+        program = str(meta.get('timeTableProgram') or 'B.Tech').strip()[:80]
+        if data.get('action') == 'download':
+            from openpyxl import Workbook
+            from django.utils.text import slugify
+            workbook = Workbook()
+            sheet = workbook.active
+            sheet.title = 'Class Timetable'
+            headers = ['Day', '9:30-10:30', '10:30-11:30', '11:40-12:40', '1:20-2:15', '2:15-3:10', '3:15-4:10']
+            sheet.append(headers)
+            for day in ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']:
+                values = {(slot.get('period')): slot.get('value', '') for slot in payload.get('slots', []) if slot.get('day') == day}
+                sheet.append([day] + [values.get(period, '') for period in headers[1:]])
+            for index, table in enumerate(payload.get('individualTables', []), start=1):
+                individual = workbook.create_sheet(('Faculty %02d' % index)[:31])
+                individual.append(['Faculty', (table.get('meta') or {}).get('individualFacultyName', '')])
+                individual.append(['Employee/Hours', (table.get('meta') or {}).get('individualTotalHours', '')])
+                individual.append(headers)
+                for day in ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']:
+                    values = {(slot.get('period')): slot.get('value', '') for slot in table.get('slots', []) if slot.get('day') == day}
+                    individual.append([day] + [values.get(period, '') for period in headers[1:]])
+            output = io.BytesIO()
+            workbook.save(output)
+            response = HttpResponse(output.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename="%s_%s_%s_timetable.xlsx"' % (slugify(branch), year, semester)
+            return response
+        item, _ = ExamBranchTimetable.objects.update_or_create(
+            program=program, branch=branch, year=year, semester=semester,
+            defaults={'payload': payload},
+        )
+        return JsonResponse({'ok': True, 'updatedAt': item.updated_at.isoformat()})
+    except (ValueError, TypeError, KeyError) as exc:
+        return JsonResponse({'error': str(exc)}, status=400)
 
 
 @login_required

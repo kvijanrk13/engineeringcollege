@@ -20,6 +20,20 @@ class Subject(models.Model):
         ordering = ['name']
 
 
+class ExamBranchTimetable(models.Model):
+    """Shared exam-branch timetable for a program, branch and semester."""
+    program = models.CharField(max_length=80, default='B.Tech')
+    branch = models.CharField(max_length=40)
+    year = models.CharField(max_length=10)
+    semester = models.CharField(max_length=10)
+    payload = models.JSONField(default=dict, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['program', 'branch', 'year', 'semester'], name='unique_exam_branch_timetable')]
+        ordering = ['branch', 'year', 'semester']
+
+
 class AuditLog(models.Model):
     STATUS_SUCCESS = 'success'
     STATUS_FAILED = 'failed'
