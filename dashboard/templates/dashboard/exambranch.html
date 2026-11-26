@@ -2533,8 +2533,49 @@ Exam Branch
             if (!saved) return [];
             try {
                 const payload = JSON.parse(saved);
-                const emptyTables = Array.isArray(payload.emptyTables) ? payload.emptyTables : [];
                 const contexts = [];
+                
+                // Add main timetable context from saved slots
+                const mainSlots = Array.isArray(payload.slots) ? payload.slots : [];
+                if (mainSlots.length > 0) {
+                    const primarySpec = primaryFixedTimeTableSpec;
+                    const year = primarySpec.year;
+                    const semester = primarySpec.semester;
+                    const branch = primarySpec.branch;
+                    const section = primarySpec.section;
+                    const regulation = primarySpec.regulation;
+                    const selectionKey = [
+                        regulation,
+                        getClassContextKey(year, semester, branch),
+                        getSectionContextValue(section, branch)
+                    ].filter(function (entry) { return entry !== ''; }).join('|');
+                    
+                    const slotElements = mainSlots.map(function (slotEntry) {
+                        return {
+                            dataset: { day: slotEntry.day, period: slotEntry.period },
+                            value: slotEntry.value || '',
+                            closest: function (selector) {
+                                return { colSpan: 1, classList: { contains: function () { return false; } }, style: { display: '' }, querySelector: function () { return null; } };
+                            }
+                        };
+                    });
+                    contexts.push({
+                        selectionKey: selectionKey,
+                        regulation: regulation,
+                        year: normalizeClassValue(year),
+                        semester: normalizeClassValue(semester),
+                        branch: normalizeClassValue(branch),
+                        section: getSectionContextValue(section, branch),
+                        label: getClassContextLabel(regulation, year, semester, branch, section),
+                        slots: slotElements,
+                        slotSelector: '.timetable-slot',
+                        titleElement: null,
+                        isPrimary: true
+                    });
+                }
+
+                // Add empty timetable contexts
+                const emptyTables = Array.isArray(payload.emptyTables) ? payload.emptyTables : [];
                 emptyTables.forEach(function (tableData) {
                     if (!tableData.yearSem) return;
                     const yearSem = String(tableData.yearSem).split('-');
