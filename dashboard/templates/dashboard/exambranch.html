@@ -12037,14 +12037,18 @@ const savedSelections = getStoredSubjectSelections();
             const classContexts = getClassTimeTableContexts(selections);
             const timetableSelections = getSelectionsForClassContexts(selections, classContexts);
 
-             loadSyllabusSubjects(payload.subjectCode).then(function (data) {
-                 classContexts.forEach(function (context) {
-                     resetClassTimeTableMerges(context.slots);
-                     (context.slots || []).forEach(function (slot) { slot.value = ''; });
-                 });
-                 const facultyOccupancyMap = createFacultyOccupancyMap();
-                 const labRoomOccupancyMap = createLabRoomOccupancyMap();
-                 prePopulateOccupancyMapsFromExistingData(facultyOccupancyMap, labRoomOccupancyMap);
+loadSyllabusSubjects(payload.subjectCode).then(function (data) {
+                  classContexts.forEach(function (context) {
+                      resetClassTimeTableMerges(context.slots);
+                      (context.slots || []).forEach(function (slot) { slot.value = ''; });
+                  });
+
+                  // Apply fixed plans FIRST so occupancy maps include their placements
+                  enforceR22ThreeTwoAIMLPlans(classContexts, selections);
+
+                  const facultyOccupancyMap = createFacultyOccupancyMap();
+                  const labRoomOccupancyMap = createLabRoomOccupancyMap();
+                  prePopulateOccupancyMapsFromExistingData(facultyOccupancyMap, labRoomOccupancyMap);
                   const classGeneration = classContexts.reduce(function (summary, context) {
                       const contextSelections = getSelectionsForClassContext(selections, context);
                       const generated = generateClassTimeTableSlotsForContext(
@@ -12077,14 +12081,12 @@ const savedSelections = getStoredSubjectSelections();
                    const finalResourceRepairs = repairAllTimetableResourceConflicts(classContexts, selections);
                    repairSummary.labRoomConflicts += finalResourceRepairs.labRoom;
                    repairSummary.facultyConflicts += finalResourceRepairs.faculty;
-                  repairSummary.morningTheoryCoverage = repairMorningTheoryCoverage(classContexts, selections);
-                   const fixedAIMLSectionPlan = enforceR22ThreeTwoAIMLPlans(classContexts, selections);
-                   repairSummary.fixedLayouts += fixedAIMLSectionPlan;
-                   repairSummary.total += fixedAIMLSectionPlan;
-                   if (fixedAIMLSectionPlan) {
-                       syncIndividualTimeTablesWithMainTables(selections, classContexts);
-                   }
-                   classGeneration.contexts.forEach(function (contextSummary, index) {
+repairSummary.morningTheoryCoverage = repairMorningTheoryCoverage(classContexts, selections);
+                    // Fixed plans already applied before generation; just sync if needed
+                    if (classContexts.some(isR22ThreeTwoAIMLContext)) {
+                        syncIndividualTimeTablesWithMainTables(selections, classContexts);
+                    }
+                    classGeneration.contexts.forEach(function (contextSummary, index) {
                        contextSummary.hours = countClassContextHours(classContexts[index]);
                    });
                  const fixedAIMLSectionCount = classContexts.filter(isR22ThreeTwoAIMLContext).length;
