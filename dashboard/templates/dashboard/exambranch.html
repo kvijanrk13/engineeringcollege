@@ -9929,7 +9929,8 @@ const savedSelections = getStoredSubjectSelections();
                 'JAVA LAB': 'E-201',
                 'SE LAB': 'E-201',
                 'DBMS LAB': 'E-201',
-                'NODE JS LAB': 'E-201'
+                'NODE JS LAB': 'E-201',
+                'WP LAB': 'E-211'
             };
             return roomMap[key] || '';
         }
@@ -10025,7 +10026,7 @@ const savedSelections = getStoredSubjectSelections();
                         facultyKey: selection ? getFacultyScheduleKey(selection) : '',
                         labRoomNumber: spec.key === 'aecsLab'
                             ? 'D-218'
-                            : (selection && selection.labRoomNumber ? selection.labRoomNumber : ''),
+                            : (selection && selection.labRoomNumber ? selection.labRoomNumber : getStandardLabRoomNumber(spec.shortLabel)),
                         isLab: spec.type === 'lab',
                         isActivity: false,
                         targetHours: spec.type === 'lab' ? 2 : 5,
@@ -10190,7 +10191,7 @@ const savedSelections = getStoredSubjectSelections();
                     subjectName: subjectName,
                     displayName: displayName,
                     facultyKey: facultyKey,
-                    labRoomNumber: selection.labRoomNumber || '',
+                    labRoomNumber: selection.labRoomNumber || getStandardLabRoomNumber(displayName),
                     isLab: isLab,
                     isActivity: isActivity,
                     targetHours: isLab ? 2 : (isR22ThreeTwoAIML && isActivity ? 1 : (isR25TwoTwoIT
