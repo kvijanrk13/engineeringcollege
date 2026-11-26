@@ -12275,6 +12275,14 @@ repairSummary.morningTheoryCoverage = repairMorningTheoryCoverage(classContexts,
                 slot.value = normalizeTimeTableDisplayValue(slot.value);
                 const selections = getStoredSubjectSelections();
                 const classContexts = getClassTimeTableContexts(selections);
+                repairAllClassTimeTableSameHourRepeats(classContexts);
+                repairAllFacultyConflicts(classContexts, selections);
+                repairAllClassLabRoomConflicts(classContexts, selections);
+                enforceActivitiesLastHours(classContexts);
+                repairAllClassLabRoomConflicts(classContexts, selections);
+                repairAllFacultyConflicts(classContexts, selections);
+                fillAllClassBlankSlots(classContexts, selections);
+                repairAllTimetableResourceConflicts(classContexts, selections);
                 syncIndividualTimeTablesWithMainTables(selections, classContexts);
                 normalizeAllTimeTableSlotValues();
                 saveTimeTableData();
@@ -12309,6 +12317,14 @@ repairSummary.morningTheoryCoverage = repairMorningTheoryCoverage(classContexts,
                 slot.value = normalizeTimeTableDisplayValue(slot.value);
                 const selections = getStoredSubjectSelections();
                 const classContexts = getClassTimeTableContexts(selections);
+                repairAllClassTimeTableSameHourRepeats(classContexts);
+                repairAllFacultyConflicts(classContexts, selections);
+                repairAllClassLabRoomConflicts(classContexts, selections);
+                enforceActivitiesLastHours(classContexts);
+                repairAllClassLabRoomConflicts(classContexts, selections);
+                repairAllFacultyConflicts(classContexts, selections);
+                fillAllClassBlankSlots(classContexts, selections);
+                repairAllTimetableResourceConflicts(classContexts, selections);
                 syncIndividualTimeTablesWithMainTables(selections, classContexts);
                 normalizeAllTimeTableSlotValues();
                 saveTimeTableData();
@@ -12346,11 +12362,17 @@ repairSummary.morningTheoryCoverage = repairMorningTheoryCoverage(classContexts,
                 }
             });
             individualTimeTableContainer.addEventListener('change', function (event) {
-                if (event.target.classList.contains('individual-timetable-slot')) {
+                if (event.target.classList.contains('individual-timetable-slot') || event.target.classList.contains('individual-timetable-meta-input')) {
                     event.target.value = normalizeTimeTableDisplayValue(event.target.value);
                     const selections = getStoredSubjectSelections();
                     const classContexts = getClassTimeTableContexts(selections);
-                    syncClassTimeTablesFromIndividualCard(event.target.closest('[data-individual-timetable-card]'), selections, classContexts);
+                    const card = event.target.closest('[data-individual-timetable-card]');
+                    if (event.target.classList.contains('individual-timetable-slot')) {
+                        syncClassTimeTablesFromIndividualCard(card, selections, classContexts);
+                    } else if (event.target.classList.contains('individual-timetable-meta-input') && card) {
+                        // When faculty name or employee code changes, re-sync all individual tables
+                        syncIndividualTimeTablesWithMainTables(selections, classContexts);
+                    }
                     repairAllClassTimeTableSameHourRepeats(classContexts);
                     repairAllFacultyConflicts(classContexts, selections);
                     repairAllClassLabRoomConflicts(classContexts, selections);
