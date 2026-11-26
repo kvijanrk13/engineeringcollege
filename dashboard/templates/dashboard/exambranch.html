@@ -2120,11 +2120,11 @@ Exam Branch
                             <a href="{{ syllabus_url }}" class="btn exam-btn exam-btn-primary">
                                 <i class="fas fa-book me-2"></i>Open Syllabus
                             </a>
-                            <button type="button" class="btn exam-btn exam-btn-primary timetable-edit-btn" data-edit-scope="main">
-                                <i class="fas fa-edit me-2"></i>Edit Timetable
-                            </button>
                             <button type="button" class="btn exam-btn exam-btn-success main-timetable-download-btn" data-download-main-timetable data-table-title="III-II IT Time Table" data-table-selector="#timeTableGrid">
                                 <i class="fas fa-file-excel me-2"></i>Download Excel
+                            </button>
+                            <button type="button" class="btn exam-btn exam-btn-primary timetable-edit-btn" data-edit-scope="main">
+                                <i class="fas fa-edit me-2"></i>Edit Timetable
                             </button>
                         </div>
                     </div>
@@ -2231,11 +2231,11 @@ Exam Branch
                             </div>
                             <div class="d-flex align-items-center gap-2 flex-wrap">
                                 <span class="subject-count-pill">{{ empty_timetable.year_sem }} {{ empty_timetable.branch_label }}{% if empty_timetable.section %} {{ empty_timetable.section }}{% endif %}</span>
-                                <button type="button" class="btn exam-btn exam-btn-primary timetable-edit-btn" data-edit-scope="empty">
-                                    <i class="fas fa-edit me-2"></i>Edit Timetable
-                                </button>
                                 <button type="button" class="btn exam-btn exam-btn-success main-timetable-download-btn" data-download-main-timetable data-table-title="{{ empty_timetable.year_label }} {{ empty_timetable.branch_label }}{% if empty_timetable.section %} Section {{ empty_timetable.section }}{% endif %} Time Table">
                                     <i class="fas fa-file-excel me-2"></i>Download Excel
+                                </button>
+                                <button type="button" class="btn exam-btn exam-btn-primary timetable-edit-btn" data-edit-scope="empty">
+                                    <i class="fas fa-edit me-2"></i>Edit Timetable
                                 </button>
                             </div>
                         </div>
@@ -2289,11 +2289,11 @@ Exam Branch
                         <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3">
                             <h3 class="card-title mb-0">Individual Time Table</h3>
                             <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <button type="button" class="btn exam-btn exam-btn-primary timetable-edit-btn" data-edit-scope="individual">
-                                    <i class="fas fa-edit me-2"></i>Edit Individual Time Table
-                                </button>
                                 <button type="button" class="btn exam-btn exam-btn-success" data-download-individual-timetable>
                                     <i class="fas fa-file-excel me-2"></i>Download Excel
+                                </button>
+                                <button type="button" class="btn exam-btn exam-btn-primary timetable-edit-btn" data-edit-scope="individual">
+                                    <i class="fas fa-edit me-2"></i>Edit Individual Time Table
                                 </button>
                             </div>
                         </div>
