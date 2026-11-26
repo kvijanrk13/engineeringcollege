@@ -4636,10 +4636,19 @@ Exam Branch
 
         function syncIndividualTimeTablesWithMainTables(selections, classContexts) {
             const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
-            const contexts = classContexts || getAllClassContextsFromSelections(normalizedSelections);
-            const filledHours = renderIndividualFacultyTimeTables(normalizedSelections, contexts);
+            const visibleContexts = classContexts || getClassTimeTableContexts(normalizedSelections);
+            const savedContexts = getAllSavedClassContexts();
+            const allContexts = [...visibleContexts];
+            const seenKeys = new Set(visibleContexts.map(function (c) { return c.selectionKey; }));
+            savedContexts.forEach(function (savedContext) {
+                if (!seenKeys.has(savedContext.selectionKey)) {
+                    allContexts.push(savedContext);
+                    seenKeys.add(savedContext.selectionKey);
+                }
+            });
+            const filledHours = renderIndividualFacultyTimeTables(normalizedSelections, allContexts);
             normalizeAllTimeTableSlotValues();
-            updateLabTimeTable(normalizedSelections, contexts);
+            updateLabTimeTable(normalizedSelections, allContexts);
             return filledHours;
         }
 
@@ -7295,22 +7304,23 @@ Exam Branch
                     restoreClassLabMergesFromValues(cardSlots);
                 });
             }
-             const savedSelections = getStoredSubjectSelections();
+const savedSelections = getStoredSubjectSelections();
              const classContexts = getClassTimeTableContexts(savedSelections);
+             const allContexts = getAllSavedClassContexts();
              repairedSameHourRepeats = applyTimeTableRequirementRepairs(classContexts, savedSelections).total;
              repairedSameHourRepeats += repairAllClassLabRoomConflicts(classContexts, savedSelections);
              repairedSameHourRepeats += repairMorningTheoryCoverage(classContexts, savedSelections);
 
-            const individualTables = Array.isArray(data.individualTables) && data.individualTables.length
-                ? data.individualTables
-                : [];
+             const individualTables = Array.isArray(data.individualTables) && data.individualTables.length
+                 ? data.individualTables
+                 : [];
 
-            const storedFacultySchedules = buildIndividualFacultySchedules(savedSelections);
-            if (storedFacultySchedules.length) {
-                renderIndividualFacultyTimeTables(savedSelections, classContexts);
-                normalizeAllTimeTableSlotValues();
-                return repairedSameHourRepeats;
-            }
+             const storedFacultySchedules = buildIndividualFacultySchedules(savedSelections);
+             if (storedFacultySchedules.length) {
+                 renderIndividualFacultyTimeTables(savedSelections, allContexts);
+                 normalizeAllTimeTableSlotValues();
+                 return repairedSameHourRepeats;
+             }
 
             ensureIndividualTimeTableCardCount(individualTables.length).forEach(function (card, cardIndex) {
                 const tableData = individualTables[cardIndex] || {};
@@ -7392,7 +7402,8 @@ Exam Branch
                 );
                 const activityRepairs = enforceActivitiesLastHours(getClassTimeTableContexts(getStoredSubjectSelections()));
                 if (repairedSameHourRepeats || migratedLegacyTimetable || activityRepairs) {
-                    syncIndividualTimeTablesWithMainTables(getStoredSubjectSelections(), getClassTimeTableContexts(getStoredSubjectSelections()));
+                    const allContexts = getAllSavedClassContexts();
+                    syncIndividualTimeTablesWithMainTables(getStoredSubjectSelections(), allContexts);
                 }
                 if (repairedSameHourRepeats || migratedLegacyTimetable || activityRepairs) {
                     saveTimeTableData();
