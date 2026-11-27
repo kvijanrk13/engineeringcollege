@@ -3752,53 +3752,119 @@ Exam Branch
             return annotatedCount;
         }
 
-         function repairAllClassTimeTableSameHourRepeats(classContexts) {
-             let total = 0;
-             (classContexts || []).forEach(function (context) {
-                 if (!context || !context.slots) {
-                     return;
-                 }
-                 const slots = context.slots;
-                 for (let periodIndex = 0; periodIndex < periodOrder.length; periodIndex += 1) {
-                     const period = periodOrder[periodIndex];
-                     const subjectDayMap = new Map();
-                     slots.forEach(function (slot) {
-                         if (slot.dataset.period !== period || !isVisibleFilledClassSlot(slot)) {
-                             return;
-                         }
-                         const value = slot.value.trim();
-                         const key = normalizeSubjectNameForSchedule(getComparableSubjectValue(value));
-                         if (isLaboratoryScheduleValue(value) || key === 'SPORTS' || timetableActivityOrder.has(key)) {
-                             return;
-                         }
-                         if (!subjectDayMap.has(key)) {
-                             subjectDayMap.set(key, []);
-                         }
-                         subjectDayMap.get(key).push(slot);
-                     });
-                     subjectDayMap.forEach(function (slotList, key) {
-                         if (slotList.length <= 1) {
-                             return;
-                         }
-                         for (let index = 1; index < slotList.length; index += 1) {
-                             const sourceSlot = slotList[index];
-                             const day = sourceSlot.dataset.day;
-                             const targetSlot = slots.find(function (candidate) {
-                                 return candidate.dataset.day === day &&
-                                     getSlotPeriodIndex(candidate) >= 0 &&
-                                     candidate !== sourceSlot &&
-                                     !candidate.value.trim() &&
-                                     canMoveSubjectToClassSlotWithPreferredSpacing(slots, candidate, sourceSlot.value.trim(), 1, new Set([sourceSlot]));
-                             });
-                             if (targetSlot && moveClassSlotValue(slots, sourceSlot, targetSlot, context.slotSelector || '.timetable-slot')) {
-                                 total += 1;
-                             }
-                         }
-                     });
-                 }
-             });
-             return total;
-         }
+function repairAllClassTimeTableSameHourRepeats(classContexts) {
+              let total = 0;
+              (classContexts || []).forEach(function (context) {
+                  if (!context || !context.slots) {
+                      return;
+                  }
+                  const slots = context.slots;
+                  for (let periodIndex = 0; periodIndex < periodOrder.length; periodIndex += 1) {
+                      const period = periodOrder[periodIndex];
+                      const subjectDayMap = new Map();
+                      slots.forEach(function (slot) {
+                          if (slot.dataset.period !== period || !isVisibleFilledClassSlot(slot)) {
+                              return;
+                          }
+                          const value = slot.value.trim();
+                          const key = normalizeSubjectNameForSchedule(getComparableSubjectValue(value));
+                          if (isLaboratoryScheduleValue(value) || key === 'SPORTS' || timetableActivityOrder.has(key)) {
+                              return;
+                          }
+                          if (!subjectDayMap.has(key)) {
+                              subjectDayMap.set(key, []);
+                          }
+                          subjectDayMap.get(key).push(slot);
+                      });
+                      subjectDayMap.forEach(function (slotList, key) {
+                          if (slotList.length <= 1) {
+                              return;
+                          }
+                          for (let index = 1; index < slotList.length; index += 1) {
+                              const sourceSlot = slotList[index];
+                              const day = sourceSlot.dataset.day;
+                              const targetSlot = slots.find(function (candidate) {
+                                  return candidate.dataset.day === day &&
+                                      getSlotPeriodIndex(candidate) >= 0 &&
+                                      candidate !== sourceSlot &&
+                                      !candidate.value.trim() &&
+                                      canMoveSubjectToClassSlotWithPreferredSpacing(slots, candidate, sourceSlot.value.trim(), 1, new Set([sourceSlot]));
+                              });
+                              if (targetSlot && moveClassSlotValue(slots, sourceSlot, targetSlot, context.slotSelector || '.timetable-slot')) {
+                                  total += 1;
+                              }
+                          }
+                      });
+                  }
+              });
+              return total;
+          }
+
+          function repairAllClassTimeTableContinuousHours(classContexts) {
+              let total = 0;
+              (classContexts || []).forEach(function (context) {
+                  if (!context || !context.slots) {
+                      return;
+                  }
+                  const slots = context.slots;
+                  slots.forEach(function (slot) {
+                      if (!isVisibleFilledClassSlot(slot)) {
+                          return;
+                      }
+                      const value = slot.value.trim();
+                      const key = normalizeSubjectNameForSchedule(getComparableSubjectValue(value));
+                      if (isLaboratoryScheduleValue(value) || key === 'SPORTS' || timetableActivityOrder.has(key)) {
+                          return;
+                      }
+                      const day = slot.dataset.day;
+                      const periodIndex = getSlotPeriodIndex(slot);
+                      if (periodIndex < 0) return;
+                      // Check previous period
+                      if (periodIndex > 0) {
+                          const prevSlot = getClassSlot(day, periodOrder[periodIndex - 1], slots);
+                          if (prevSlot && isVisibleFilledClassSlot(prevSlot)) {
+                              const prevValue = prevSlot.value.trim();
+                              const prevKey = normalizeSubjectNameForSchedule(getComparableSubjectValue(prevValue));
+                              if (prevKey === key) {
+                                  // Found continuous hours - move current slot
+                                  const targetSlot = slots.find(function (candidate) {
+                                      return candidate.dataset.day === day &&
+                                          getSlotPeriodIndex(candidate) >= 0 &&
+                                          candidate !== slot &&
+                                          !candidate.value.trim() &&
+                                          canMoveSubjectToClassSlotWithPreferredSpacing(slots, candidate, value, 1, new Set([slot]));
+                                  });
+                                  if (targetSlot && moveClassSlotValue(slots, slot, targetSlot, context.slotSelector || '.timetable-slot')) {
+                                      total += 1;
+                                  }
+                              }
+                          }
+                      }
+                      // Check next period
+                      if (periodIndex < periodOrder.length - 1) {
+                          const nextSlot = getClassSlot(day, periodOrder[periodIndex + 1], slots);
+                          if (nextSlot && isVisibleFilledClassSlot(nextSlot)) {
+                              const nextValue = nextSlot.value.trim();
+                              const nextKey = normalizeSubjectNameForSchedule(getComparableSubjectValue(nextValue));
+                              if (nextKey === key) {
+                                  // Found continuous hours - move next slot
+                                  const targetSlot = slots.find(function (candidate) {
+                                      return candidate.dataset.day === day &&
+                                          getSlotPeriodIndex(candidate) >= 0 &&
+                                          candidate !== nextSlot &&
+                                          !candidate.value.trim() &&
+                                          canMoveSubjectToClassSlotWithPreferredSpacing(slots, candidate, nextValue, 1, new Set([nextSlot]));
+                                  });
+                                  if (targetSlot && moveClassSlotValue(slots, nextSlot, targetSlot, context.slotSelector || '.timetable-slot')) {
+                                      total += 1;
+                                  }
+                              }
+                          }
+                      }
+                  });
+              });
+              return total;
+          }
 
          function applyTimeTableRequirementRepairs(classContexts, selections) {
              const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
@@ -3820,8 +3886,9 @@ Exam Branch
                  total: 0
              };
 
-             summary.sameHourRepeats += repairAllClassTimeTableSameHourRepeats(contexts);
-             summary.facultyConflicts += repairAllFacultyConflicts(contexts, normalizedSelections);
+summary.sameHourRepeats += repairAllClassTimeTableSameHourRepeats(contexts);
+              summary.continuousHours += repairAllClassTimeTableContinuousHours(contexts);
+              summary.facultyConflicts += repairAllFacultyConflicts(contexts, normalizedSelections);
              summary.labRoomConflicts += repairAllClassLabRoomConflicts(contexts, normalizedSelections);
              summary.fixedLayouts += ensureFixedRequiredLayouts(contexts);
              const freshFacultyOccupancyMap = createFacultyOccupancyMap();
@@ -10874,6 +10941,12 @@ const savedSelections = getStoredSubjectSelections();
                             if (subjectUsedPeriods(key).has(periodIndex)) {
                                 continue;
                             }
+                            // Prevent continuous hours for same subject on same day
+                            const prevPeriodOccupied = subjectUsedPeriods(key).has(periodIndex - 1);
+                            const nextPeriodOccupied = subjectUsedPeriods(key).has(periodIndex + 1);
+                            if (prevPeriodOccupied || nextPeriodOccupied) {
+                                continue;
+                            }
                             if (!slotFree(day, periodIndex)) {
                                 continue;
                             }
@@ -12276,6 +12349,7 @@ repairSummary.morningTheoryCoverage = repairMorningTheoryCoverage(classContexts,
                 const selections = getStoredSubjectSelections();
                 const classContexts = getClassTimeTableContexts(selections);
                 repairAllClassTimeTableSameHourRepeats(classContexts);
+                repairAllClassTimeTableContinuousHours(classContexts);
                 repairAllFacultyConflicts(classContexts, selections);
                 repairAllClassLabRoomConflicts(classContexts, selections);
                 enforceActivitiesLastHours(classContexts);
@@ -12318,6 +12392,7 @@ repairSummary.morningTheoryCoverage = repairMorningTheoryCoverage(classContexts,
                 const selections = getStoredSubjectSelections();
                 const classContexts = getClassTimeTableContexts(selections);
                 repairAllClassTimeTableSameHourRepeats(classContexts);
+                repairAllClassTimeTableContinuousHours(classContexts);
                 repairAllFacultyConflicts(classContexts, selections);
                 repairAllClassLabRoomConflicts(classContexts, selections);
                 enforceActivitiesLastHours(classContexts);
@@ -12374,6 +12449,7 @@ repairSummary.morningTheoryCoverage = repairMorningTheoryCoverage(classContexts,
                         syncIndividualTimeTablesWithMainTables(selections, classContexts);
                     }
                     repairAllClassTimeTableSameHourRepeats(classContexts);
+                    repairAllClassTimeTableContinuousHours(classContexts);
                     repairAllFacultyConflicts(classContexts, selections);
                     repairAllClassLabRoomConflicts(classContexts, selections);
                     enforceActivitiesLastHours(classContexts);
