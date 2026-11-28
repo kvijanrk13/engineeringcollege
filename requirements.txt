@@ -9,6 +9,7 @@ dj-database-url==2.3.0
 Django==4.2.30
 django-cloudinary-storage==0.3.0
 django-extensions==3.2.3
+django-csp==4.1.0
 gunicorn==23.0.0
 idna==3.10
 matplotlib==3.8.2

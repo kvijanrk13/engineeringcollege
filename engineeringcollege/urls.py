@@ -11,6 +11,9 @@ from .moocs_views import (
     moocs_formulas
 )
 
+# Import admin URL from settings
+ADMIN_URL = getattr(settings, 'ADMIN_URL', 'admin-panel-secure-2026/')
+
 
 def health_check(request):
     """Health check endpoint for Render"""
@@ -27,7 +30,10 @@ urlpatterns = [
     path('MOOCS/scorecard/', moocs_scorecard, name='moocs_scorecard'),
     path('MOOCS/scorecard/api/', moocs_scorecard_api, name='moocs_scorecard_api'),
     path('MOOCS/formulas/', moocs_formulas, name='moocs_formulas'),
-    path('admin/', admin.site.urls),
+    
+    # Dynamic admin URL for security
+    path(ADMIN_URL, admin.site.urls),
+    
     path('car-price/', include('car_price_app.urls')),
     path('aeclibrary/student/', include('student.urls')),
     path('aeclibrary/', include('library.urls')),

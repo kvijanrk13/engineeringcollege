@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CSRF Token Error - Engineering College</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f5f5f5; margin: 0; }
+        .error-container { background: white; padding: 40px; border-radius: 10px; max-width: 600px; margin: 0 auto; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        h1 { color: #dc3545; margin-bottom: 20px; }
+        .error-icon { font-size: 48px; margin-bottom: 20px; }
+        .message { color: #666; line-height: 1.6; margin-bottom: 20px; }
+        .reason { background: #f8f9fa; padding: 15px; border-radius: 5px; font-family: monospace; font-size: 14px; color: #666; margin-bottom: 20px; word-break: break-all; }
+        .btn { display: inline-block; padding: 12px 24px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; margin: 5px; transition: background 0.3s; }
+        .btn:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #545b62; }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon">🛡️</div>
+        <h1>{{ title }}</h1>
+        <p class="message">{{ message }}</p>
+        
+        {% if reason %}
+        <div class="reason">
+            <strong>Technical Details:</strong><br>
+            {{ reason }}
+        </div>
+        {% endif %}
+        
+        <div>
+            <a href="javascript:history.back()" class="btn">← Go Back</a>
+            <a href="/admin-login/" class="btn btn-secondary">Login Page</a>
+            <a href="/" class="btn btn-secondary">Home</a>
+        </div>
+        
+        <p style="margin-top: 30px; font-size: 12px; color: #999;">
+            If this problem persists, please clear your browser cookies and cache, then try again.
+        </p>
+    </div>
+</body>
+</html>

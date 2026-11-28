@@ -1,0 +1,1752 @@
+===PAGE 10===
+PART B: Program Level Criteria
+Criterion 1: Outcome-based Curriculum (120)
+1.1. Vision, Mission and Program Educational Objectives (PEOs) (35)
+(Provide details of vision and mission and program educational objectives.)
+1.1.1. State the Vision and Mission of the Institute and the Department (05)
+(Vision statement typically indicates aspirations and Mission statement states the
+broad approach to achieve aspirations.)
+1.1.2. State PEOs of the Program (05)
+(State the PEOs (3 to 5) of program seeking accreditation.)
+1.1.3. Process of Defining Vision, Mission and PEOs (10)
+(Articulate the process involved in defining the Vision and Mission of the department
+and PEOs of the program.)
+1.1.4. Dissemination of Vision, Mission and PEOs (05)
+(Describe where (websites, curricula, posters etc.) the Vision, Mission and PEOs are
+published and detail the process which ensures awareness among internal and external
+stakeholders with effective process implementation.
+Internal stakeholders may include Management, Governing Board Members, faculty,
+support staff, students etc. and external stakeholders may include employers,
+industry, alumni, funding agencies, etc.)
+1.1.5. Mapping of PEOs with Mission (10)
+(Generate a Mission of the Department–PEOs matrix with justification and rationale of
+the mapping.)
+Table No.1.1.5.1: Mapping of PEOs with mission.
+PEO Statements M M …. M
+1 2 n
+PEO1:
+PEO2:
+PEON:
+Note:
+ M , M . . . M are distinct elements of mission statement. Enter correlation
+1 2 n
+levels as Low (1), Medium (2) and High (3). If there is no correlation, put “-”
+===PAGE 11===
+1.2. Curriculum Structure and Features (30)
+1.2.1. State the Process for Developing/Revising the Program Curriculum (10)
+Describe the process that periodically documents and demonstrates how the program
+curriculum has evolved, considering the Washington Accord Knowledge and Attitude
+Profile (WKs) and the Program Outcomes (POs) defined by the NBA, as listed in
+Annexure-II. Describe the process involving both internal and external stakeholders in
+framing the curriculum.)
+1.2.2. Curriculum Structure (10)
+(Provide details of courses in terms of teaching and learning scheme and number of
+credits in the Program curriculum.)
+Table No.1.2.2.1: Details of various courses presented in terms of teaching and learning
+scheme.
+Teaching & Learning Scheme
+Course C ourse
+Code Titles Classroom Lab Term Work Total no.
+Total
+Instruction Instruction (TW) and Self of Hours
+Credits
+(CI) (LI) Learning (SL) per
+(C)*
+(in hours per (in hours (TW+ SL) semester
+(Total
+semester) per (in hours per
+Hours/30
+semester) semester)
+)
+L T P SL
+101 C++ 42 14 28 36 120 120/30=4
+102 Chemistry 42 18 60 60/30=2
+Laboratory
+…
+*This is as per the new National Credit Framework, which accounts for 30 hrs. of learning as
+equivalent to 1 credit. Those universities which are still following the LTP will transform them
+into no. of hours and fill in the above table.
+Legend:
+CI: Classroom Instruction (Includes different instructional/implementation strategies i.e.
+Lecture (L), Tutorial (T), Case method, Demonstrations, Video demonstration,
+Problem based learning etc. to deliver theoretical concepts)
+LI: Laboratory Instruction (Includes experiments/practical performances /problem-
+based experiences in laboratory, workshop, field or other locations using different
+instructional/Implementation strategies)
+TW: Term work (includes assignments, seminars, micro projects, industrial visits, any
+other student activities etc.)
+SL: Self Learning, MOOCs, spoken tutorials, online educational resources etc.(If Provided
+in curriculum structure.)
+1.2.3. Components of Curriculum (05)
+(Provide details of Curriculum components for all relevant Years.)
+Table No.1.3.3.1: Program curriculum grouping based on curriculum components.
+===PAGE 12===
+Curriculum Curriculum Content Total number of Total number of
+Component (% of total number contact hours credits
+of credits of the
+program)
+Basic Sciences
+Basic Engineering
+Humanities and Social
+Sciences
+Program Core
+Program Electives
+Open Electives
+Project(s)
+Internships/Seminars
+Any other (Please
+specify)
+Total number of Credits:
+Add more rows, if required
+1.2.4. Strategies for Education Reforms (05)
+(A brief explanation of the plans to implement and map activities in curriculum design
+with multidisciplinary and interdisciplinary programs, the establishment of an
+academic bank of credits system, APAAR etc.)
+1.3. PO, PSO and their Mapping with Courses (20)
+1.3.1. POs and PSOs (05)
+(Program Specific Outcomes (PSOs) are defined by the program, with up to 3 PSOs
+specified.)
+List of POs as Defined by NBA in Annexure II.
+List of PSOs (up to 3)
+(Provide details of the PSOs for the program currently seeking accreditation.)
+1.3.2. Mapping between the Courses and POs/PSOs (15)
+(Mention the courses relevant to the POs/PSOs.)
+Table No.1.3.1: Connection of courses with POs/PSOs.
+PO Number List of Courses
+PO1:
+PO2:
+PON:
+Add more rows for PSOs
+1.4. Course Outcomes and Course Articulation Matrix (30)
+1.4.1. Course Outcome (Semester Wise) (15)
+(Provide Course outcomes (COs) for two core courses per semester from 1-8
+semesters as a sample. The maximum number of outcomes for a course is expected
+===PAGE 13===
+to be around 6. COs should reflect on the measurable outcomes towards attaining POs
+and PSOs).
+Table No. 1.4.1.1: Course outcomes.
+Semester No:
+Course Title: Course Code:
+Course Outcome No. Course Outcome Statement
+1.4.2. Course Articulation Matrix (15)
+(Provide course articulation matrices for two core courses per semester from 1-8
+semesters which have been provided in the section 1.4.1. Select courses to
+demonstrate the mapping/correlation with POs and PSOs.)
+Table No.1.4.2: Course articulation matrix.
+Course Name: Course Code:
+Course Program Outcomes (POs) Program
+Outcomes Specific
+(COs) Outcomes
+code (PSOs)
+& PO- PO PO PO- PO- PO PO PO PO PO- PO- PSO- PSO-
+Statement 1 -2 -3 4 5 -6 -7 -8 -9 10 11 1 2
+CO-1
+CO-2
+CO-3
+CO-4
+CO-5
+Add more columns for PSOs if any
+Note:
+ Enter correlation levels 1, 2 or 3 as defined below:
+ 1: Slight (Low)
+ 2: Moderate (Medium)
+ 3: Substantial (High),
+ If there is no correlation, put “-”
+1.5. Program Articulation Matrix (05)
+Table No.1.5.1: Program articulation matrix
+Course Course PO1 PO2 PO3 PO4 PO5 PO6 PO7 PO8 PO9 PO10 PO11
+Code Name
+C101
+===PAGE 14===
+C202
+C303
+….
+C4…
+Add more columns for PSOs if any.
+===PAGE 15===
+Criterion 2: Outcome-Based Teaching Learning (120)
+2.1. Describe Processes Followed to Ensure Quality of Teaching & Learning (20)
+(Processes may include adherence to academic calendar and instruction methods using
+pedagogical initiatives such as real-world examples, collaborative learning, quality of
+laboratory experience with regard to conducting experiments, recording observations,
+analysis of data etc. encouraging fast learners, assisting slow learners etc. The
+implementation details and impact analysis need to be documented.)
+2.2. Quality of Student Capstone Project (25)
+(Quality of the capstone/major project is measured in terms of consideration to factors
+including, but not limited to, environment, sustainability, safety, ethics, cost, type
+(application, product, research, review etc.) and standards. Processes related to
+project identification, allotment, continuous monitoring, evaluation including
+demonstration of working prototypes and enhancing the relevance of projects.
+Mention implementation details including details of POs and PSOs addressed through
+the projects with justification.)
+2.3. Internship/Industrial Training (10)
+(Describe process, duration, POs/PSOs addressed.)
+2.4. Seminar and Mini/Micro Projects (10)
+(Describe process, POs/PSOs addressed.)
+2.5. Case Studies and Real-Life Examples (10)
+(Type and complexity, POs/PSOs addressed.)
+2.6. SWAYAM/NPTEL/MOOC/Self Learning (10)
+(Number of students registered, certification and POs/PSOs addressed.)
+2.7. Solving Complex Engineering Problems Incorporating Sustainability Goals (20)
+(Provide details of core courses (Project based learning, problem-based learning), mini
+projects, integrated design projects, capstone projects, hackathon or any other
+activity-based learning towards solving complex engineering problems targeting
+relevant SDGs.)
+2.8. Steps Taken for Enhancing Industry Institute Partnerships (15)
+(Provide details of partial delivery of courses, industry supported labs, industry offered
+short-term programs/training etc.)
+===PAGE 16===
+Criterion 3: Outcome-Based Assessment (120)
+3.1. Evaluation of Continuous Assessment: Assignments, Unit Tests, Mid-Term,
+etc. (10)
+(Describe the process of evaluation followed during continuous assessment to maintain
+quality of assessment; constructive alignment of questions with COs and hence POs/
+PSOs. Details to be kept in course files for evaluation.)
+3.2. Evaluation of the Semester End Exam (SEE) Question Paper (10)
+(Describe the process of setting of SEE papers & their evaluation to maintain quality
+of assessment, constructive alignment of questions with COs and POs/PSOs. Details to
+be kept in course files for evaluation.)
+3.3. Evaluation of Laboratory Work and Workshop (Continuous and SEE) (10)
+(Provide details of rubrics used to assess learnings in laboratories and workshops
+linking with COs and POs/PSOs targeted. Evidence of student assessments through
+rubrics to be kept in course files for evaluation.)
+3.4. Evaluation of Industrial Training/ Internship (Continuous and SEE) (10)
+(Provide details of rubrics used to assess learnings in internships/industrial trainings
+linking POs/PSOs targeted for attainment. Evidence of student assessments through
+rubrics to be kept in course files for evaluation.)
+3.5. Evaluation of Projects (20)
+(Provide details of rubrics used to assess learnings in projects linking POs/PSOs
+targeted for attainment. Evidence of student assessments through rubrics to be kept
+in course files for evaluation.)
+3.6. Evidence of Addressing Sustainable Development Goals (SDG) (10)
+(Provide details of student work carried out to meet sustainable development goals
+such as research work, project work, student activities etc. Evidence in the form of a
+portfolio to be made available during the visit.)
+3.7. Attainment of Course Outcomes (25)
+3.7.1. Describe the Assessment Tools and Processes Used to Gather the Data for the
+Evaluation of Course Outcome (05)
+(Describe different assessment tools (semester end examinations, mid-semester tests,
+laboratory examinations, student portfolios etc.,) to measure the student learning and
+hence attainment of course outcomes.)
+3.7.2. Record the Attainment of Course Outcomes of all Courses with Respect to Set
+Attainment Levels (20)
+(Program shall set course outcome attainment levels for each course. Measuring CO
+attainment through Continuous Internal Examinations (CIE) and Semester End
+Examination (SEE) needs to be detailed.
+Target may be stated in terms of percentage of students getting more than class
+average marks or set by the program in each of the associated COs in the assessment
+===PAGE 17===
+instruments (midterm tests, assignments, mini projects, reports and presentations
+etc. as mapped with the COs.))
+3.8. Attainment of Program Outcomes and Program Specific Outcomes (25)
+(The attainment of POs and PSOs by direct assessment based on student performance
+and indirect assessment based on surveys are to be presented through program level
+Course-PO&PSO matrices as indicated.)
+PO and PSO Attainment:
+Table No.3.8.1: PO and PSO attainment value using direct assessment tools.
+Course PO1 PO2 PO3 PO4 PO5 PO6 PO7 PO8 PO9 PO10 PO11
+C101
+C102
+…
+C409
+Direct
+Attainment
+Add more columns as needed for PSOs if any.
+Note:
+ C101, C102 are indicative courses in the first year. Similarly, C409 is final year
+course. First numeric digit indicates year of study and remaining two digits
+indicate course nos. in the respective year of study.
+ Direct attainment of a PO/PSO is determined by taking average across all courses
+addressing that PO/PSO.
+Table No. 3.8.2: PO and PSO attainment value using indirect assessment tools.
+Name of the PO1 PO2 PO3 PO4 PO5 PO6 PO7 PO8 PO9 PO10 PO11
+Survey
+Survey 1
+Survey 2
+Survey 3
+…..
+Indirect
+Attainment
+Add more columns as needed for PSOs if any.
+Note:
+ Mention the type of survey conducted and the location of its source.
+ Indirect attainment level of a PO/PSO is determined based on the student exit
+surveys, employer surveys, etc.
+Table No.3.8.3: Overall PO and PSO attainment value
+Assessment PO1 PO2 PO3 PO4 PO5 PO6 PO7 PO8 PO9 PO10 PO11
+Direct Attainment
+===PAGE 18===
+Indirect Attainment
+Overall Attainment
+Add more columns as needed for PSOs if any.
+===PAGE 19===
+Criterion 4: Students’ Performance (120)
+Table No. 4A: Admission details for the program excluding those admitted through multiple entry and exit points.
+Item (Information is to be CAY CAYm1 CAYm2 CAYm3 CAYm4 CAYm5 CAYm6
+provided cumulatively for all (LYG) (LYGm1) (LYGm2)
+the shifts with explicit
+headings, wherever applicable)
+N= Sanctioned intake of the
+program (as per AICTE
+/Competent authority)
+N1= Total no. of students admitted
+in the 1st year minus the no.
+of students, who migrated to
+other programs/ institutions
+plus no. of students, who
+migrated to this program
+N2= Number of students admitted
+in 2nd year in the same batch
+via lateral entry including
+leftover seats
+N3= Separate division if any
+N4= Total no. of students admitted
+in the 1st year via all
+supernumerary quotas
+Total number of students admitted
+in the program (N1 + N2 +
+N3 + N4) - excluding those
+admitted through multiple
+entry and exit points.
+CAY= Current Academic Year.
+CAYm1= Current Academic Year Minus 1= Current Assessment Year.
+CAYm2= Current Academic Year Minus 2= Current Assessment Year Minus 1.
+LYG= Last Year Graduate.
+LYGm1= Last Year Graduate Minus 1.
+LYGm2= Last Year Graduate Minus 2.
+Example for Table No.4A: Admission details for the program excluding those admitted through multiple entry and exit points.
+===PAGE 20===
+Item (Information is to be provided cumulatively CAYm3 CAYm4 CAYm5 CAYm6
+CAY CAYm1 CAYm2
+for all the shifts with explicit headings, wherever 2020- (LYG) (LYGm1) (LYGm2)
+2023- 2022- 2021-
+applicable) 21 2019- 2018-19 2017-18
+24 23 22
+20
+N= Sanctioned intake of the program (as per AICTE 120 120 120 120 120 120 120
+/Competent authority)
+N1= Total no. of students admitted in the 1st year minus 120 120 116 120 120 120 120
+the no. of students, who migrated to other
+programs/ institutions plus no. of students, who
+migrated to this program
+N2= Number of students admitted in 2nd year in the 00 11 09 10 11 10 11
+same batch via lateral entry including leftover
+seats
+N3= Separate division if any 00 00 00 00 00 00 00
+N4= Total no. of students admitted in the 1st year via all 00 01 00 00 00 00 00
+supernumerary quotas
+Total number of students admitted in the program (N1 120 132 125 130 131 130 131
++ N2 + N3 + N4) - excluding those admitted through
+multiple entry and exit points.
+Table No. 4B: Admission details for the program through multiple entry and exit points.
+Item (No. of students admitted/exited through CAY CAYm1 CAYm2 CAYm3 CAYm4 CAYm5 CAYm6
+multiple entry and exit points) in the respective batch (LYG) (LYGm1) (LYGm2)
+N52= No. of students admitted in 2nd
+year via multiple entry and exit
+N5(Multiple entry) points in same batch
+N53= No. of students admitted in 3rd
+N5=N52+N53+N54 year via multiple entry and exit
+points in same batch
+N54= No. of students admitted in 4th
+year via multiple entry and exit
+points in same batch
+N5=N52+N53+N54
+===PAGE 21===
+N61= No. of students exits after 1st
+N6 (Multiple exit) year via multiple entry and exit
+points in same batch
+N6=N61+N62+N63 N62= No. of students exit after 2nd
+year via multiple entry and exit
+points
+N63= No. of students exit after 3rd
+year via multiple entry and exit
+points in same batch
+N6=N61+N62+N63
+Example for Table No.4B: Admission details for the program through multiple entry and exit points.
+Item (No. of students admitted/exited through CAYm3 CAYm4 CAYm5 CAYm6
+CAY CAYm1 CAYm2
+multiple entry and exit points) in the respective batch 2020- (LYG) (LYGm1) (LYGm2)
+2023- 2022- 2021-
+21 2019- 2018- 2017-
+24 23 22
+20 19 18
+N52= No. of students admitted in 2nd 0(NA) 2 1 2 1 1 2 (a)
+year via multiple entry and exit
+N5(Multiple entry) points in same batch
+N53= No. of students admitted in 3rd 0(NA) 0(NA) 0 0 0 0 1 (b)
+N5=N52+N53+N54 year via multiple entry and exit
+points in same batch
+N54= No. of students admitted in 4th 0(NA) 0(NA) 0(NA) 0 0 0 1 (c)
+year via multiple entry and exit
+points in same batch
+N5=N52+N53+N54 0(NA) 2 1 2 1 1 4
+N61= No. of students exits after 1st 0(NA) 1 1 1 0 1 1 (d)
+N6 (Multiple exit) year via multiple entry and exit
+points in same batch
+N6=N61+N62+N63 N62= No. of students exit after 2nd 0(NA) 0(NA) 0 0 0 0 1(e)
+year via multiple entry and exit
+points
+N63= No. of students exit after 3rd 0(NA) 0(NA) 0(NA) 0 0 0 0 (f)
+year via multiple entry and exit
+points in same batch
+N6=N61+N62+N63 0(NA) 1 1 1 0 1 2
+===PAGE 22===
+1. Example: Multiple entry for Batch LYG m2 (2017-18):
+ No. of students admitted through multiple entry: 4
+ Breakdown: 2(a) + 1(b) + 1(c), where:
+o a = no. of students admitted in 2nd year
+o b = no. of students admitted in 3rd year
+o c = no. of students admitted in 4th year
+ Therefore, for batch LYG m2 (2017-18):
+o 2 students were admitted in the 2nd year.
+o 1 student was admitted each in the 3rd and 4th years.
+2. Example: Multiple exit for Batch LYG m2 (2017-18):
+ No. of students exiting/dropped through multiple exit: 2
+ Breakdown: 1(d) + 1(e) + 0(f)), where:
+o d = no. of students exiting after 1st year
+o e = no. of students exiting after 2nd year
+o f = no. of students exiting after 3rd year
+ Therefore, for batch LYG m2 (2017-18):
+o 1 student exited after the 1st year.
+o 1 student exited after the 2nd year.
+o No students exited after the 3rd year.
+Table No. 4C: No. of students graduated within the stipulated period of the program.
+Year of Total no. of students (N1 + Number of students who have successfully graduated in the stipulated period of
+entry N2 + N3+ N4+N5-N6 as study [Total of with Backlogs+ without Backlogs]
+defined above) I Year II Year III Year IV Year
+CAY
+CAYm1
+CAYm2
+CAYm3
+CAYm4
+(LYG)
+CAYm5
+(LYGm1)
+CAYm6
+(LYGm2)
+Example for Table No.4C: No. of students graduated within the stipulated period of the program.
+===PAGE 23===
+Year of Total no. of students (N1 + N2 Number of students who have successfully graduated in the stipulated period of
+entry + N3+ N4+N5-N6 as defined study [Total of with Backlogs+ without Backlogs]
+above)
+I Year II Year III Year IV Year
+2023-24 120 (120+0+0+0+0(NA)-0(NA)
+CAY
+2022-23 133 (120+11+0+1+2-1) 128
+CAYm1
+2021-22 125 (116+9+0+0+1-1) 123 121
+CAYm2
+2020-21 131 (120+10+0+0+2-1) 125 123 121
+CAYm3
+2019-20 132 (120+11+0+0+1-0) 127 125 125 123
+CAYm4
+(LYG)
+2018-19 130 (120+10+0+0+1-1) 125 123 122 121
+CAYm5
+(LYGm1)
+2017-18 133 (120+11+0+0+4-2) 129 127 126 124
+CAYm6
+(LYGm2)
+===PAGE 24===
+4.1. Enrolment Ratio in the First Year (20)
+ER Points= Average ER*100
+Table No.4.1.1: Student enrolment ratio in the 1st year.
+Item (Students enrolled in the First Year on average CAY CAYm1 CAYm2
+over 3 academic years (CAY, CAYm1 and CAYm2))
+N= Sanctioned intake of the program in the 1st year (as per
+AICTE/Competent authority)
+N1= Total no. of students admitted in the 1st year minus the
+no. of students, who migrated to other programs/
+institutions plus no. of students, who migrated to this
+program
+N4= Total no. of students admitted in the 1st year via all
+supernumerary quotas
+Enrolment Ratio (ER)= (N1+N4)/N ER_1 ER_2 ER_3
+Average ER= (ER_1+ ER_2+ ER_3)/3
+Example for Table No.4.1.1: Student enrolment ratio in the 1st year.
+Item (Students enrolled in the First Year on average CAY CAYm1 CAYm2
+over 3 academic years (CAY, CAYm1 and CAYm2)) 2023- 2022- 2021-
+24 23 22
+N= Sanctioned intake of the program in the 1st year (as per 120 120 120
+AICTE/Competent authority)
+N1= Total no. of students admitted in the 1st year minus the 120 120 116
+no. of students, who migrated to other programs/
+institutions plus no. of students, who migrated to this
+program
+N4= Total no. of students admitted in the 1st year via all 00 01 00
+supernumerary quotas
+Enrolment Ratio (ER)=(N1+N4)/N 1.00 1.01 0.97
+Average ER = (ER_1+ ER_2+ ER_3)/3 0.99
+Table No. 4.1.2: The marks distribution for enrolment ratio in the 1st year.
+Item (Students enrolled in the First Year on average over 3 academic years Marks
+(CAY, CAYm1 and CAYm2))
+>= 90% students enrolled in the First Year on average over 3 academic years (CAY,
+20
+CAYm1 and CAYm2)
+>= 80% students enrolled in the First Year on average over 3 academic years (CAY, 17
+CAYm1 and CAYm2)
+>= 70% students enrolled in the First Year on average over 3 academic years (CAY, 14
+CAYm1 and CAYm2)
+>= 60% students enrolled in the First Year on average over 3 academic years (CAY, 11
+CAYm1 and CAYm2)
+>= 50% students enrolled in the First Year on average over 3 academic years (CAY, 08
+CAYm1 and CAYm2)
+>= 40% students enrolled in the First Year on average over 3 academic years (CAY, 05
+CAYm1 and CAYm2)
+===PAGE 25===
+4.2. Success Rate of the Students in the Stipulated Period of the Program (15)
+Success Rate (SR) = (No. of students who graduated from the program in the
+stipulated course duration) /(No. of students admitted in the 1st year of that batch and
+those actually admitted in the 2nd year via lateral entry, plus the number of students
+admitted through multiple entry (if any) and separate division if applicable, minus the
+number of students who exited through multiple entry (if any).
+Average SR = Mean of SR for the past three batches.
+SR Points = 1.5 * Average SR/10.
+Table No.4.2.1: The success rate in the stipulated period of a program.
+Item LYG LYGm1 LYGm2
+A*= (No. of students admitted in the 1st year of
+that batch and those actually admitted in the
+2nd year via lateral entry, plus the number of
+students admitted through multiple entry (if
+any) and separate division if applicable, minus
+the number of students who exited through
+multiple entry (if any).
+B=No. of students who graduated from the program
+in the stipulated course duration
+SR_1 SR_2 SR_3
+Success Rate (SR)= (B/A) * 100
+Average SR of three batches ((SR_1+ SR_2+
+SR_3)/3)
+Note *: If the value of A in Table No. 4.2.1 is less than the sum of the sanctioned
+intake (N) and the lateral entry including leftover seats (N2), then the value of A in
+Table No. 4.2.1 should be the sum of the sanctioned intake (N) and the lateral entry
+including leftover seats (N2).
+4.3. Academic Performance of the First-Year Students of the Program (10)
+Academic Performance = Average Academic Performance Index (API), where
+API = ((Mean of 1st Year Grade Point Average of all successful students on a 10-point
+scale) or (Mean of the percentage of marks of all successful students in 1st year/10))
+* (Number of successful students/number of students appeared in the examination)
+Successful students are those who have proceeded to the 2nd year.
+Table No.4.3.1: Academic Performance of the First-Year Students of the Program.
+Academic Performance CAYm1 CAYm2 CAYm3
+X= (Mean of 1st year grade point average of all successful
+students on a 10-point scale) or (Mean of the
+percentage of marks of all successful students in 1st
+year/10)
+Y= Total no. of successful students
+===PAGE 26===
+Z = Total no. of students appeared in the examination
+API = X* (Y/Z) AP1 AP2 AP3
+Average API = (AP1 + AP2 + AP3)/3
+4.4 Academic Performance of the Second Year Students of the Program (10)
+Academic Performance = Average Academic Performance Index (API), where
+API = ((Mean of 2nd Year Grade Point Average of all successful students on a 10-point
+scale) or (Mean of the percentage of marks of all successful students in 2nd Year/10))
+* (Number of successful students/number of students appeared in the examination).
+Successful students are those who have proceeded to the 3rd year.
+Table No.4.4.1: Academic Performance of the Second Year Students of the Program.
+Academic Performance CAYm1 CAYm2 CAYm3
+X= (Mean of 2nd year grade point average of all successful
+students on a 10-point scale) or (Mean of the
+percentage of marks of all successful students in 2rd
+year/10)
+Y= Total no. of successful students
+Z =Total no. of students appeared in the examination
+API = X* (Y/Z) AP1 AP2 AP3
+Average API = (AP1 + AP2 + AP3)/3
+4.5 Academic Performance of the Third Year Students of the Program (10)
+Academic Performance = Average Academic Performance Index (API), where
+API = ((Mean of 3rd Year Grade Point Average of all successful students on a 10-point
+scale) or (Mean of the percentage of marks of all successful students in 3rd Year/10))
+* (Number of successful students/number of students appeared in the examination).
+Successful students are those who have proceeded to the 4th year.
+Table No.4.5.1: Academic Performance of the Third Year Students of the Program
+Academic Performance CAYm1 CAYm2 CAYm3
+X= (Mean of 3rd year grade point average of all successful
+students on a 10-point scale) or (Mean of the
+percentage of marks of all successful students in 3rd
+year/10)
+Y= Total no. of successful students
+===PAGE 27===
+Z= Total no. of students appeared in the examination
+API = X* (Y/Z) AP1 AP2 AP3
+Average API = (AP1 + AP2 + AP3)/3
+4.6 Placement, Higher Studies and Entrepreneurship (30)
+Placement index points= 0.3 * Average placement index (P).
+Table No. 4.6.1: Placement, higher studies, and entrepreneurship details.
+LYG LYGm1 LYGm2
+Item
+FS*=Total no. of final year students
+X= No. of students placed
+Y= No. of students admitted to higher studies
+Z= No. of students taking up entrepreneurship
+X + Y + Z =
+Placement Index (P) = (((X + Y + Z)/FS) * 100) P_1 P_2 P-3
+Average placement index = (P_1 + P_2 + P_3)/3
+Note *: If the value of FS in Table No. 4.6.1 is less than the sum of the sanctioned intake (N)
+and the lateral entry including leftover seats (N2), then the value of FS in Table No. 4.6.1
+should be the sum of the sanctioned intake (N) and the lateral entry including leftover seats
+(N2).
+4.7 Professional Activities (25)
+4.7.1 Professional Societies/ Bodies, Chapters, Clubs, and Professional Engineering
+Events Organized (05)
+(Provide a list of active professional societies/bodies, chapters, and clubs that exist
+at the departmental/cluster level in the past 3 years, and also provide a list of events
+organized by the professional societies, chapters, and clubs over the past 3 years.)
+Table No. 4.7.1.1: List of active professional societies/bodies/chapters/clubs.
+S.N. Name of the Professional Societies/Bodies, Chapters, Clubs
+1.
+..
+Table No. 4.7.1.2: List of events/programs organized.
+S.N. Name of the Professional Name of National/ Date of
+Societies/Bodies/Chapters/ the Event International level Event
+Clubs
+CAYm1
+===PAGE 28===
+1
+…
+CAYm2
+1
+..
+CAYm3
+1
+..
+4.7.2 Student’s Participations in Professional Events (10)
+(Provide details of students, who have participated at other institutes in various
+professional events, such as hackathons, codeathons, ideathons, etc., over the past 3
+years.)
+Table No. 4.7.2.1: List of students participated in professional events.
+S.N. Name of the Name of the State /National/ Date of Name of
+Student Event International level Event the award
+if any
+CAYm1
+1
+..
+CAYm2
+1
+..
+CAYm3
+1
+..
+4.7.3 Publication of Journals, Magazines, Newsletters, etc. in the Department (05)
+(Provide details of journals, magazines, newsletters, etc., published by the
+department, along with the names of the editors, issue numbers, volume numbers,
+and a list of students involved for the past 3 years.)
+Table No. 4.7.3.1: List of students involved in publication of journals, magazines, and
+newsletters, etc. in the Department.
+S.N. Name of the Name of Name of the No. of Hard copy/
+Journal, Magazine, the Editor Student & Issues Soft copy
+Newsletter Semester
+CAYm1
+1
+===PAGE 29===
+..
+CAYm2
+1
+..
+CAYm3
+1
+..
+4.7.4 Student Publications (05)
+(Provide details of student publications in journals, conferences, etc., for the past 3
+years.)
+Table No. 4.7.4.1: List of student publications.
+S.N. Name of Name of the Name of the Journal/ Volume Name of
+the Student Publisher Conference, etc. No. & the Award
+& Semester Issue if any
+No.
+CAYm1
+1
+..
+CAYm2
+1
+..
+CAYm3
+1
+..
+===PAGE 30===
+Criterion 5: Faculty Information (100)
+Table No. 5A: Faculty details
+nt t s sy / r e
+S . N . N a m e o f t h e F a c u l t y P A N N o . A P A A R f a c u l t y I D * ( i f a n y ) H i g h e s t d e g r e e U n i v e r s i t y A r e a o f S p e c i a l i z a t i o n D a t e o f J o i n i n g i n t h i s I n s t i t u t i o n D a t e o f J o i n i n g i n t h e D e p a r t m e n t ( i c a s e o f t r a n s f e r f r o m o n e D e p a r t m e n t o a n o t h e r ) i f a n y E x p e r i e n c e i n y e a r s i n c u r r e n i n s t i t u t e D e s i g n a t i o n a t T i m e J o i n i n g i n t h i I n s t i t u t i o n P r e s e n t D e s i g n a t i o n T h e d a t e o n w h i c h D e s i g n a t e d a P r o f e s s o r / A s s o c i a t e P r o f e s s o r i f a n N a t u r e o f A s s o c i a t i o n ( R e g u l a r C o n t r a c t / A d h o c ) I u f l l c t o i m n t e r a o c t u a l m e n t i o n F ( P a r t t i m e o r h o u r l y b a s e d ) C u r r e n t l y A s s o c i a t e d ( Y / N ) D a t e o f L e a v i n g i f a n y ( I n c a s C u r r e n t l y A s s o c i a t e d i s “ N o ” )
+1
+..
+Note 1: Please provide details of the faculty in the Department and allied Departments, including cumulative information for all three academic years starting from
+the current academic year (CAY) in the specified format. Programs such as MCA, BCA, Diploma (Engineering), and other non-engineering programs running
+in the Department and allied Departments need to have sufficient faculty members to support those programs. Note that these faculty members should not
+be included in the above said Table no. 5A.
+Note 2: All the faculty whether regular or contractual (except part-time or hourly based), will be considered. All regular faculty members shall meet the AICTE
+qualifications and experience requirements. The contractual faculty appointed with any terminology whatsoever, who have taught for 2 consecutive
+semesters with or without break between the 2 semesters in corresponding academic year on full-time basis shall be considered for the purpose of calculation
+in the faculty student ratio. However, following will be ensured in case of contractual faculty:
+A. Shall have the AICTE prescribed qualifications and experience.
+B. Shall be appointed on full time basis and worked for consecutive two semesters with or without break between the 2 semesters during the particular
+academic year under consideration.
+C. Should have gone through an appropriate process of selection and the records of the same shall be made available to the visiting team during NBA
+visit.
+Note 3:
+A. Faculty members in the Department who do not have teaching, or practical loads, will not be counted.
+B. Director/ Principal/ Dean/ other academic/administrative posts, who has teaching/ practical load in the Department will be counted.
+C. Visiting faculty/adjunct faculty, who are working on hourly based faculty will not be counted
+===PAGE 31===
+Note 4:
+A. The Professor of Practice (PoP), Associate Professor of Practice (PoP), and Assistant Professor of Practice (PoP) (Full-time basis) will be considered as
+per the qualifications and experience prescribed by the AICTE for the NBA evaluation process for accreditation of Engineering programs. e.g. for
+calculation of SFR, Faculty Qualification, Faculty Cadre Proportion, Faculty Retention Ratio and Faculty members participation in STTPs/FDPs. The
+maximum number of faculty members engaged as Professor of Practice (PoP) with the required faculty strength (Cadre Ratio) as per AICTE norm will
+be 20% wherein 5% (ratio 3:1) is exclusively reserved for Women Professor of Practice (PoP), Associate /Assistant Professor of Practice (PoP) (Full-
+time basis)
+===PAGE 32===
+5.1. Student-Faculty Ratio (30)
+(SFR to be calculated at Department level considering all UG and PG engineering
+programs in the Department; include allied department programs/clusters as well.)
+ No. of UG(Engineering) programs in Department including allied departments/
+clusters (UG ):
+n
+ UG =1st UG program
+1
+ UG =nth UG program
+n
+ B= No. of Students in UG 2nd year (ST)
+ C= No. of Students in UG 3rd year (ST)
+ D= No. of Students in UG 4th year (ST)
+ No. of PG (Engineering) programs in Department including allied departments/
+clusters (PG ):
+m
+ PG =1st PG program.
+1
+ PG =mth PG program
+m
+ A= No. of Students in PG 1st year
+ B= No. of Students in PG 2nd year
+ Student Faculty Ratio (SFR) = S/F
+ S= No. of students of all programs in the Department including all students of
+allied departments/clusters.
+ No. of students (ST)=Sanctioned Intake (SA)+ Actual admitted students
+via lateral entry including leftover seats (L) if any (limited to 10 % of SA)
+ Students who admitted under supernumerary quotas (SNQ, EWS, etc) will
+not be considered in calculating SFR value. Those students are exempted.
+ F=Total no. of regular or contractual faculty members (Full Time) in the
+Department, including allied departments/clusters (excluding first year faculty
+(The faculty members who have a 100% teaching load in the first-year
+courses)).
+Example: Table No. 5.1.1: Calculation of no. of students admitted in the program
+though lateral entry or left-over seats.
+Let us assume that sanctioned intake of the program (SA)=120
+Example No. of Leftover No. of actually No. of students in
+case students seats/Unfilled students admitted in the program to be
+admitted seats in 1st 2nd year, L= a+ b; considered for SFR
+in 1st year a=Lateral entry calculation (ST)=
+year admission (maximum (SA + L) limited to
+10% of SA) 110 % of SA
+b=Leftover seats
+admitted in 2nd year
+Case 1 120 00 00 120 (120+00)
+Case 2 120 00 12 132 (120+12)
+Case 3 120 00 06 126 (120+06)
+Case 4 60 60 00 120 (120+00)
+Case 5 75 45 06 126 (120+06)
+Case 6 82 38 12 132 (120+12)
+Case 7 88 32 44* 132 (120+12)
+Case 8 60 60 42* 132 (120+12)
+*Note:
+If the number of students admitted in 2nd year via lateral entry including left over seats
+(L) is more than 10% of the sanctioned intake in the respective program, then the
+total number of students considered to be admitted in the program (ST) should be the
+===PAGE 33===
+sanctioned intake program plus 10% of the sanctioned intake program. Additionally,
+the (ST) value cannot exceed 132 in the given example.
+Table No. 5.1.2: Student-faculty ratio
+Year CAY CAYm1 CAYm2
+UG . B
+1
+UG . C
+1
+UG . D
+1
+UG .B+ UG .C+ UG .B+ UG .C+ UG .B+ UG .C+
+UG 1 1 1 1 1 1
+1 UG .D UG .D UG .D
+1 1 1
+…
+UG . B
+n
+UG . C
+n
+UG . D
+n
+UG .B+UG .C+U UG .B+UG .C+UG UG .B+UG .C+U
+UG n n n n n n
+n G .D .D G .D
+n n n
+PG . A
+1
+PG . B
+1
+PG PG .A+ PG .B PG .A+ PG .B PG .A+ PG .B
+1 1 1 1 1 1 1
+…..
+PG . A
+m
+PG . B
+m
+PG PG .A+ PG .B PG .A+ PG .B PG .A+ PG .B
+m m m m m m m
+DS=Total no. of students in all UG
+and PG programs in the ….. ….. …..
+Department
+AS=Total no. of students of all UG
+and PG programs in allied ….. ….. …..
+departments
+S=Total no. of students in the S1=UG 1 +UG 2 +.. S2=UG 1 +UG 2 +.. S3=UG 1 +UG 2 +..
+Department (DS) and allied +UG n +PG 1 + +UG n +PG 1 + +UG n +PG 1 +
+departments (AS) …PG m …PG m …PG m
+DF=Total no. of faculty members in
+….. ….. …..
+the Department
+AF= Total no. of faculty members in
+….. ….. …..
+the allied Departments
+F=Total no. of faculty members in the
+Department (DF) and allied F1 F2 F3
+Departments (AF)
+PoP=Total no. of PoP in the
+Department (DF) and allied PoP1 PoP2 PoP3
+Departments (AF)
+FF=The faculty members in F who
+have a 100% teaching load in the FF1 FF2 FF3
+first-year courses
+TF= Total faculty= F+PoP-FF TF1 TF3 TF3
+Student Faculty Ratio
+SFR1= S1/ TF1 SFR2=S2/ TF2 SFR3=S3/ TF3
+(SFR)=S/(TF)
+Average SFR for 3 years Average SFR=(SFR1+SFR2+SFR3)/3
+===PAGE 34===
+Note: Programs such as MCA, BCA, Diploma (Engineering), and other non-engineering
+programs running in the Department or allied Departments need to have sufficient faculty
+members to support those programs. These faculty members and students should not be
+included in Table No. 5.1.2.
+Note:
+Marks to be given proportionally from a maximum of 30 to a minimum of 15 for
+average SFR between 15:1 to 25:1, and zero for average SFR higher than 25:1. Marks
+distribution is given as below:
+SFR < 15 - 30 Marks
+< 17 - 27 Marks
+< 19 - 24 Marks
+< 21 - 21 Marks
+< 23 - 18 Marks
+< 25 - 15 Marks
+> 25 - 00 Mark
+Example 1: Computer Science and Engineering Department (Cluster Programs)/
+(See Annexure-III):
+If the College offers a cluster of Undergraduate(UG) engineering programs & Postgraduate
+(PG) Engineering Programs in for example Computer Science and Engineering (CSE),
+such as UG-Engineering-CSE, UG-Engineering-CSE (Artificial Intelligence), UG-Engineering-
+CSE (Artificial Intelligence and Machine Learning), UG-Engineering-CSE (Cyber Security),
+UG-Engineering-CSE (Data Science), UG-Engineering-Information Technology, PG-
+Engineering-CSE within the Department or a separate Department, they will be counted as
+one cluster(Department). The SFR should be calculated as follows:
+ No. of UG ((Engineering) Programs in Department including allied departments/clusters
+(UG ): 6
+n
+1. UG =UG-Engineering-CSE
+1
+2. UG =UG-Engineering-CSE (Artificial Intelligence)
+2
+3. UG =UG-Engineering-CSE (Artificial Intelligence and Machine Learning)
+3
+4. UG =UG-Engineering-CSE (Cyber Security)
+4
+5. UG =UG-Engineering-CSE (Data Science)
+5
+6. UG =UG-Engineering-Information Technology
+6
+ No. of PG ((Engineering) Programs in Department including allied departments/clusters
+(PG ): 1
+m
+1. PG =PG-Engineering-CSE.
+1
+Let’s assume that the Department of Computer Science is offering programs like UG =UG-
+1
+Engineering-CSE, UG =UG-Engineering-CSE (Artificial Intelligence), UG =UG-Engineering-
+2 3
+CSE (Artificial Intelligence and Machine Learning), UG =UG-Engineering-CSE (Cyber
+4
+Security), UG =UG-Engineering-CSE (Data Science), and PG =PG-Engineering-CSE.
+5 1
+Additionally, Allied Departments like Information Technology is offering UG =UG-
+6
+Engineering-Information Technology in the above said example. The SFR is to be calculated
+as follows:
+Example: Student-Faculty Ratio for Table No. 5.1.2.
+===PAGE 35===
+Student CAY CAYm1 CAYm2
+UG . B 132 132 131
+1
+UG . C 132 131 130
+1
+UG . D 131 130 129
+1
+UG (UG-Engineering-CSE) 395 393 390
+1
+UG . B 131 130 125
+2
+UG . C 130 125 130
+2
+UG . D 125 130 123
+2
+UG (UG-Engineering-CSE
+2 386 385 378
+(Artificial Intelligence))
+UG . B 126 122 120
+3
+UG . C 122 120 112
+3
+UG . D 120 122 119
+3
+UG (UG-Engineering-CSE
+3
+(Artificial Intelligence 368 364 351
+and Machine Learning))
+UG . B 132 132 130
+4
+UG . C 132 130 130
+4
+UG . D 130 130 129
+4
+UG (UG-Engineering-CSE
+4 394 392 389
+(Cyber Security)
+UG . B 131 130 124
+5
+UG . C 130 124 130
+5
+UG . D 124 130 121
+5
+UG (UG-Engineering-CSE
+5 385 384 375
+(Data science))
+UG . B 132 131 130
+6
+UG . C 131 130 130
+6
+UG . D 130 130 128
+6
+UG (UG-Engineering
+6
+(Information 393 391 388
+Technology))
+PG . A 18 18 18
+1
+PG . B 18 18 18
+1
+PG (PG-Engineering-CSE) 36 36 36
+1
+DS=Total no. of students in the
+Department (UG , UG , UG , 1,964 1,954 1,919
+1 2 4
+UG , PG )
+5 1
+AS=Total no. of students in
+393 391 388
+allied departments (UG )
+6
+S=Total no. of students in the S1=2,357 S2=2,345 S3=2,307
+Department (DS) and allied (2,321 (all UGs) (2,309(all (2,271(all
+departments (AS) +36(PG)) UGs)+36(PG)) UGs)+36(PG))
+DF=No. of faculty members in the
+95 99 100
+Department
+AF=No. of faculty members in the
+25 25 25
+allied Departments
+===PAGE 36===
+F=Total no. of faculty members in
+the Department (DF) and allied F1=120 F2=124 F3=125
+Departments (AF)
+PoP=Total no. of PoP in the
+Department (DF) and allied 00 00 00
+Departments (AF)
+FF=The faculty members who have
+a 100% teaching load in the first- 00 00 00
+year courses
+TF= Total faculty= F+PoP-FF 120 124 125
+Student Faculty Ratio SFR1=2,357/120= SFR2=2,345/12 SFR3=2,307/125=
+(SFR)=S/TF 19.64 4=18.91 18.46
+Average SFR for 3 years Average SFR= (19.64+18.91+18.46)/3=19.00
+5.2. Faculty Qualification (25)
+ Faculty qualification index (FQI) = 2.5 * [(10X +4Y)/RF] where
+ X=No. of faculty members with Ph.D. degree or equivalent as per AICTE/UGC
+norms.
+ Y=No. of faculty members with M. Tech. or ME degree or equivalent as per
+AICTE/ UGC norms.
+ RF=No. of required faculty in the Department including allied Departments
+adhere to the 20:1 Student-Faculty ratio, with calculations based on both
+student numbers and faculty requirements as per section 5.1 of SAR;
+(RF=S/20).
+Table No.5.2.1: Faculty qualification.
+Year X Y RF FQI= 2.5 * [(10X +4Y)/RF]
+CAY
+CAYm1
+CAYm2
+Average Assessment
+Note:
+ To determine the RF value (No. of required faculty in the Department including
+allied Departments to adhere to the 20:1 Student-Faculty ratio), all students (S
+as defined in section 5.1 of SAR) in the department including allied Departments
+need to be considered.
+ The programs, such as MCA, BCA, Diploma (Engineering) and other non-
+engineering programs running in the Department including allied Departments
+need to have sufficient faculty members to support those programs and exclude
+the faculty members and students listed in Table No. 5.2.1 (X, Y, and RF).
+5.3. Faculty Cadre Proportion (25)
+ Faculty Cadre Proportion is 1(RF1): 2(RF2): 6(RF3)
+ RF1= No. of Professors required = 1/9 * No. of Faculty required to comply with
+20:1 Student-Faculty ratio based on no. of students (S) in the Department
+including allied Departments as per section 5.1 of SAR.
+===PAGE 37===
+ RF2= No. of Associate Professors required = 2/9 * No. of Faculty required to
+comply with 20:1 Student-Faculty ratio based on no. of students (S) in the
+Department including allied Departments as per section 5.1 of SAR.
+ RF3= No. of Assistant Professors required = 6/9 * No. of Faculty required to
+comply with 20:1 Student-Faculty ratio based on no. of students (S) in the
+Department including allied Departments as per section 5.1 of SAR.
+ Faculty cadre and qualification and experience should be as per AICTE/UGC norms.
+Table No.5.3.1: Faculty cadre proportion details.
+Professors Associate Professors Assistant Professors
+Year
+Required Available Required Available Required Available
+Faculty(RF1) Faculty(AF1) Faculty(RF2) Faculty(AF2) Faculty(RF3) Faculty(AF3)
+CAY
+CAYm1
+CAYm2
+Average
+RF1= AF1= RF2= AF2= RF3= AF3=
+Numbers
+Faculty Cadre Proportion Marks= AF1 + AF2* 0.6 + AF3 * 0.4 * 12.5
+RF1 RF2 RF3
+ If AF1 = AF2= 0, then zero mark
+ Maximum marks should be limited to 25 if they exceed the allocated marks
+ Case 1: AF1/RF1=1; AF2/RF2=1; AF3/RF3=1
+Faculty Cadre Proportion marks= (1+0.6+0.4) * 12.5=25.
+ Case 2: AF1/RF1=1; AF2/RF2=4/2; AF3/RF3=8/9
+Faculty Cadre Proportion marks=(1+1.2+0.36)* 12.5=32(limited to
+25)
+Note:
+ All Professors (RF1, AF1), all Associate Professors (RF2, AF2), and all Assistant
+Professors (RF3, AF3) in the department including allied Departments should
+be considered for the calculation of faculty cadre proportion marks.
+ To determine the RF1, RF2, and RF3 values, all students (S) as defined in the
+section 5.1 of SAR) in the department including allied Departments need to be
+considered.
+ The programs, such as MCA, BCA, Diploma (Engineering) and other non-
+engineering programs running in the Department including allied Departments
+need to have sufficient faculty members to support them and exclude the
+faculty members listed in Table No. 5.3.1 (AF1, AF2, AF3).
+5.4. Visiting/Adjunct Faculty/Professor of Practice (10)
+(Provide details of participation and contributions in teaching, learning, or practical
+work by visiting, adjunct, and emeritus faculty; Professors of Practice (PoP), Associate
+Professors of Practice, and Assistant Professors of Practice, engaged on an hourly or
+===PAGE 38===
+part-time basis, etc., from industry, research organizations, and reputed institutions,
+as well as retired professors, during the assessment period.)
+ Provision of visiting or adjunct faculty/emeritus professor/professor of practice etc.
+(1)
+ Minimum 50 cumulative hours per year of interaction with adjunct faculty from
+industry or research organization, retired professors, etc. (9)
+ A minimum of 50 hours of interaction in a year will result in 3 marks for that year
+(3 marks * 3 years = 9 marks).
+Note: Here, individuals who contribute to teaching, learning, or practical work
+on part-time basis or an hourly basis need to be included. There is no data
+repetition from Section 5.1.
+Table No. 5.4.1: List of visiting/adjunct faculty/professor of practice and their teaching and
+practical loads.
+S.N. Name of the Designation & Name of the No. of hours
+Person Organization Course handled
+CAYm1
+1
+..
+Total no. of hours:
+CAYm2
+1
+..
+Total no. of hours:
+CAYm3
+1
+..
+Total no. of hours:
+5.5. Faculty Retention (10)
+Table No.5.5.1: Faculty retention ratio.
+Item CAY CAYm1 CAYm2
+RF=No. of required faculty in the Department to adhere
+to the 20:1 Student-Faculty ratio, with calculations
+based on both student numbers and faculty
+requirements as per section 5.1 of SAR; (RF=DS/20).
+AF=The no. of available faculty members in the
+Department
+===PAGE 39===
+A= The no. of faculty members at the current institute
+with less than 1 year of experience (A in AF)
+B= The no. of faculty members at the current institute
+with more than 1 year and less than 2 years of
+experience (B in AF)
+C= The no. of faculty members at the current institute
+with more than 2 years and less than 3 years of
+experience (C in AF)
+D= The no. of faculty members at the current institute
+with more than 3 years and less than 4 years of
+experience (D in AF)
+E= The no. of faculty members at the current institute
+with more than 4 years of experience (E in AF)
+FR=(((A*0) +(B*1)+(C*2)+(D*3)+(E*4))/RF) *2.50 FR_1 FR_2 FR_3
+(points limited to 10)
+Average FR= ((FR_1+ FR_2+ FR_3)/3)
+(marks limited to 10)
+Note:
+ To. determine the RF value (Number of faculty required to comply with the 20:1
+student-faculty ratio in the Department), all students (S) as defined in section 5.1 of
+SAR) in the department need to be considered
+ The programs, such as MCA, BCA, diploma (Engineering), and other non-engineering
+programs running in the Department need to have sufficient faculty members to
+support them and exclude the faculty members listed in Table No. 5.5.1 (AF).
+Example for Table No.5.5.1: Faculty retention ratio.
+Item CAY CAYm1 CAYm2
+RF=No. of required faculty in 1,964/20=98 1,954/20=97 2,307/20=95
+the Department to adhere
+to the 20:1 Student-
+Faculty ratio, with
+calculations based on
+both student numbers
+and faculty requirements
+as per section 5.1 of SAR;
+(RF=DS/20).
+AF=The no. of available 95 99 100
+faculty members in the
+Department
+A=The no. of faculty 1 0 2
+members at the current
+institute with less than 1
+year of experience (A in
+AF)
+B=The no. of faculty 2 3 10
+members at the current
+institute with more than 1
+year and less than 2 years
+of experience (B in AF)
+C=The no. of faculty 1 2 2
+members at the current
+===PAGE 40===
+institute with more than 2
+years and less than 3
+years of experience (C in
+AF)
+D=The no. of faculty 1 0 1
+members at the current
+institute with more than 3
+years and less than 4
+years of experience (D in
+AF)
+E= The no. of faculty 90 94 85
+members at the current
+institute with more than 4
+years of experience (E in
+AF)
+FR=(((A*0) +(B*1) +(C*2) FR_1=((0+2+2+3 FR_2=((0+3+4+0 FR_3=((0+10+4+
++(D*3) + (E*4))/RF) * 2.50 +360)/98)*2.50= +376)/97)*2.50= 3+340)/95)*2.50
+(points limited to 10) 9.36 9.87 =9.39
+Average FR= ((FR_1+ FR_2+ (9.36+9.87+9.39)/3=28.62/3=9.54
+FR_3)/3)
+(marks limited to 10)
+===PAGE 41===
+Criterion 6: Faculty Contributions (120)
+Here, Department Information Alone needs to be added
+6.1. Professional Development Activities (60)
+6.1.1. Memberships in Profession Societies at National/International Levels (05)
+(Provide details of faculty members, who have active recognized professional
+memberships and their positions and contributions to professional societies during the
+assessment period.)
+Table No. 6.1.1.1: List of faculty members and their memberships.
+S.N. Name of the Name of the Professional Name of the Grade/
+Faculty Society /Body at National Level/Position
+and International Level
+1  
+ 
+..
+6.1.2. Faculty as Resource Persons or Participants in STTPs/FDPs (10)
+6.1.2.1. Faculty as Resource Persons in STTPs/FDPs (05)
+(Provide details of the faculty involved as resource persons in STTP/FDP events during
+the assessment period.)
+Table No. 6.1.2.1.1: List of faculty members as resource person in STTP/FDP events.
+S.N. Name of the Faculty as Name of the Date Location Organized
+Resource Person STTP/FDP by
+CAYm1
+1
+..
+`CAYm2
+1
+..
+CAYm3
+1
+..
+6.1.2.2. Faculty Members’ Participation in STTPs/FDPs (05)
+(Provide details of faculty participated in STTP/FDP events during the assessment
+period with special reference to the faculty competency for the program under
+consideration for accreditation. Please do not give duplicate data from the section
+6.1.4.)
+ A Faculty scores maximum five points for participation
+===PAGE 42===
+ Participation in 2 to 5 days Faculty/ Faculty development program: 3 Points
+ Participation in >5 days Faculty/ Faculty development program: 5 points.
+Table No. 6.1.2.2.1: List of faculty members participated in STTP/FDP events.
+S.N. Name of the Faculty as Resource Max. 5 per Faculty
+Person or Participant
+CAYm1 CAYm2 CAYm3
+1
+..
+N
+Sum
+RF=Number of faculty required to comply with the RF_1 RF_2 RF_3
+20:1 student-faculty ratio in the Department
+alone, as per section 5.1 of SAR
+(RF=DS/20).
+Assessment Points (AP)= (Sum/(0.5* RF)) AP_1 AP_2 AP_3
+(Points limited to 5 for each assessment year)
+Average assessment points over 3 years=
+((AP_1+AP_2+AP_3)/3)
+(Marks limited to 5 over the assessment period)
+Note:
+1. We need to consider all students (DS) in the department alone to determine the RF value
+(Number of faculty required to comply with the 20:1 student-faculty ratio in the
+Department).
+2. Faculty members who participated in the FDP/STP programs at the parent institute will
+not be counted. Only participation in external programs will be considered.
+6.1.3. Faculty Contribution in Development of SWAYAM MOOCs and other E-Content
+(07)
+(Provide details of faculty members developed courses for various educational
+initiatives, including SWAYAM MOOCs/SWAYM PLUS/NPTEL, e-PG Pathshala and other
+e-contents during the assessment period.)
+Table No. 6.1.3.1: List of faculty members developed MOOC course for the past 3 years.
+S.N. Name of the Faculty Name of the Course Developed and available online on
+Swayam platform by your Department faculty
+1
+..
+N
+6.1.4. Faculty Certification of MOOCs through SWAYAM, etc. (08)
+===PAGE 43===
+(Provide details of faculty members, who have obtained MOOCs (Massive Open Online
+Courses) certification through platforms like SWAYAM/SWAYM PLUS/NPTEL and other
+approved programs during the assessment period.)
+Table No. 6.1.4.1: List of faculty members obtained certification of MOOCs for the past 3
+years.
+S.N. Name of the Name of Course Course Offered by Grade obtained
+Faculty Passed (agency) if any
+1
+..
+N
+6.1.5. FDP/STTP Organized by the Department (10)
+(Provide details of the number of faculty development programs and short-term
+training programs organized by the department individually or in collaboration with
+other departments over the past 3 years.)
+ The minimum duration of FDP/STTP is 5 days.
+ 2 points per FDP/STTP, with a maximum of 4 marks per assessment year and a
+total maximum of 10 marks
+Table No. 6.1.5.1: List of FDPs/STPs organized by Department for the past 3 years.
+S.N. Name of Date of Duration Name of the Speaker No. of People
+the the of the & Designation and Attended
+Program Program Program Organization
+CAYm1
+1
+..
+CAYm2
+1
+..
+CAYm3
+1
+..
+6.1.6. Faculty Support in Student Innovative Projects (10)
+(Provide details of faculty supports as a mentor, facilitator, etc. in student innovation
+projects in various events like hackathons, codeathons, ideathons, open research,
+etc.)
+Table No. 6.1.6.1: List of faculty members involved in student innovative projects.
+S.N. Name of the Name of the Event Date of Place of Website
+Faculty Event Event Link if any
+===PAGE 44===
+CAYm1
+
+1
+
+..
+CAYm2
+1
+..
+CAYm3
+1
+..
+6.1.7. Faculty Internship/Training/Collaboration with Industry (10)
+(Provide details of faculty members who have undergone internships or training in
+industry and research organizations, or a list of faculty members who are actively
+collaborating with industry.
+The outcomes of internships, training, and collaborations including the number of
+programs organized for students and faculty members, the development of working
+models and prototypes, the publication of joint research papers, the number of funded
+projects received, etc. for the assessment period.)
+Table No. 6.1.7.1: Faculty internship/training/collaboration details.
+Name of Name of the Name of the Duration Outcomes of
+S.N.
+the Internship/ Company & Internship/
+Faculty Training/ Place Training/
+Collaboration Collaboration
+1    
+  
+  
+.. 
+6.2. Research and Development Activities (60)
+6.2.1. Academic Research (10)
+(Provide details of compiled list including research papers, available online or in hard-
+copy, from reputable publishers and should be list of Scopus/WoS. Only papers with
+the faculty member's affiliation aligned with the current institution are considered.
+Each entry in the comprehensive list includes details such as DOI, publisher, and
+month/year of publication.
+Table No. 6.2.1.1: Faculty publication details.
+S.N. Item CAYm1 CAYm2 CAYm3
+1 No. of peer reviewed journal papers published
+===PAGE 45===
+2 No. of peer reviewed conference papers published
+3 No. of books/book chapters published
+6.2.2. Ph.D. Student Details (05)
+(No. of Ph.D. students’ enrollment and graduated in the Department during the assessment
+period.)
+Table No. 6.2.2.1: Ph.D. details.
+S.N. Item CAYm1 CAYm2 CAYm3
+1 No. of students enrolled for Ph.D. in the Department
+2 No. of Ph.D. students graduated in the Department
+6.2.3. Development Activities (10)
+(Provide details of patents granted/published, working models, and prototypes
+developed by faculty members in the last 3 years.)
+6.2.4. Sponsored Research Project (15)
+(Provide details of funded research projects from the external sources including
+Corporate Social Responsibility (CSR). List includes Principal Investigator (PI), Co-PI
+name, name of the dept where project is sanctioned, project title, funding agency,
+sanctioned amount, duration and sanctioned year. Also, provide the cumulative
+funding amount received during CAYm1, CAYm2, and CAYm3. Please do not give
+duplicate data from the sections 6.2.5 and 6.2.6.)
+ Amount >20 Lacs – 15 Marks
+ Amount >16 Lacs and < 20 lacs– 12 Marks
+ Amount >12 Lacs and < 16 lacs –9 Marks
+ Amount > 8 Lacs and < 12 lacs –6 Marks
+ Amount > 4 Lacs and < 8 lacs –3 Marks
+ Amount > 1 Lacs and < 4 lacs –1 Mark
+ Amount < 1 Lac – 0 Mark.
+Table No. 6.2.4.1: List of sponsored research projects received from external agencies.
+S.N. PI Co-PI Name of the Project Name of Duration Amount
+name names if Dept., where title* the of the (Lacs)
+any project is Funding project
+sanctioned agency
+CAYm1
+1
+..
+Amount received (Rs.)
+CAYm2
+1
+…
+===PAGE 46===
+Amount received (Rs.)
+CAYm3
+1
+..
+Amount received (Rs.)
+Total Amount (Lacs) Received for the Past 3 Years
+Note*:
+ Only sponsored research projects will be considered. Infrastructure-based projects
+will not be considered here.
+6.2.5. Consultancy Work (15)
+(Provide details of consultancy projects from the external sources. List includes
+Principal Investigator (PI), Co-PI name, name of the dept where project is sanctioned,
+project title, funding agency, sanctioned amount, duration and sanctioned year. Also,
+provide the cumulative funding amount received during CAYm1, CAYm2, and CAYm3.
+Please do not give duplicate data from the sections 6.2.4 and 6.2.6.)
+ Amount >20 Lacs – 15 Marks
+ Amount >16 Lacs and < 20 lacs–12 Marks
+ Amount >12 Lacs and < 16 lacs –9 Marks
+ Amount > 8 Lacs and < 12 lacs –6 Marks
+ Amount > 4 Lacs and <8 lacs –3 Marks
+ Amount > 1 Lacs and <4 lacs –1 Mark
+ Amount < 1 Lac – 0 Mark.
+Table No. 6.2.5.1: List of consultancy projects received from external agencies.
+S.N PI Co-PI Name of the Project Name of Duration Amou
+. name names Dept., where title* the of the nt
+if any project is Funding project (Lacs)
+sanctioned agency
+CAYm1
+1
+..
+Amount received (Rs.)
+CAYm2
+1
+…
+Amount received (Rs.)
+CAYm3
+1
+..
+Amount received (Rs.)
+Total amount (Lacs) received for the past 3 years
+===PAGE 47===
+Note*:
+ Only consultancy projects will be considered. Infrastructure-based projects will not
+be considered here.
+6.2.6. Institution Seed Money or Internal Research Grant to its Faculty for Research
+Work (05)
+(Provide details of faculty members received Institution seed money grants to its
+faculty for research work. Also, provide the cumulative funding amount received and
+utilized during CAYm1, CAYm2, and CAYm3. Please do not give duplicate data from
+the sections 6.2.4 and 6.2.5. The outcomes of the project are no. of publications, no.
+of working models/prototypes, no. of Ph.D. students graduated, no. of M.E students
+graduated, amount generated, etc.)
+Amount received (3 marks)
+ Amount > 6 Lacs – 3 Marks
+ Amount > 4 Lacs and < 6 lacs– 2 Marks
+ Amount > 2 Lacs and < 4 lacs – 1 Mark
+ Amount < 1 Lac – 0 Mark.
+Amount utilized (2 marks).
+Table No. 6.2.6.1: List of faculty members received seed money or internal research grant
+from the institution.
+S.N. Faculty Project title/ Duration Amount Amount Outcomes
+name Support for (Lacs) Utilized of the
+Activity (Lacs) project
+CAYm1
+1
+..
+Amount received (Rs.)
+CAYm2
+1
+..
+Amount received (Rs.)
+CAYm3
+1
+..
+Amount received (Rs.)
+Total amount (Lacs) received for the past 3 years
+===PAGE 48===
+Criterion 7: Facilities and Technical Support (100)
+7.1. Adequate and Well-Equipped Laboratories, and Technical Manpower (40)
+(Provide details of various laboratories for the program and at the department level.
+Also, please provide a list of technical support staff appointed by the College for the
+Department and their qualifications. Please do not give duplicate data from the
+sections 7.2 and 7.5.)
+Table No.7.1.1: List of laboratories and technical manpower.
+Technical Manpower support
+S. Name of No. of Name of Weekly
+N. the student the major utilization
+Laborato s per equipmen status Designat Qualificat
+Name
+ry setup t (all the ion ion
+of the
+(Batch courses for
+technic
+Size) which the
+al staff
+lab is
+utilized)
+1.
+..
+N.
+7.2. Additional Facilities Created for Improving the Quality of Learning Experience
+in Laboratories (20)
+(Provide details of various additional facilities provided by the department to enhance
+the quality of learning in laboratories. Please do not give duplicate data from the
+sections 7.1 and 7.5.)
+Table No.7.2.1: List of additional facilities.
+S. N. Name of the Purpose Utilization Relevance to
+Details
+Facility for creating POs/PSOs
+facility
+1.
+…
+N.
+7.3. Maintenance of Laboratories and Overall Ambiance (10)
+(Provide details of overall laboratories maintenance and overall ambiance in the
+Department.)
+7.4. Safety Measures in Laboratories (10)
+(Provide details of various safety measures deployed in each laboratory within the
+Department.)
+===PAGE 49===
+Table No. 7.4.1: List of various safety measures in laboratories.
+S.N. Name of the Laboratory Safety measures
+1.
+…
+N.
+7.5. Project Laboratory/Research Laboratory /Centre of Excellence (20)
+(Provide details of laboratories for supporting projects, research, Centre of Excellence,
+innovation, and startups etc. Please do not give duplicate data from the sections 7.1
+and 7.2.)
+Table No. 7.5.1: List of project laboratory/research laboratory /Centre of Excellence.
+S.N. Name of the Laboratory
+1.
+…
+N.
+===PAGE 50===
+Criterion 8: Continuous Improvement (80)
+8. 1. Actions Taken Based on the Results of Evaluation of the COs, POs, and PSOs
+(40)
+8.1.1. Actions Taken Based on the Results of Evaluation of the COs Attainment (20)
+(Identify the areas of weaknesses in the program based on the analysis of evaluation
+of COs attainment levels. Measures identified and implemented to improve COs
+attainment levels for the assessment year (CAYm1) including curriculum intervention,
+pedagogical initiatives, support system improvements, etc.)
+8.1.2. Actions Taken Based on the Results of Evaluation of the POs/PSOs Attainment
+(20)
+(Identify the areas of weaknesses in the program based on the analysis of evaluation
+of POs/PSOs attainment levels. Measures identified and implemented during two years
+to improve POs attainment levels including curriculum intervention, pedagogical
+initiatives, support system improvements, etc.)
+8.2. Academic Audit and Actions Taken thereof during the Period of Assessment
+(15)
+(Academic audit system/process and its implementation in relation to continuous
+improvement.)
+8.3. Improvement in Faculty Qualification/Contribution (15)
+(Assessment is based on improvement in qualification and publications with respect to
+the Department)
+Table No.8.3.1: Improvement in qualification and publications
+Item CAYm1 CAYm2 CAYm3
+No. of faculty members
+with Ph.D. degree
+No. of publications in peer
+reviewed journals
+No. of publications in
+conferences
+8.4. Improvement in Academic Performance (10)
+(Provide details of improvement in academic performance of 1st year, 2nd year, 3rd year
+students during the assessment period.)
+Table No.8.4.1: Improvement in academic performance
+Item CAYm1 CAYm2 CAYm3
+Academic Performance Index (API) of the First-
+Year Students in the Program (Refer to section 4.3)
+Academic Performance Index of the Second-Year
+Students in the Program (Refer to section 4.4)
+Academic Performance Index of the Third Year
+Students in the Program (Refer to section 4.5)
+===PAGE 51===
+Criterion 9: Student Support System and Governance (120)
+9.1. First Year Student-Faculty Ratio (FYSFR) (05)
+(Data for first year courses to calculate the FYSFR)
+Table No. 9.1.1: FYSFR details.
+Year Sanctioned No. of No. of faculty No. of Percentage=
+intake of all required members in faculty No. of faculty members
+UG faculty Basic Science members in ((NS1*0.8) +(NS2*0.2))/(No.
+programs (RF4= Courses & Engineering of required faculty (RF4));
+(S4) S4/20) Humanities Science
+and Social Courses Percentage=((NS1*0.8)
+Sciences (NS2) +(NS2*0.2))/RF4
+including
+Management
+courses
+(NS1)
+CAY 300 15 18 3 ((18*0.8) +(3*0.2))/15
+=(14.4+0.6)/15=15/15=100%
+CAYm1 300 15 16 2 ((16*0.8) +(2*0.2))/15
+=(12.8+0.4)/15=13.2/15=88%
+CAYm2 240 12 10 2 ((10*0.8) +(2*0.2))/12
+=(8+0.4)/12=8.4/12=70%
+Average Percentage
+86%
+Note:
+Ex: If S4=240, the Institute needs a minimum of 2 faculty members in Physics, 2 in
+Chemistry, and 4 in Mathematics.
+Ex: If S4=420, the Institute needs a minimum of 4 faculty members in Physics, 4 in
+Chemistry, and 5 in Mathematics.
+Ex: If S4=720, the Institute needs a minimum of 6 faculty members in Physics, 6 in
+Chemistry, and 8 in Mathematics.
+For intake(S4) is more than 720, an FYSFR of 1:20 shall be maintained
+approximately.
+> 90% of faculty members; 05 marks.
+> 80% to < 90 of faculty members; 04 marks.
+> 70% to < 80 of faculty members; 03 marks.
+> 60% to < 70 of faculty members; 02 marks.
+> 50% to < 60 of faculty members; 01 mark.
+< 50% of faculty members; 00 mark.
+9.2. Mentoring System (05)
+(Type of mentoring: Professional guidance/career advancement/course work specific/
+laboratory specific/all-round development. Number of faculty mentors: Number of
+students per mentor: Frequency of meeting:
+===PAGE 52===
+The institution should report the details of the mentoring system, its implementation
+and effectiveness through impact studies, services both online and physical, and the
+mentoring of seniors (final year students) to juniors (freshmen) if any, etc.).
+9.3. Feedback Analysis (10)
+9.3.1. Feedback on Teaching and Learning Process and Corrective Measures Taken,
+if any (05)
+(Provide details of the feedback collection process on TLP, average percentage of
+students who participate; Specify the feedback analysis process; Basis of reward/
+corrective measures during the assessment period. Specify the number of corrective
+measures taken. Exhibit the details of analysis done.)
+9.3.2. Feedback on Academic Facilities (05)
+(Provide details of the feedback collection process on facilities, its analysis and
+corrective actions taken during the assessment period.)
+9.4. Training and Placement Support (10)
+(Provide details of the training and placement supports, calendar of scheduled
+trainings, career guidance and effectiveness of career guidance, industry interaction
+exclusively for pre-placement/ internship/placement/counseling and support for higher
+study etc.)
+9.5. Start-up and Entrepreneurship Activities (05)
+(Describe the initiatives, facilities created/utilization and their effectiveness in
+encouraging students for innovation, entrepreneurship, incubation and start-up. Also
+provide the list of beneficiaries.)
+9.6. Governance and Transparency (25)
+9.6.1. Availability of the Institutional Strategic Plan and its Effective
+Implementation and Monitoring (10)
+(Provide details of the Institute's strategic plan or Institutional Development Plan
+(IDP), its approval by the competent authority, and its implementation.)
+9.6.2. Governing Body, Administrative Setup, Functions of Various Bodies, Service
+Rules, Recruitment procedures and Promotion Policies (10)
+(Provide details of statutory and non-statutory administrative committees like the
+Governing body, Academic Council/ Senate, Grievance redressal Committee, IQAC,
+Anti-Raging committee, Disciplinary committee in place; Internal Complaints
+Committee (Women harassment mitigation committee) etc., provide the approval of
+these committees along with details of members, the meetings details (meeting notice,
+agenda, minutes, action taken etc. The service rules, policies and procedures; year of
+publication are to be listed.)
+9.6.3. Transparency (05)
+(Information on policies, rules, processes, delegation of financial powers, faculty,
+students, etc., and dissemination of this information to stakeholders should be made
+available on the Institute's website. Agendas and minutes of the Governing Body,
+===PAGE 53===
+Academic Council, and Senate are also required to be uploaded on the Institute's
+website. Additionally, state the extent of awareness among the stakeholders.)
+9.7. Budget Allocation, Utilization, and Public Accounting at Institute Level (12)
+(Provide a summary of the financial year's budget and actual expenditure incurred
+exclusively for the institution in the three financial years: CFYm1, CFYm2, and CFYm3.
+If the management oversees multiple Institutions, exclusive audited records for each
+Institute must be provided and made available on the Institute's website. The budget
+should be approved by the Institute BoG/GB/GC before the start of the financial year.)
+CFY=Current Financial Year.
+CFYm1=Current Financial Year Minus 1.
+CFYm2=Current Financial Year Minus 2.
+CFYm3=Current Financial Year Minus 3.
+For CFYm1
+Table No. 9.7.1: Summary of budget and actual expenditure incurred at Institute level for
+CFY m1.
+Total Income in the CFYm1 Actual Total Expenditure per
+expenditure Students in student
+in the CFYm1 the institute in CFYm1:
+Fee Govt. Grant(s) Other
+Sources
+(specify)
+Note:
+ Similar tables are to be prepared for CFYm2 & CFYm3.
+ Audited statements for CFYm2, and CFYm3 are to be uploaded on the website
+Table No. 9.7.2: Budget and actual expenditure incurred at Institute level.
+Actual
+Items Actual Actual Actual
+Budget expens Budget Budget Budget
+Expens Expens Expens
+ed in es in ed in ed in ed in
+es in es in es in
+CFY CFY CFYm1 CFYm2 CFYm3
+CFYm1 CFYm2 CFYm3
+(till …)
+Infrastructure
+Built-Up
+Library
+Laboratory
+equipment
+Teaching and
+non-teaching
+staff salary
+Outreach
+Programs
+R&D
+===PAGE 54===
+Training,
+Placement
+and Industry
+linkage
+SDGs
+Entrepreneurs
+hip
+Others*, pl.
+specify
+Total
+amount
+* Items to be mentioned.
+9.8. Program Specific Budget Allocation, Utilization (08)
+(Total budget at program level: CFYm1, CFYm2 & CFYm3
+CFY=Current Financial Year.
+CFYm1=Current Financial Year Minus 1.
+CFYm2=Current Financial Year Minus 2.
+CFYm3=Current Financial Year Minus 3.)
+For CFYm1 (Similar table to be prepared for CFYm2 and CFYm3)
+Table No. 9.8.1: Summary of budget and actual expenditure incurred at program level.
+Total No. of
+Actual expenditure in
+Total Budget in CFYm1: students in
+CFYm1:
+CFYm1:
+Actual Actual Expenditure per
+Demanded % Spent
+Allocated Expenditure student
+Note: Justification and process of budgeting to be listed.
+Table No. 9.8.2: Budget and actual expenditure incurred at program level.
+Actual
+Actual Actual Actual
+Budgeted expenses Budgeted Budgeted Budgeted
+Items Expenses Expenses Expenses
+in CFY in CFY in CFYm1 in CFYm2 in CFYm3
+in CFYm1 in CFYm2 in CFYm3
+(till …)
+Laboratory
+equipment
+Software
+SDGs
+Support for
+faculty
+development
+R & D
+Industrial
+Training,
+===PAGE 55===
+Industry
+expert,
+Internship
+Miscellaneous
+expenses *
+Total amount
+* Items to be mentioned.
+9.9. Quality of Learning Resources (Hard/Soft) (05)
+(Provide details of available learning resources, including e-resources (books and
+journals), as well as information on the accessibility of these resources to students.
+Additionally, describe the support provided to students for self-learning activities.)
+9.10. E-Governance (05)
+(E-governance initiatives, sustainable practices in academic and learning
+management, campus-wide computing resources, and their accessibility and
+availability to support academic and professional activities for students and faculty.)
+9.11. Initiatives and Implementation of Sustainable Development Goals (SDGs) (10)
+(Provide details of initiatives taken towards implementation of SDG specifically on
+green energy, waste management, preserving water, net zero, quality education,
+reuse, recycle, less use to renewables, etc. Provide evidences on implementation
+(projects assigned, R & D activities, entrepreneurial activities, outreach programs etc.)
+9.12. Innovative Educational Initiatives and Implementation (05)
+(Provide details of initiatives taken towards mobility of students, implementation of
+academic bank of credits, and support for holistic education including human values,
+multidisciplinary/interdisciplinary curriculum/programs, initiatives on Indian
+Knowledge System, Contribution towards and implementation of teaching in Indian
+language, etc. Policies on inclusivity and equity and their implementation, support for
+economically, socially and physically challenged students. Action plan and its
+implementation for slow learners.)
+9.13. Faculty Performance Appraisal and Development System (FPADS) (10)
+(Faculty members of Higher Educational Institutions today have to perform a variety of
+tasks pertaining to diverse roles. In addition to instruction, faculty members need to
+innovate and conduct research for their self-renewal, keep abreast of changes in
+technology, and develop expertise for the effective implementation of curricula. They
+are also expected to provide services to the industry and community to understand and
+contribute to solving real-life problems in industry. Another role involves shouldering
+administrative responsibilities and cooperating with other faculty, heads of
+departments, and the head of the institute. An effective performance appraisal system
+for faculty is vital for optimizing the contribution of individual faculty to institutional
+performance.
+The assessment is based on a well-defined system for faculty appraisal for all the
+assessment years and its implementation and effectiveness.)
+===PAGE 56===
+9.14. Outreach Activities (05)
+(Provide details of outreach activities such as community service, Unnat Bharat
+Abhiyan, social internship and society connect activities undertaken by the students
+and their achievements.)

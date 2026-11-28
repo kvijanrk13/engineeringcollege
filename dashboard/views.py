@@ -12272,3 +12272,37 @@ def nba_criterion_form(request, criterion_no):
         "annexure_page_start": annexure_pages[criterion_no][0],
         "annexure_page_end": annexure_pages[criterion_no][1],
     })
+
+
+# ================================
+# SECURITY VIEWS
+# ================================
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+
+@require_http_methods(["GET", "POST"])
+def csrf_failure(request, reason=""):
+    """
+    Custom CSRF failure view.
+    Logs the failure and shows a user-friendly error page.
+    """
+    import logging
+    logger = logging.getLogger('django.security.csrf')
+    
+    # Log the CSRF failure with details
+    logger.warning(
+        f"CSRF Failure: {reason} | "
+        f"Path: {request.path} | "
+        f"Method: {request.method} | "
+        f"Referer: {request.META.get('HTTP_REFERER', 'None')} | "
+        f"User-Agent: {request.META.get('HTTP_USER_AGENT', 'None')} | "
+        f"IP: {request.META.get('REMOTE_ADDR', 'Unknown')}"
+    )
+    
+    # Return a user-friendly error page
+    context = {
+        'reason': reason,
+        'title': 'CSRF Token Missing or Invalid',
+        'message': 'Your session may have expired or the form was tampered with. Please try again.',
+    }
+    return render(request, 'dashboard/csrf_failure.html', context, status=403)
